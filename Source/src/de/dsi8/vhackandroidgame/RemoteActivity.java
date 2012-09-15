@@ -41,7 +41,10 @@ public class RemoteActivity extends SimpleBaseGameActivity implements IClientLog
 	
 	private static final String LOG_TAG = "RemoteActivity";
 	
-	
+	/*
+	  Wait until this before sending the next
+	 */
+	private long nextSendl;
 
 	private Camera mCamera;
 	private ITextureRegion mOnScreenControlBaseTextureRegion;
@@ -57,7 +60,7 @@ public class RemoteActivity extends SimpleBaseGameActivity implements IClientLog
 	protected void onCreate(Bundle pSavedInstanceState) {
 		super.onCreate(pSavedInstanceState);
 		
-		connectionParameter = new ConnectionParameter("http://vhackandroidgame.dsi8.de/connect/?host=192.168.43.245&port=4254&password=");//getIntent().getData().toString());
+		connectionParameter = new ConnectionParameter("http://vhackandroidgame.dsi8.de/connect/?host=192.168.43.1&port=4254&password=");//getIntent().getData().toString());
 	}
 	
 	@Override
@@ -155,9 +158,16 @@ public class RemoteActivity extends SimpleBaseGameActivity implements IClientLog
 			public void onControlChange(final BaseOnScreenControl pBaseOnScreenControl, final float pValueX, final float pValueY) {
 				// TODO Zum Server funken
 				
-				if(clientLogic != null) {
-					RemoteActivity.this.clientLogic.driveCar(pValueX, pValueY);
+				long now = System.currentTimeMillis();
+				// TODO: Not here & this better?
+				if(now > nextSendl) {
+					if(clientLogic != null) {
+						RemoteActivity.this.clientLogic.driveCar(pValueX, pValueY);
+					}
+					nextSendl = now+100;
 				}
+				
+				
 			}
 
 			@Override

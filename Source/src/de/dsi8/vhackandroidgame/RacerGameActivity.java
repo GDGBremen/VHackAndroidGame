@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.andengine.engine.camera.Camera;
-import org.andengine.engine.camera.hud.controls.BaseOnScreenControl;
 import org.andengine.engine.options.EngineOptions;
 import org.andengine.engine.options.ScreenOrientation;
 import org.andengine.engine.options.resolutionpolicy.RatioResolutionPolicy;
