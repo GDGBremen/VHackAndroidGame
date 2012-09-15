@@ -34,6 +34,7 @@ import com.badlogic.gdx.physics.box2d.FixtureDef;
 
 import de.dsi8.vhackandroidgame.logic.contract.IServerLogic;
 import de.dsi8.vhackandroidgame.logic.contract.IServerLogicListener;
+import de.dsi8.vhackandroidgame.logic.impl.ServerLogic;
 
 /**
  * (c) 2010 Nicolas Gramlich
@@ -100,6 +101,21 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements IServer
 		
 		
 		
+	}
+	
+	@Override
+	protected void onStart() {
+		super.onStart();
+		
+		serverLogic = new ServerLogic(this);
+		serverLogic.start();
+	}
+	
+	@Override
+	protected void onStop() {
+		super.onStop();
+		
+		serverLogic.close();
 	}
 	
 	@Override
