@@ -6,6 +6,7 @@ import de.dsi8.dsi8acl.communication.contract.IServerCommunication;
 import de.dsi8.dsi8acl.communication.contract.IServerCommunicationListener;
 import de.dsi8.dsi8acl.communication.impl.ServerCommunication;
 import de.dsi8.dsi8acl.exception.ConnectionProblemException;
+import de.dsi8.vhackandroidgame.communication.model.CollisionMessage;
 import de.dsi8.vhackandroidgame.handler.DriveMessageHandler;
 import de.dsi8.vhackandroidgame.logic.contract.IServerLogic;
 import de.dsi8.vhackandroidgame.logic.contract.IServerLogicListener;
@@ -47,6 +48,11 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener {
 	public void socketListenerProblem(Exception ex) {
 		// TODO Auto-generated method stub
 		Log.e(LOG_TAG, "socketListenerProblem", ex);
+	}
+
+	@Override
+	public void collisionDetected(int carId) {
+		communication.sendMessage(carId, new CollisionMessage());
 	}
 
 }
