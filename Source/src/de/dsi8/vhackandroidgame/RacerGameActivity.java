@@ -1,11 +1,9 @@
 package de.dsi8.vhackandroidgame;
 
-import java.net.ServerSocket;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.andengine.engine.camera.Camera;
-import org.andengine.engine.camera.hud.controls.BaseOnScreenControl;
 import org.andengine.engine.options.EngineOptions;
 import org.andengine.engine.options.ScreenOrientation;
 import org.andengine.engine.options.resolutionpolicy.RatioResolutionPolicy;
@@ -35,12 +33,15 @@ import org.andengine.util.math.MathUtils;
 
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.os.Bundle;
 
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef.BodyType;
+import com.badlogic.gdx.physics.box2d.Contact;
+import com.badlogic.gdx.physics.box2d.ContactImpulse;
+import com.badlogic.gdx.physics.box2d.ContactListener;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
+import com.badlogic.gdx.physics.box2d.Manifold;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.MultiFormatWriter;
 import com.google.zxing.WriterException;
@@ -115,13 +116,6 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements IServer
 	// Methods for/from SuperClass/Interfaces
 	// ===========================================================
 
-	@Override
-	protected void onCreate(Bundle pSavedInstanceState) {
-		super.onCreate(pSavedInstanceState);
-		
-		
-		
-	}
 	
 	@Override
 	protected void onStart() {
@@ -176,6 +170,43 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements IServer
 
 		this.mPhysicsWorld = new FixedStepPhysicsWorld(30, new Vector2(0, 0), false, 8, 1);
 
+		this.mPhysicsWorld.setContactListener(new ContactListener() {
+			
+			@Override
+			public void preSolve(Contact arg0, Manifold arg1) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void postSolve(Contact arg0, ContactImpulse arg1) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void endContact(Contact arg0) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void beginContact(Contact contact) {
+				int firstCarId = getCarIdFromBody(contact.getFixtureA().getBody());
+				if (firstCarId > -1) {
+					RacerGameActivity.this.serverLogic.collisionDetected(firstCarId);
+				}
+				
+				int secondCarId = getCarIdFromBody(contact.getFixtureB().getBody());
+				if (secondCarId > -1) {
+					RacerGameActivity.this.serverLogic.collisionDetected(secondCarId);
+				}
+				
+				
+				
+			}
+		});
+		
 		this.initRacetrack();
 		this.initRacetrackBorders();
 		this.initObstacles();
@@ -187,8 +218,21 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements IServer
 
 		this.mScene.registerUpdateHandler(this.mPhysicsWorld);
 
+				
+		
 		return this.mScene;
 	}
+	
+	public int getCarIdFromBody(Body body) {
+		for (CarView carView : this.cars.values()) {
+			if (carView.body == body) {
+				return carView.id;
+			}
+		}
+		
+		return -1;
+	}
+	
 
 	@Override
 	public void onGameCreated() {
@@ -360,6 +404,7 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements IServer
 	@Override
 	public void addCar(int carId) {
 		CarView carView = new CarView();
+		carView.id = carId;
 		
 		carView.car = new TiledSprite(20, 20, CAR_SIZE, CAR_SIZE, this.mVehiclesTextureRegion, this.getVertexBufferObjectManager());
 		carView.car.setCurrentTileIndex(0);

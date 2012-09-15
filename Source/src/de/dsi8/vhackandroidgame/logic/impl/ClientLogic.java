@@ -2,11 +2,14 @@ package de.dsi8.vhackandroidgame.logic.impl;
 
 import java.net.Socket;
 
+import org.andengine.engine.handler.collision.CollisionHandler;
+
 import de.dsi8.dsi8acl.communication.contract.ICommunicationPartner;
 import de.dsi8.dsi8acl.communication.contract.ICommunicationPartnerListener;
 import de.dsi8.dsi8acl.communication.impl.CommunicationPartner;
 import de.dsi8.dsi8acl.exception.ConnectionProblemException;
 import de.dsi8.vhackandroidgame.communication.model.DriveMessage;
+import de.dsi8.vhackandroidgame.handler.CollisionMessageHandler;
 import de.dsi8.vhackandroidgame.logic.contract.IClientLogic;
 import de.dsi8.vhackandroidgame.logic.contract.IClientLogicListener;
 
@@ -18,6 +21,7 @@ public class ClientLogic implements IClientLogic, ICommunicationPartnerListener 
 	public ClientLogic(IClientLogicListener listener, Socket socket) {
 		this.listener = listener;
 		this.partner = new CommunicationPartner(this, socket);
+		this.partner.registerMessageHandler(new CollisionMessageHandler(listener));
 		this.partner.initialized();
 	}
 	

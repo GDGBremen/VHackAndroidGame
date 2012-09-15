@@ -17,9 +17,11 @@ import org.andengine.opengl.texture.atlas.bitmap.BitmapTextureAtlasTextureRegion
 import org.andengine.opengl.texture.region.ITextureRegion;
 import org.andengine.ui.activity.SimpleBaseGameActivity;
 
+import android.content.Context;
 import android.opengl.GLES20;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Vibrator;
 import android.util.Log;
 import de.dsi8.dsi8acl.common.utils.AsyncTaskResult;
 import de.dsi8.dsi8acl.connection.model.ConnectionParameter;
@@ -41,7 +43,10 @@ public class RemoteActivity extends SimpleBaseGameActivity implements IClientLog
 	
 	private static final String LOG_TAG = "RemoteActivity";
 	
-	
+	/*
+	  Wait until this before sending the next
+	 */
+	private long nextSendl;
 
 	private Camera mCamera;
 	private ITextureRegion mOnScreenControlBaseTextureRegion;
@@ -155,9 +160,16 @@ public class RemoteActivity extends SimpleBaseGameActivity implements IClientLog
 			public void onControlChange(final BaseOnScreenControl pBaseOnScreenControl, final float pValueX, final float pValueY) {
 				// TODO Zum Server funken
 				
-				if(clientLogic != null) {
-					RemoteActivity.this.clientLogic.driveCar(pValueX, pValueY);
+				long now = System.currentTimeMillis();
+				// TODO: Not here & this better?
+				if(now > nextSendl) {
+					if(clientLogic != null) {
+						RemoteActivity.this.clientLogic.driveCar(pValueX, pValueY);
+					}
+					nextSendl = now+100;
 				}
+				
+				
 			}
 
 			@Override
@@ -174,4 +186,14 @@ public class RemoteActivity extends SimpleBaseGameActivity implements IClientLog
 	public void connectionLost(ConnectionProblemException ex) {
 		Log.e(LOG_TAG, "connectionLost", ex);
 	}
+
+	@Override
+	public void collisionDetected() {
+		Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+		v.vibrate(300);
+
+
+	}
+
+	
 }
