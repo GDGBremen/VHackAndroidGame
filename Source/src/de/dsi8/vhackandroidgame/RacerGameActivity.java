@@ -70,9 +70,6 @@ public class RacerGameActivity extends SimpleBaseGameActivity {
 	private ITextureRegion mRacetrackStraightTextureRegion;
 	private ITextureRegion mRacetrackCurveTextureRegion;
 
-	private BitmapTextureAtlas mOnScreenControlTexture;
-	private ITextureRegion mOnScreenControlBaseTextureRegion;
-	private ITextureRegion mOnScreenControlKnobTextureRegion;
 
 	private Scene mScene;
 
@@ -93,7 +90,7 @@ public class RacerGameActivity extends SimpleBaseGameActivity {
 	// Methods for/from SuperClass/Interfaces
 	// ===========================================================
 
-	// @Override  FIXME!
+	@Override
 	public EngineOptions onCreateEngineOptions() {
 		this.mCamera = new Camera(0, 0, CAMERA_WIDTH, CAMERA_HEIGHT);
 
@@ -113,10 +110,7 @@ public class RacerGameActivity extends SimpleBaseGameActivity {
 		this.mRacetrackCurveTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mRacetrackTexture, this, "racetrack_curve.png", 0, 128);
 		this.mRacetrackTexture.load();
 
-		this.mOnScreenControlTexture = new BitmapTextureAtlas(this.getTextureManager(), 256, 128, TextureOptions.BILINEAR);
-		this.mOnScreenControlBaseTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mOnScreenControlTexture, this, "onscreen_control_base.png", 0, 0);
-		this.mOnScreenControlKnobTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mOnScreenControlTexture, this, "onscreen_control_knob.png", 128, 0);
-		this.mOnScreenControlTexture.load();
+		
 
 		this.mBoxTexture = new BitmapTextureAtlas(this.getTextureManager(), 32, 32, TextureOptions.BILINEAR);
 		this.mBoxTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mBoxTexture, this, "box.png", 0, 0);
@@ -136,7 +130,6 @@ public class RacerGameActivity extends SimpleBaseGameActivity {
 		this.initRacetrackBorders();
 		this.initCar();
 		this.initObstacles();
-		this.initOnScreenControls();
 
 		this.mScene.registerUpdateHandler(this.mPhysicsWorld);
 
@@ -152,36 +145,20 @@ public class RacerGameActivity extends SimpleBaseGameActivity {
 	// Methods
 	// ===========================================================
 
-	private void initOnScreenControls() {
-		final AnalogOnScreenControl analogOnScreenControl = new AnalogOnScreenControl(0, CAMERA_HEIGHT - this.mOnScreenControlBaseTextureRegion.getHeight(), this.mCamera, this.mOnScreenControlBaseTextureRegion, this.mOnScreenControlKnobTextureRegion, 0.1f, this.getVertexBufferObjectManager(), new IAnalogOnScreenControlListener() {
-			// @Override  FIXME!
-			public void onControlChange(final BaseOnScreenControl pBaseOnScreenControl, final float pValueX, final float pValueY) {
-				final Body carBody = RacerGameActivity.this.mCarBody;
 
-				final Vector2 velocity = Vector2Pool.obtain(pValueX * 5, pValueY * 5);
-				carBody.setLinearVelocity(velocity);
-				Vector2Pool.recycle(velocity);
+	public void moveCar(final BaseOnScreenControl pBaseOnScreenControl, final float pValueX, final float pValueY) {
+		final Body carBody = this.mCarBody;
 
-				final float rotationInRad = (float)Math.atan2(-pValueX, pValueY);
-				carBody.setTransform(carBody.getWorldCenter(), rotationInRad);
+		final Vector2 velocity = Vector2Pool.obtain(pValueX * 5, pValueY * 5);
+		carBody.setLinearVelocity(velocity);
+		Vector2Pool.recycle(velocity);
 
-				RacerGameActivity.this.mCar.setRotation(MathUtils.radToDeg(rotationInRad));
-			}
+		final float rotationInRad = (float)Math.atan2(-pValueX, pValueY);
+		carBody.setTransform(carBody.getWorldCenter(), rotationInRad);
 
-			// @Override  FIXME!
-			public void onControlClick(final AnalogOnScreenControl pAnalogOnScreenControl) {
-				/* Nothing. */
-			}
-		});
-		analogOnScreenControl.getControlBase().setBlendFunction(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
-		analogOnScreenControl.getControlBase().setAlpha(0.5f);
-		//		analogOnScreenControl.getControlBase().setScaleCenter(0, 128);
-		//		analogOnScreenControl.getControlBase().setScale(0.75f);
-		//		analogOnScreenControl.getControlKnob().setScale(0.75f);
-		analogOnScreenControl.refreshControlKnobPosition();
-
-		this.mScene.setChildScene(analogOnScreenControl);
+		this.mCar.setRotation(MathUtils.radToDeg(rotationInRad));
 	}
+	
 
 	private void initCar() {
 		this.mCar = new TiledSprite(20, 20, CAR_SIZE, CAR_SIZE, this.mVehiclesTextureRegion, this.getVertexBufferObjectManager());
