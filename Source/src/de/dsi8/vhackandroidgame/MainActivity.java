@@ -1,10 +1,10 @@
 package de.dsi8.vhackandroidgame;
 
+import roboguice.activity.RoboActivity;
 import android.os.Bundle;
-import android.app.Activity;
 import android.view.Menu;
 
-public class MainActivity extends Activity {
+public class MainActivity extends RoboActivity {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
