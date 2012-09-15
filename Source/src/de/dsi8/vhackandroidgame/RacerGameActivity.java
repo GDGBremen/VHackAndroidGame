@@ -261,7 +261,7 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements IServer
 					this.mPaint.setColor(Color.WHITE);
 					for(int y = 0; y < bitmatrix.getHeight(); y++) {
 						for(int x = 0; x < bitmatrix.getWidth(); x++) {
-							if(bitmatrix.get(x, y)) {
+							if(!bitmatrix.get(x, y)) {
 								pCanvas.drawPoint(x, y, mPaint);
 							}
 						}
