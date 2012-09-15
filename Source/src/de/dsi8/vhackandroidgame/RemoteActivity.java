@@ -52,13 +52,12 @@ public class RemoteActivity extends SimpleBaseGameActivity implements IClientLog
 	
 	private ConnectionParameter connectionParameter;
 	private ConnectTask connectTask;
-	public ClientLogic logic;
 	
 	@Override
 	protected void onCreate(Bundle pSavedInstanceState) {
 		super.onCreate(pSavedInstanceState);
 		
-		connectionParameter = new ConnectionParameter(getIntent().getData().toString());
+		connectionParameter = new ConnectionParameter("http://vhackandroidgame.dsi8.de/connect/?host=192.168.43.245&port=4254&password=");//getIntent().getData().toString());
 	}
 	
 	@Override
@@ -74,8 +73,8 @@ public class RemoteActivity extends SimpleBaseGameActivity implements IClientLog
 		super.onStop();
 		
 		connectTask.cancel(true);
-		if(logic != null) {
-			logic.close();
+		if(clientLogic != null) {
+			clientLogic.close();
 		}
 	}
 	
@@ -103,9 +102,10 @@ public class RemoteActivity extends SimpleBaseGameActivity implements IClientLog
 				@Override
 				protected void onPostExecute(AsyncTaskResult<Socket> result) {
 					if(result.getError() == null) {
-						logic = new ClientLogic(RemoteActivity.this, result.getResult());
+						clientLogic = new ClientLogic(RemoteActivity.this, result.getResult());
 					} else {
 						Log.e(LOG_TAG, "IOException", result.getError());
+						finish();
 					}
 				}
 	}
@@ -155,8 +155,9 @@ public class RemoteActivity extends SimpleBaseGameActivity implements IClientLog
 			public void onControlChange(final BaseOnScreenControl pBaseOnScreenControl, final float pValueX, final float pValueY) {
 				// TODO Zum Server funken
 				
-				RemoteActivity.this.clientLogic.driveCar(pValueX, pValueY);
-				
+				if(clientLogic != null) {
+					RemoteActivity.this.clientLogic.driveCar(pValueX, pValueY);
+				}
 			}
 
 			@Override

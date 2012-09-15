@@ -18,6 +18,7 @@ public class ClientLogic implements IClientLogic, ICommunicationPartnerListener 
 	public ClientLogic(IClientLogicListener listener, Socket socket) {
 		this.listener = listener;
 		this.partner = new CommunicationPartner(this, socket);
+		this.partner.initialized();
 	}
 	
 	@Override
