@@ -68,6 +68,7 @@ public class RemoteActivity extends SimpleBaseGameActivity implements IClientLog
 	@Override
 	protected void onStart() {
 		super.onStart();
+		Log.i(LOG_TAG, "onStart");
 		
 		connectTask = new ConnectTask();
 		connectTask.execute((Object)null);
@@ -76,6 +77,7 @@ public class RemoteActivity extends SimpleBaseGameActivity implements IClientLog
 	@Override
 	protected void onStop() {
 		super.onStop();
+		Log.i(LOG_TAG, "onStop");
 		
 		connectTask.cancel(true);
 		if(clientLogic != null) {
@@ -94,6 +96,16 @@ public class RemoteActivity extends SimpleBaseGameActivity implements IClientLog
 				protected AsyncTaskResult<Socket> doInBackground(
 						Object... params) {
 					try {
+						synchronized (this) {
+							// Workaround for multicall of onStart by the AndEngine
+							try {
+								this.wait(2000);
+							} catch(InterruptedException ex) {
+								Log.i(LOG_TAG, "Interrupted");
+								return null;
+							}
+						}
+						Log.i(LOG_TAG, "Not interrupted");
 						Socket socket = new Socket(connectionParameter.host, connectionParameter.port);
 						return new AsyncTaskResult<Socket>(socket);
 					} catch (Exception e) {
@@ -166,7 +178,7 @@ public class RemoteActivity extends SimpleBaseGameActivity implements IClientLog
 					if(clientLogic != null) {
 						RemoteActivity.this.clientLogic.driveCar(pValueX, pValueY);
 					}
-					nextSendl = now+100;
+					nextSendl = now+50;
 				}
 				
 				
