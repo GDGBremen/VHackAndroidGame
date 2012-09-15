@@ -3,24 +3,21 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent" >
 
-    <TextView
-        android:id="@+id/textView1"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:layout_centerVertical="true"
-        android:text="@string/hello_world"
-        tools:context=".MainActivity" />
-
     <Button
-        android:id="@+id/button1"
-        android:onClick="button"
+        android:id="@+id/btnStartServer"
+        android:onClick="clickStartServer"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
-        android:layout_alignRight="@+id/textView1"
-        android:layout_marginRight="40dp"
-        android:layout_marginTop="61dp"
-        android:text="Button" />
+        android:text="@string/startServer" />
+
+    <Button
+        android:id="@+id/btnStartClient"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignRight="@+id/btnStartServer"
+        android:layout_below="@+id/btnStartServer"
+        android:onClick="clickStartClient"
+        android:text="@string/startClient" />
 
 </RelativeLayout>
