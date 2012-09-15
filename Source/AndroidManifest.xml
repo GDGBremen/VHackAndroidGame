@@ -2,6 +2,8 @@
     package="de.dsi8.vhackandroidgame"
     android:versionCode="1"
     android:versionName="1.0" >
+    
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <uses-sdk
         android:minSdkVersion="8"
@@ -27,11 +29,12 @@
         <activity
             android:name=".RemoteActivity"
             android:label="@string/title_activity_remote" >
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+			<intent-filter>
+			    <action android:name="android.intent.action.VIEW"></action>
+				<category android:name="android.intent.category.DEFAULT"></category>
+				<category android:name="android.intent.category.BROWSABLE"></category>
+				<data android:host="vhackandroidgame.dsi8.de" android:pathPrefix="/connect"  android:scheme="http"></data>
+			</intent-filter>
         </activity>
     </application>
 
