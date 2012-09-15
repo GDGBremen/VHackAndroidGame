@@ -407,7 +407,7 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements IServer
 		carView.id = carId;
 		
 		carView.car = new TiledSprite(20, 20, CAR_SIZE, CAR_SIZE, this.mVehiclesTextureRegion, this.getVertexBufferObjectManager());
-		carView.car.setCurrentTileIndex(0);
+		carView.car.setCurrentTileIndex(carId%6);
 
 		carView.body = PhysicsFactory.createBoxBody(this.mPhysicsWorld, carView.car, BodyType.DynamicBody, carFixtureDef);
 		
