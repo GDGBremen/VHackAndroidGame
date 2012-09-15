@@ -7,23 +7,19 @@ import de.dsi8.dsi8acl.connection.model.Message;
 
 public class DriveMessage extends Message {
 	
-	public DriveMessage(@JsonProperty("rotation") float rotation,
-						@JsonProperty("speed") float speed) {
-		this.rotation = rotation;
-		this.speed = speed;
+	public DriveMessage(@JsonProperty("valueX") float valueX,
+						@JsonProperty("valueY") float valueY) {
+		this.valueX = valueX;
+		this.valueY = valueY;
 	}
 	
 	/**
-	 * A floating-point number to adjust speed in the range:
-	 * -1.0f to 1.0f.
+	 * A floating-point number of the On-Screen-Control.
 	 */
-	public final float speed;
+	public final float valueX;
 	
 	/**
-	 * Rotation of the "steering wheel":
-	 * -1.0f: maximum to the left
-	 * 0: no rotation (drive forward)
-	 * +1.0f: maximum to the right
+	 * A floating-point number of the On-Screen-Control.
 	 */
-	public final float rotation;
+	public final float valueY;
 }

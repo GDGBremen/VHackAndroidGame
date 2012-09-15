@@ -4,10 +4,10 @@ import de.dsi8.vhackandroidgame.communication.model.DriveMessage;
 
 public interface IServerLogicListener {
 	/***
-	 * @param speed See {@link DriveMessage}
-	 * @param rotation See {@link DriveMessage}
+	 * @param valueX See {@link DriveMessage}
+	 * @param valueY See {@link DriveMessage}
 	 */
-	void driveCar(int carId, float speed, float rotation);
+	void driveCar(int carId, float valueX, float valueY);
 	
 	void addCar(int carId);
 	

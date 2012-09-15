@@ -1,8 +1,6 @@
 package de.dsi8.vhackandroidgame;
 
 import org.andengine.engine.camera.Camera;
-import org.andengine.engine.camera.hud.controls.AnalogOnScreenControl;
-import org.andengine.engine.camera.hud.controls.AnalogOnScreenControl.IAnalogOnScreenControlListener;
 import org.andengine.engine.camera.hud.controls.BaseOnScreenControl;
 import org.andengine.engine.options.EngineOptions;
 import org.andengine.engine.options.ScreenOrientation;
@@ -27,12 +25,15 @@ import org.andengine.opengl.vbo.VertexBufferObjectManager;
 import org.andengine.ui.activity.SimpleBaseGameActivity;
 import org.andengine.util.math.MathUtils;
 
-import android.opengl.GLES20;
+import android.os.Bundle;
 
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef.BodyType;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
+
+import de.dsi8.vhackandroidgame.logic.contract.IServerLogic;
+import de.dsi8.vhackandroidgame.logic.contract.IServerLogicListener;
 
 /**
  * (c) 2010 Nicolas Gramlich
@@ -41,7 +42,7 @@ import com.badlogic.gdx.physics.box2d.FixtureDef;
  * @author Nicolas Gramlich
  * @since 22:43:20 - 15.07.2010
  */
-public class RacerGameActivity extends SimpleBaseGameActivity {
+public class RacerGameActivity extends SimpleBaseGameActivity implements IServerLogicListener {
 	// ===========================================================
 	// Constants
 	// ===========================================================
@@ -77,6 +78,9 @@ public class RacerGameActivity extends SimpleBaseGameActivity {
 
 	private Body mCarBody;
 	private TiledSprite mCar;
+	
+	
+	private IServerLogic serverLogic;
 
 	// ===========================================================
 	// Constructors
@@ -90,6 +94,14 @@ public class RacerGameActivity extends SimpleBaseGameActivity {
 	// Methods for/from SuperClass/Interfaces
 	// ===========================================================
 
+	@Override
+	protected void onCreate(Bundle pSavedInstanceState) {
+		super.onCreate(pSavedInstanceState);
+		
+		
+		
+	}
+	
 	@Override
 	public EngineOptions onCreateEngineOptions() {
 		this.mCamera = new Camera(0, 0, CAMERA_WIDTH, CAMERA_HEIGHT);
@@ -145,20 +157,6 @@ public class RacerGameActivity extends SimpleBaseGameActivity {
 	// Methods
 	// ===========================================================
 
-
-	public void moveCar(final BaseOnScreenControl pBaseOnScreenControl, final float pValueX, final float pValueY) {
-		final Body carBody = this.mCarBody;
-
-		final Vector2 velocity = Vector2Pool.obtain(pValueX * 5, pValueY * 5);
-		carBody.setLinearVelocity(velocity);
-		Vector2Pool.recycle(velocity);
-
-		final float rotationInRad = (float)Math.atan2(-pValueX, pValueY);
-		carBody.setTransform(carBody.getWorldCenter(), rotationInRad);
-
-		this.mCar.setRotation(MathUtils.radToDeg(rotationInRad));
-	}
-	
 
 	private void initCar() {
 		this.mCar = new TiledSprite(20, 20, CAR_SIZE, CAR_SIZE, this.mVehiclesTextureRegion, this.getVertexBufferObjectManager());
@@ -276,7 +274,31 @@ public class RacerGameActivity extends SimpleBaseGameActivity {
 		this.mScene.attachChild(rightInner);
 	}
 
-	// ===========================================================
-	// Inner and Anonymous Classes
-	// ===========================================================
+	@Override
+	public void driveCar(int carId, float valueX, float valueY) {
+		// TODO mehrere Autos
+		
+		final Body carBody = this.mCarBody;
+
+		final Vector2 velocity = Vector2Pool.obtain(valueX * 5, valueY * 5);
+		carBody.setLinearVelocity(velocity);
+		Vector2Pool.recycle(velocity);
+
+		final float rotationInRad = (float)Math.atan2(-valueX, valueY);
+		carBody.setTransform(carBody.getWorldCenter(), rotationInRad);
+
+		this.mCar.setRotation(MathUtils.radToDeg(rotationInRad));
+	}
+
+	@Override
+	public void addCar(int carId) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void removeCar(int carId) {
+		// TODO Auto-generated method stub
+		
+	}
 }

@@ -27,8 +27,8 @@ public class ClientLogic implements IClientLogic, ICommunicationPartnerListener 
 	}
 
 	@Override
-	public void driveCar(float speed, float rotation) {
-		partner.sendMessage(new DriveMessage(rotation, speed));
+	public void driveCar(float valueX, float valueY) {
+		partner.sendMessage(new DriveMessage(valueX, valueY));
 	}
 
 	@Override
