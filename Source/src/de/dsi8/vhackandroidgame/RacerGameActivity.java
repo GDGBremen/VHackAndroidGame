@@ -1,5 +1,8 @@
 package de.dsi8.vhackandroidgame;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.andengine.engine.camera.Camera;
 import org.andengine.engine.camera.hud.controls.BaseOnScreenControl;
 import org.andengine.engine.options.EngineOptions;
@@ -76,12 +79,12 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements IServer
 	private Scene mScene;
 
 	private PhysicsWorld mPhysicsWorld;
-
-	private Body mCarBody;
-	private TiledSprite mCar;
-	
 	
 	private IServerLogic serverLogic;
+	
+	private final FixtureDef carFixtureDef = PhysicsFactory.createFixtureDef(1, 0.5f, 0.5f);
+	
+	private Map<Integer, CarView> cars = new HashMap<Integer, RacerGameActivity.CarView>();
 
 	// ===========================================================
 	// Constructors
@@ -156,7 +159,6 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements IServer
 
 		this.initRacetrack();
 		this.initRacetrackBorders();
-		this.initCar();
 		this.initObstacles();
 
 		this.mScene.registerUpdateHandler(this.mPhysicsWorld);
@@ -174,17 +176,7 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements IServer
 	// ===========================================================
 
 
-	private void initCar() {
-		this.mCar = new TiledSprite(20, 20, CAR_SIZE, CAR_SIZE, this.mVehiclesTextureRegion, this.getVertexBufferObjectManager());
-		this.mCar.setCurrentTileIndex(0);
-
-		final FixtureDef carFixtureDef = PhysicsFactory.createFixtureDef(1, 0.5f, 0.5f);
-		this.mCarBody = PhysicsFactory.createBoxBody(this.mPhysicsWorld, this.mCar, BodyType.DynamicBody, carFixtureDef);
-
-		this.mPhysicsWorld.registerPhysicsConnector(new PhysicsConnector(this.mCar, this.mCarBody, true, false));
-
-		this.mScene.attachChild(this.mCar);
-	}
+	
 
 	private void initObstacles() {
 		this.addObstacle(CAMERA_WIDTH / 2, RACETRACK_WIDTH / 2);
@@ -292,29 +284,49 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements IServer
 
 	@Override
 	public void driveCar(int carId, float valueX, float valueY) {
-		// TODO mehrere Autos
+		CarView carView = this.cars.get(carId);
 		
-		final Body carBody = this.mCarBody;
-
 		final Vector2 velocity = Vector2Pool.obtain(valueX * 5, valueY * 5);
-		carBody.setLinearVelocity(velocity);
+		carView.body.setLinearVelocity(velocity);
 		Vector2Pool.recycle(velocity);
 
 		final float rotationInRad = (float)Math.atan2(-valueX, valueY);
-		carBody.setTransform(carBody.getWorldCenter(), rotationInRad);
+		carView.body.setTransform(carView.body.getWorldCenter(), rotationInRad);
 
-		this.mCar.setRotation(MathUtils.radToDeg(rotationInRad));
+		carView.car.setRotation(MathUtils.radToDeg(rotationInRad));
 	}
 
 	@Override
 	public void addCar(int carId) {
-		// TODO Auto-generated method stub
+		CarView carView = new CarView();
 		
+		carView.car = new TiledSprite(20, 20, CAR_SIZE, CAR_SIZE, this.mVehiclesTextureRegion, this.getVertexBufferObjectManager());
+		carView.car.setCurrentTileIndex(0);
+
+		carView.body = PhysicsFactory.createBoxBody(this.mPhysicsWorld, carView.car, BodyType.DynamicBody, carFixtureDef);
+		
+		this.mScene.attachChild(carView.car);
+		carView.physicsConnector = new PhysicsConnector(carView.car, carView.body, true, false);
+		this.mPhysicsWorld.registerPhysicsConnector(carView.physicsConnector);
+		this.cars.put(carId, carView);
 	}
 
 	@Override
 	public void removeCar(int carId) {
-		// TODO Auto-generated method stub
+		CarView carView = this.cars.remove(carId);
+		if (carView != null) {
+			this.mPhysicsWorld.unregisterPhysicsConnector(carView.physicsConnector);
+			this.mScene.detachChild(carView.car);
+		}
+	}
+	
+	public class CarView {
+		public int id;
 		
+		public Body body;
+		
+		public TiledSprite car;
+		
+		public PhysicsConnector physicsConnector;
 	}
 }
