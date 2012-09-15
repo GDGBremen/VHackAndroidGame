@@ -20,8 +20,13 @@ public class MainActivity extends Activity {
         return true;
     }
     
-    public void button(View button) {
+    public void clickStartServer(View button) {
     	Intent intent = new Intent(this, RacerGameActivity.class);
+    	startActivity(intent);
+    }
+    
+    public void clickStartClient(View button) {
+    	Intent intent = new Intent(this, RemoteActivity.class);
     	startActivity(intent);
     }
 }
