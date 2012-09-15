@@ -1,5 +1,7 @@
 package de.dsi8.vhackandroidgame;
 
+import java.net.Socket;
+
 import org.andengine.engine.camera.Camera;
 import org.andengine.engine.camera.hud.controls.AnalogOnScreenControl;
 import org.andengine.engine.camera.hud.controls.AnalogOnScreenControl.IAnalogOnScreenControlListener;
@@ -9,23 +11,22 @@ import org.andengine.engine.options.ScreenOrientation;
 import org.andengine.engine.options.resolutionpolicy.RatioResolutionPolicy;
 import org.andengine.entity.scene.Scene;
 import org.andengine.entity.scene.background.Background;
-import org.andengine.extension.physics.box2d.util.Vector2Pool;
 import org.andengine.opengl.texture.TextureOptions;
 import org.andengine.opengl.texture.atlas.bitmap.BitmapTextureAtlas;
 import org.andengine.opengl.texture.atlas.bitmap.BitmapTextureAtlasTextureRegionFactory;
 import org.andengine.opengl.texture.region.ITextureRegion;
 import org.andengine.ui.activity.SimpleBaseGameActivity;
 
-import com.badlogic.gdx.math.Vector2;
-
+import android.opengl.GLES20;
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.util.Log;
+import de.dsi8.dsi8acl.common.utils.AsyncTaskResult;
 import de.dsi8.dsi8acl.connection.model.ConnectionParameter;
 import de.dsi8.dsi8acl.exception.ConnectionProblemException;
 import de.dsi8.vhackandroidgame.logic.contract.IClientLogic;
 import de.dsi8.vhackandroidgame.logic.contract.IClientLogicListener;
 import de.dsi8.vhackandroidgame.logic.impl.ClientLogic;
-
-import android.opengl.GLES20;
-import android.os.Bundle;
 
 public class RemoteActivity extends SimpleBaseGameActivity implements IClientLogicListener {
 
@@ -36,19 +37,77 @@ public class RemoteActivity extends SimpleBaseGameActivity implements IClientLog
 	private static final int CAMERA_HEIGHT = 192;
 	
 	private BitmapTextureAtlas mOnScreenControlTexture;
-		
+
+	
+	private static final String LOG_TAG = "RemoteActivity";
+	
+	
+
+	private Camera mCamera;
 	private ITextureRegion mOnScreenControlBaseTextureRegion;
 	
 	private ITextureRegion mOnScreenControlKnobTextureRegion;
 	
-	private Camera mCamera;
-
 	private Scene mScene;
+	
+	private ConnectionParameter connectionParameter;
+	private ConnectTask connectTask;
+	public ClientLogic logic;
 	
 	@Override
 	protected void onCreate(Bundle pSavedInstanceState) {
 		super.onCreate(pSavedInstanceState);
 		
+		connectionParameter = new ConnectionParameter(getIntent().getData().toString());
+	}
+	
+	@Override
+	protected void onStart() {
+		super.onStart();
+		
+		connectTask = new ConnectTask();
+		connectTask.execute((Object)null);
+	}
+	
+	@Override
+	protected void onStop() {
+		super.onStop();
+		
+		connectTask.cancel(true);
+		if(logic != null) {
+			logic.close();
+		}
+	}
+	
+	/**
+	 * The Task that should connect the client with the host.
+	 */
+	private class ConnectTask extends AsyncTask<Object, Object, AsyncTaskResult<Socket>>  {
+				/**
+				 * Connecting to the Host.
+				 */
+				@Override
+				protected AsyncTaskResult<Socket> doInBackground(
+						Object... params) {
+					try {
+						Socket socket = new Socket(connectionParameter.host, connectionParameter.port);
+						return new AsyncTaskResult<Socket>(socket);
+					} catch (Exception e) {
+						return new AsyncTaskResult<Socket>(e);
+					}
+				}
+				
+				/**
+				 * Connection is open, initialize the logic.
+				 */
+				@Override
+				protected void onPostExecute(AsyncTaskResult<Socket> result) {
+					if(result.getError() == null) {
+						logic = new ClientLogic(RemoteActivity.this, result.getResult());
+					} else {
+						Log.e(LOG_TAG, "IOException", result.getError());
+					}
+				}
 	}
 	
 	/**
@@ -112,7 +171,6 @@ public class RemoteActivity extends SimpleBaseGameActivity implements IClientLog
 
 	@Override
 	public void connectionLost(ConnectionProblemException ex) {
-		// TODO Auto-generated method stub
-		
+		Log.e(LOG_TAG, "connectionLost", ex);
 	}
 }
