@@ -19,7 +19,7 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener {
 	
 	public ServerLogic(IServerLogicListener listener) {
 		this.listener = listener;
-		communication = new ServerCommunication(this, 4);
+		communication = new ServerCommunication(this, 8);
 	}
 	
 	public void start() {
