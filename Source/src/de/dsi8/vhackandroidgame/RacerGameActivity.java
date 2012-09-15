@@ -1,5 +1,6 @@
 package de.dsi8.vhackandroidgame;
 
+import java.net.ServerSocket;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -22,19 +23,31 @@ import org.andengine.extension.physics.box2d.util.Vector2Pool;
 import org.andengine.opengl.texture.TextureOptions;
 import org.andengine.opengl.texture.atlas.bitmap.BitmapTextureAtlas;
 import org.andengine.opengl.texture.atlas.bitmap.BitmapTextureAtlasTextureRegionFactory;
+import org.andengine.opengl.texture.atlas.bitmap.source.EmptyBitmapTextureAtlasSource;
+import org.andengine.opengl.texture.atlas.bitmap.source.IBitmapTextureAtlasSource;
+import org.andengine.opengl.texture.atlas.bitmap.source.decorator.BaseBitmapTextureAtlasSourceDecorator;
 import org.andengine.opengl.texture.region.ITextureRegion;
+import org.andengine.opengl.texture.region.TextureRegion;
 import org.andengine.opengl.texture.region.TiledTextureRegion;
 import org.andengine.opengl.vbo.VertexBufferObjectManager;
 import org.andengine.ui.activity.SimpleBaseGameActivity;
 import org.andengine.util.math.MathUtils;
 
+import android.graphics.Canvas;
+import android.graphics.Color;
 import android.os.Bundle;
 
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef.BodyType;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.MultiFormatWriter;
+import com.google.zxing.WriterException;
+import com.google.zxing.common.BitMatrix;
 
+import de.dsi8.dsi8acl.connection.impl.SocketConnector;
+import de.dsi8.dsi8acl.connection.model.ConnectionParameter;
 import de.dsi8.vhackandroidgame.logic.contract.IServerLogic;
 import de.dsi8.vhackandroidgame.logic.contract.IServerLogicListener;
 import de.dsi8.vhackandroidgame.logic.impl.ServerLogic;
@@ -85,6 +98,10 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements IServer
 	private final FixtureDef carFixtureDef = PhysicsFactory.createFixtureDef(1, 0.5f, 0.5f);
 	
 	private Map<Integer, CarView> cars = new HashMap<Integer, RacerGameActivity.CarView>();
+
+	private BitmapTextureAtlas qrCodeAtlas;
+
+	private TextureRegion qrCodeAtlasRegion;
 
 	// ===========================================================
 	// Constructors
@@ -146,6 +163,8 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements IServer
 		this.mBoxTexture = new BitmapTextureAtlas(this.getTextureManager(), 32, 32, TextureOptions.BILINEAR);
 		this.mBoxTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mBoxTexture, this, "box.png", 0, 0);
 		this.mBoxTexture.load();
+		
+		createBarcode();
 	}
 
 	@Override
@@ -160,6 +179,11 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements IServer
 		this.initRacetrack();
 		this.initRacetrackBorders();
 		this.initObstacles();
+		
+		int bardcodeSize = CAMERA_HEIGHT - 2 * RACETRACK_WIDTH;
+		
+		final Sprite barcode = new Sprite(CAMERA_WIDTH / 2 - bardcodeSize/2 , RACETRACK_WIDTH, bardcodeSize, bardcodeSize, qrCodeAtlasRegion, this.getVertexBufferObjectManager());
+		this.mScene.attachChild(barcode);
 
 		this.mScene.registerUpdateHandler(this.mPhysicsWorld);
 
@@ -176,7 +200,44 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements IServer
 	// ===========================================================
 
 
+	private void createBarcode() {
+		ConnectionParameter param = SocketConnector.getDefaultConnectionDetails();
+		MultiFormatWriter writer = new MultiFormatWriter();
+		try {
+			final BitMatrix bitmatrix = writer.encode(param.toConnectionURL(), BarcodeFormat.QR_CODE, 150, 150);
+			
+		
+			this.qrCodeAtlas = new BitmapTextureAtlas(this.getTextureManager(), 150, 150, TextureOptions.DEFAULT);
 	
+			final IBitmapTextureAtlasSource baseTextureSource = new EmptyBitmapTextureAtlasSource(150, 150);
+			final BaseBitmapTextureAtlasSourceDecorator decoratedTextureAtlasSource = new BaseBitmapTextureAtlasSourceDecorator(baseTextureSource) {
+				@Override
+				protected void onDecorateBitmap(Canvas pCanvas) throws Exception {
+					pCanvas.drawRGB(0, 0, 0);
+					this.mPaint.setColor(Color.WHITE);
+					for(int y = 0; y < bitmatrix.getHeight(); y++) {
+						for(int x = 0; x < bitmatrix.getWidth(); x++) {
+							if(bitmatrix.get(x, y)) {
+								pCanvas.drawPoint(x, y, mPaint);
+							}
+						}
+					}
+				}
+	
+				@Override
+				public BaseBitmapTextureAtlasSourceDecorator deepCopy() {
+					throw new RuntimeException();
+				}
+			};
+
+			this.qrCodeAtlasRegion = BitmapTextureAtlasTextureRegionFactory.createFromSource(this.qrCodeAtlas, decoratedTextureAtlasSource, 0, 0);
+			this.qrCodeAtlas.load();
+		
+		
+		} catch (WriterException e) {
+			e.printStackTrace();
+		}
+	}
 
 	private void initObstacles() {
 		this.addObstacle(CAMERA_WIDTH / 2, RACETRACK_WIDTH / 2);

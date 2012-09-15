@@ -57,7 +57,7 @@ public class RemoteActivity extends SimpleBaseGameActivity implements IClientLog
 	protected void onCreate(Bundle pSavedInstanceState) {
 		super.onCreate(pSavedInstanceState);
 		
-		connectionParameter = new ConnectionParameter("http://vhackandroidgame.dsi8.de/connect/?host=192.168.43.245&port=4254&password=");//getIntent().getData().toString());
+		connectionParameter = new ConnectionParameter(getIntent().getData().toString());
 	}
 	
 	@Override
