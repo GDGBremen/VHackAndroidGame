@@ -25,6 +25,8 @@ import de.dsi8.dsi8acl.communication.contract.ICommunicationPartner;
 import de.dsi8.dsi8acl.communication.contract.IServerCommunication;
 import de.dsi8.dsi8acl.communication.contract.IServerCommunicationListener;
 import de.dsi8.dsi8acl.communication.impl.ServerCommunication;
+import de.dsi8.dsi8acl.connection.impl.TCPSocketConnector;
+import de.dsi8.dsi8acl.connection.model.ConnectionParameter;
 import de.dsi8.dsi8acl.exception.ConnectionProblemException;
 import de.dsi8.vhackandroidgame.communication.model.CollisionMessage;
 import de.dsi8.vhackandroidgame.handler.DriveMessageHandler;
@@ -39,7 +41,8 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener {
 	
 	public ServerLogic(IServerLogicListener listener) {
 		this.listener = listener;
-		communication = new ServerCommunication(this, 20);
+		// TODO: Refactor Connection Parameter
+		communication = new ServerCommunication(this, new TCPSocketConnector(ConnectionParameter.DEFAULT_PORT), 20);
 	}
 	
 	public void start() {

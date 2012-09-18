@@ -67,7 +67,7 @@ import com.google.zxing.MultiFormatWriter;
 import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
 
-import de.dsi8.dsi8acl.connection.impl.SocketConnector;
+import de.dsi8.dsi8acl.connection.impl.TCPSocketConnector;
 import de.dsi8.dsi8acl.connection.model.ConnectionParameter;
 import de.dsi8.vhackandroidgame.logic.contract.IServerLogic;
 import de.dsi8.vhackandroidgame.logic.contract.IServerLogicListener;
@@ -265,7 +265,7 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements IServer
 
 
 	private void createBarcode() {
-		ConnectionParameter param = SocketConnector.getDefaultConnectionDetails();
+		ConnectionParameter param = TCPSocketConnector.getDefaultConnectionDetails();
 		MultiFormatWriter writer = new MultiFormatWriter();
 		try {
 			final BitMatrix bitmatrix = writer.encode(param.toConnectionURL(), BarcodeFormat.QR_CODE, 150, 150);
