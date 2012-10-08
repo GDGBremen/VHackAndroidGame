@@ -41,7 +41,8 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener {
 	
 	public ServerLogic(IServerLogicListener listener) {
 		this.listener = listener;
-		// TODO: Refactor Connection Parameter
+		
+		ConnectionParameter.setStaticCommunicationConfiguration(new VHackAndroidGameConfiguration());
 		int port = ConnectionParameter.getDefaultConnectionDetails().port;
 		communication = new ServerCommunication(this, new TCPSocketConnector(port), 20);
 	}

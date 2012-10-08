@@ -49,6 +49,7 @@ import de.dsi8.dsi8acl.exception.ConnectionProblemException;
 import de.dsi8.vhackandroidgame.logic.contract.IClientLogic;
 import de.dsi8.vhackandroidgame.logic.contract.IClientLogicListener;
 import de.dsi8.vhackandroidgame.logic.impl.ClientLogic;
+import de.dsi8.vhackandroidgame.logic.impl.VHackAndroidGameConfiguration;
 
 public class RemoteActivity extends SimpleBaseGameActivity implements IClientLogicListener {
 
@@ -81,6 +82,7 @@ public class RemoteActivity extends SimpleBaseGameActivity implements IClientLog
 	@Override
 	protected void onCreate(Bundle pSavedInstanceState) {
 		super.onCreate(pSavedInstanceState);
+		ConnectionParameter.setStaticCommunicationConfiguration(new VHackAndroidGameConfiguration());
 		
 		connectionParameter = new ConnectionParameter(getIntent().getData().toString());
 	}
