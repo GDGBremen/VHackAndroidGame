@@ -42,7 +42,8 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener {
 	public ServerLogic(IServerLogicListener listener) {
 		this.listener = listener;
 		// TODO: Refactor Connection Parameter
-		communication = new ServerCommunication(this, new TCPSocketConnector(ConnectionParameter.DEFAULT_PORT), 20);
+		int port = ConnectionParameter.getDefaultConnectionDetails().port;
+		communication = new ServerCommunication(this, new TCPSocketConnector(port), 20);
 	}
 	
 	public void start() {

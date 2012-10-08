@@ -265,7 +265,7 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements IServer
 
 
 	private void createBarcode() {
-		ConnectionParameter param = TCPSocketConnector.getDefaultConnectionDetails();
+		ConnectionParameter param = ConnectionParameter.getDefaultConnectionDetails();
 		MultiFormatWriter writer = new MultiFormatWriter();
 		try {
 			final BitMatrix bitmatrix = writer.encode(param.toConnectionURL(), BarcodeFormat.QR_CODE, 150, 150);
