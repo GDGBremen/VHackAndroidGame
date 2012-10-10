@@ -20,10 +20,14 @@
  ******************************************************************************/
 package de.dsi8.vhackandroidgame.communication.model;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 import de.dsi8.dsi8acl.connection.model.Message;
 
+/**
+ * this message will send when a collision is detected.
+ * 
+ * @author Henrik Voß <hennevoss@gmail.com>
+ *
+ */
 public class CollisionMessage extends Message {
-
+	// No attributes or functions requried.
 }

@@ -20,7 +20,26 @@
  ******************************************************************************/
 package de.dsi8.vhackandroidgame.logic.contract;
 
-public interface IClientLogic {
+import java.io.Closeable;
+
+import de.dsi8.vhackandroidgame.RemoteActivity;
+import de.dsi8.vhackandroidgame.logic.impl.ClientLogic;
+
+
+/**
+ * Interface from the {@link RemoteActivity} to the {@link ClientLogic}.
+ * 
+ * @author Henrik Voß <hennevoss@gmail.com>
+ *
+ */
+public interface IClientLogic extends Closeable {
+	
+	/**
+	 * Move the car to a new position.
+	 * valueX and valueY define a unit vector of the direction and speed. 
+	 * 
+	 * @param valueX 	x-value of the unit vector.	
+	 * @param valueY 	Y-value of the unit vector.	
+	 */
 	void driveCar(float valueX, float valueY);
-	void close();
 }

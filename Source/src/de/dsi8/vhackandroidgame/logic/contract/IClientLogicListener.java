@@ -21,9 +21,25 @@
 package de.dsi8.vhackandroidgame.logic.contract;
 
 import de.dsi8.dsi8acl.exception.ConnectionProblemException;
+import de.dsi8.vhackandroidgame.RemoteActivity;
+import de.dsi8.vhackandroidgame.logic.impl.ClientLogic;
 
+/**
+ * Interface from the {@link ClientLogic} to the {@link RemoteActivity}.
+ * 
+ * @author Henrik Voß <hennevoss@gmail.com>
+ *
+ */
 public interface IClientLogicListener {
+	
+	/**
+	 * The connection to the Server lost.
+	 * @param ex	
+	 */
 	void connectionLost(ConnectionProblemException ex);
 	
+	/**
+	 * A collision was detected.
+	 */
 	void collisionDetected();
 }

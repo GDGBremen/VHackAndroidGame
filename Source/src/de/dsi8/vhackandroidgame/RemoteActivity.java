@@ -20,6 +20,7 @@
  ******************************************************************************/
 package de.dsi8.vhackandroidgame;
 
+import java.io.IOException;
 import java.net.Socket;
 
 import org.andengine.engine.camera.Camera;
@@ -62,7 +63,7 @@ public class RemoteActivity extends SimpleBaseGameActivity implements IClientLog
 	private BitmapTextureAtlas mOnScreenControlTexture;
 
 	
-	private static final String LOG_TAG = "RemoteActivity";
+	private static final String LOG_TAG = RemoteActivity.class.getSimpleName();
 	
 	/*
 	  Wait until this before sending the next
@@ -103,7 +104,11 @@ public class RemoteActivity extends SimpleBaseGameActivity implements IClientLog
 		
 		connectTask.cancel(true);
 		if(clientLogic != null) {
-			clientLogic.close();
+			try {
+				clientLogic.close();
+			} catch (IOException e) {
+				Log.w(LOG_TAG, "Can not close the connection the server.", e);
+			}
 		}
 	}
 	

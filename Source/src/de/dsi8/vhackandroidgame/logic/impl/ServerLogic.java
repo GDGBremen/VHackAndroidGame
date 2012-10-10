@@ -28,56 +28,97 @@ import de.dsi8.dsi8acl.communication.impl.ServerCommunication;
 import de.dsi8.dsi8acl.connection.impl.TCPSocketConnector;
 import de.dsi8.dsi8acl.connection.model.ConnectionParameter;
 import de.dsi8.dsi8acl.exception.ConnectionProblemException;
+import de.dsi8.vhackandroidgame.RacerGameActivity;
 import de.dsi8.vhackandroidgame.communication.model.CollisionMessage;
 import de.dsi8.vhackandroidgame.handler.DriveMessageHandler;
 import de.dsi8.vhackandroidgame.logic.contract.IServerLogic;
 import de.dsi8.vhackandroidgame.logic.contract.IServerLogicListener;
 
+/**
+ * The logic on the {@link RacerGameActivity}.
+ * 
+ * @author Henrik Voß <hennevoss@gmail.com>
+ *
+ */
 public class ServerLogic implements IServerLogic, IServerCommunicationListener {
 
-	private static final String LOG_TAG = "ServerLogic";
+	/**
+	 * Log-Tag.
+	 */
+	private static final String LOG_TAG = ServerLogic.class.getSimpleName();
+	
+	/**
+	 * Interface to the {@link RacerGameActivity}.
+	 */
 	private final IServerLogicListener listener;
+	
+	/**
+	 * Interface to the server communication.
+	 */
 	private final IServerCommunication communication;
 	
+	/**
+	 * Creates the logic.
+	 * @param listener	Interface to the {@link RacerGameActivity}.	
+	 */
 	public ServerLogic(IServerLogicListener listener) {
 		this.listener = listener;
 		
 		ConnectionParameter.setStaticCommunicationConfiguration(new VHackAndroidGameConfiguration());
 		int port = ConnectionParameter.getDefaultConnectionDetails().port;
-		communication = new ServerCommunication(this, new TCPSocketConnector(port), 20);
+		this.communication = new ServerCommunication(this, new TCPSocketConnector(port), 20);
 	}
 	
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
 	public void start() {
-		communication.startListen();
+		this.communication.startListen();
 	}
 	
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
 	public void close() {
-		communication.close();
+		this.communication.close();
 	}
 	
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public void newPartner(ICommunicationPartner partner) {
-		Log.i(LOG_TAG, "New Partner!");
-		partner.registerMessageHandler(new DriveMessageHandler(listener));
-		listener.addCar(partner.getId());
+		Log.i(LOG_TAG, "newPartner");
+		partner.registerMessageHandler(new DriveMessageHandler(this.listener));
+		this.listener.addCar(partner.getId());
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public void connectionLost(ICommunicationPartner partner,
 			ConnectionProblemException ex) {
 		Log.i(LOG_TAG, "connectionLost", ex);
-		listener.removeCar(partner.getId());
+		this.listener.removeCar(partner.getId());
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public void socketListenerProblem(Exception ex) {
-		// TODO Auto-generated method stub
 		Log.e(LOG_TAG, "socketListenerProblem", ex);
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public void collisionDetected(int carId) {
-		communication.sendMessage(carId, new CollisionMessage());
+		this.communication.sendMessage(carId, new CollisionMessage());
 	}
 
 }

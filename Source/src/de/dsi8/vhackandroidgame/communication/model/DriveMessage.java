@@ -24,22 +24,36 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import de.dsi8.dsi8acl.connection.model.Message;
 
-
+/**
+ * This message will send when the player moves the cursor. 
+ * A unit-vector with the speed will be transmitted.
+ * 
+ * @author Henrik Voß <hennevoss@gmail.com>
+ *
+ */
 public class DriveMessage extends Message {
 	
-	public DriveMessage(@JsonProperty("valueX") float valueX,
-						@JsonProperty("valueY") float valueY) {
+	/**
+	 * Creats the drive-message.
+	 *  
+	 * @param valueX 	x-value of the unit vector.	
+	 * @param valueY	y-value of the unit vector.
+	 */
+	public DriveMessage(
+			@JsonProperty("valueX") float valueX,
+			@JsonProperty("valueY") float valueY
+		) {
 		this.valueX = valueX;
 		this.valueY = valueY;
 	}
 	
 	/**
-	 * A floating-point number of the On-Screen-Control.
+	 * x-value of the unit vector.
 	 */
 	public final float valueX;
 	
 	/**
-	 * A floating-point number of the On-Screen-Control.
+	 * y-value of the unit vector.
 	 */
 	public final float valueY;
 }

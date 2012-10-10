@@ -24,21 +24,35 @@ import de.dsi8.dsi8acl.communication.handler.AbstractMessageHandler;
 import de.dsi8.dsi8acl.communication.impl.CommunicationPartner;
 import de.dsi8.dsi8acl.exception.InvalidMessageException;
 import de.dsi8.vhackandroidgame.communication.model.CollisionMessage;
-import de.dsi8.vhackandroidgame.communication.model.DriveMessage;
 import de.dsi8.vhackandroidgame.logic.contract.IClientLogicListener;
-import de.dsi8.vhackandroidgame.logic.contract.IServerLogicListener;
+import de.dsi8.vhackandroidgame.logic.impl.ClientLogic;
 
+/**
+ * Handles the {@link CollisionMessage}.
+ *
+ * @author Henrik Voß <hennevoss@gmail.com>
+ *
+ */
 public class CollisionMessageHandler extends AbstractMessageHandler<CollisionMessage> {
 	
+	/**
+	 * Interface to the {@link ClientLogic}.
+	 */
 	private IClientLogicListener listener;
 
+	/**
+	 * Creates the MessageHandler
+	 * @param listener		Interface to the {@link ClientLogic}.
+	 */
 	public CollisionMessageHandler(IClientLogicListener listener) {
 		this.listener = listener;
 	}
 	
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
-	public void handleMessage(CommunicationPartner partner, CollisionMessage message)
-			throws InvalidMessageException {
-		listener.collisionDetected();
+	public void handleMessage(CommunicationPartner partner, CollisionMessage message) throws InvalidMessageException {
+		this.listener.collisionDetected();
 	}
 }

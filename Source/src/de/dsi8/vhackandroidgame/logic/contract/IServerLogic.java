@@ -20,8 +20,27 @@
  ******************************************************************************/
 package de.dsi8.vhackandroidgame.logic.contract;
 
-public interface IServerLogic {
+import java.io.Closeable;
+
+import de.dsi8.vhackandroidgame.RacerGameActivity;
+import de.dsi8.vhackandroidgame.logic.impl.ServerLogic;
+
+/**
+ * Interface from the {@link ServerLogic} to the {@link RacerGameActivity}.
+ * 
+ * @author Henrik Voß <hennevoss@gmail.com>
+ *
+ */
+public interface IServerLogic extends Closeable {
+	
+	/**
+	 * Starts the server.
+	 */
 	void start();
-	void close();
+	
+	/**
+	 * A collision was detected on a car.
+	 * @param carId
+	 */
 	void collisionDetected(int carId);
 }
