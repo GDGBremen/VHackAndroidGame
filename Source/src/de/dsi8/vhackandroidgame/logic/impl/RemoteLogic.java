@@ -30,8 +30,8 @@ import de.dsi8.dsi8acl.exception.ConnectionProblemException;
 import de.dsi8.vhackandroidgame.RemoteActivity;
 import de.dsi8.vhackandroidgame.communication.model.DriveMessage;
 import de.dsi8.vhackandroidgame.handler.CollisionMessageHandler;
-import de.dsi8.vhackandroidgame.logic.contract.IClientLogic;
-import de.dsi8.vhackandroidgame.logic.contract.IClientLogicListener;
+import de.dsi8.vhackandroidgame.logic.contract.IRemoteLogic;
+import de.dsi8.vhackandroidgame.logic.contract.IRemoteLogicListener;
 
 /**
  * Logic of the remote smartphone.
@@ -39,7 +39,7 @@ import de.dsi8.vhackandroidgame.logic.contract.IClientLogicListener;
  * @author Henrik Voß <hennevoss@gmail.com>
  *
  */
-public class ClientLogic implements IClientLogic, ICommunicationPartnerListener {
+public class RemoteLogic implements IRemoteLogic, ICommunicationPartnerListener {
 
 	/**
 	 * Connection to the server.
@@ -49,14 +49,14 @@ public class ClientLogic implements IClientLogic, ICommunicationPartnerListener 
 	/**
 	 * Listener to the {@link RemoteActivity}.
 	 */
-	private final IClientLogicListener listener;
+	private final IRemoteLogicListener listener;
 	
 	/**
 	 * Creates the client-logic.
 	 * @param listener		Listener on the {@link RemoteActivity}.
 	 * @param socket		Socket to the Server.
 	 */
-	public ClientLogic(IClientLogicListener listener, Socket socket) {
+	public RemoteLogic(IRemoteLogicListener listener, Socket socket) {
 		this.listener = listener;
 		this.serverPartner = new CommunicationPartner(this, new TCPConnection(socket));
 		this.serverPartner.registerMessageHandler(new CollisionMessageHandler(listener));

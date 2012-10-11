@@ -20,26 +20,19 @@
  ******************************************************************************/
 package de.dsi8.vhackandroidgame.logic.contract;
 
-import java.io.Closeable;
-
-import de.dsi8.vhackandroidgame.RemoteActivity;
-import de.dsi8.vhackandroidgame.logic.impl.ClientLogic;
-
+import de.dsi8.vhackandroidgame.RacerGameActivity;
+import de.dsi8.vhackandroidgame.communication.contract.IDrive;
+import de.dsi8.vhackandroidgame.logic.impl.GameCoordinatorLogic;
 
 /**
- * Interface from the {@link RemoteActivity} to the {@link ClientLogic}.
+ * Interface from the {@link GameCoordinatorLogic} to the {@link RacerGameActivity}.
  * 
  * @author Henrik Voß <hennevoss@gmail.com>
  *
  */
-public interface IClientLogic extends Closeable {
+public interface IGameCoordinatorLogicListener extends IDrive {
 	
-	/**
-	 * Move the car to a new position.
-	 * valueX and valueY define a unit vector of the direction and speed. 
-	 * 
-	 * @param valueX 	x-value of the unit vector.	
-	 * @param valueY 	Y-value of the unit vector.	
-	 */
-	void driveCar(float valueX, float valueY);
+	
+
+	
 }

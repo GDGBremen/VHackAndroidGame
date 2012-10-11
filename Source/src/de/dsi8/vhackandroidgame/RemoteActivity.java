@@ -47,14 +47,14 @@ import android.util.Log;
 import de.dsi8.dsi8acl.common.utils.AsyncTaskResult;
 import de.dsi8.dsi8acl.connection.model.ConnectionParameter;
 import de.dsi8.dsi8acl.exception.ConnectionProblemException;
-import de.dsi8.vhackandroidgame.logic.contract.IClientLogic;
-import de.dsi8.vhackandroidgame.logic.contract.IClientLogicListener;
-import de.dsi8.vhackandroidgame.logic.impl.ClientLogic;
+import de.dsi8.vhackandroidgame.logic.contract.IRemoteLogic;
+import de.dsi8.vhackandroidgame.logic.contract.IRemoteLogicListener;
+import de.dsi8.vhackandroidgame.logic.impl.RemoteLogic;
 import de.dsi8.vhackandroidgame.logic.impl.VHackAndroidGameConfiguration;
 
-public class RemoteActivity extends SimpleBaseGameActivity implements IClientLogicListener {
+public class RemoteActivity extends SimpleBaseGameActivity implements IRemoteLogicListener {
 
-	private IClientLogic clientLogic;
+	private IRemoteLogic clientLogic;
 	
 	private static final int CAMERA_WIDTH = 320;
 	
@@ -146,7 +146,7 @@ public class RemoteActivity extends SimpleBaseGameActivity implements IClientLog
 				@Override
 				protected void onPostExecute(AsyncTaskResult<Socket> result) {
 					if(result.getError() == null) {
-						clientLogic = new ClientLogic(RemoteActivity.this, result.getResult());
+						clientLogic = new RemoteLogic(RemoteActivity.this, result.getResult());
 					} else {
 						Log.e(LOG_TAG, "IOException", result.getError());
 						finish();

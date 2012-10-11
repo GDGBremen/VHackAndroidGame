@@ -22,15 +22,15 @@ package de.dsi8.vhackandroidgame.logic.contract;
 
 import de.dsi8.dsi8acl.exception.ConnectionProblemException;
 import de.dsi8.vhackandroidgame.RemoteActivity;
-import de.dsi8.vhackandroidgame.logic.impl.ClientLogic;
+import de.dsi8.vhackandroidgame.logic.impl.RemoteLogic;
 
 /**
- * Interface from the {@link ClientLogic} to the {@link RemoteActivity}.
+ * Interface from the {@link RemoteLogic} to the {@link RemoteActivity}.
  * 
  * @author Henrik Voß <hennevoss@gmail.com>
  *
  */
-public interface IClientLogicListener {
+public interface IRemoteLogicListener {
 	
 	/**
 	 * The connection to the Server lost.

@@ -21,6 +21,7 @@
 package de.dsi8.vhackandroidgame;
 
 import java.io.IOException;
+import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -28,12 +29,10 @@ import org.andengine.engine.camera.Camera;
 import org.andengine.engine.options.EngineOptions;
 import org.andengine.engine.options.ScreenOrientation;
 import org.andengine.engine.options.resolutionpolicy.RatioResolutionPolicy;
-import org.andengine.entity.primitive.Rectangle;
 import org.andengine.entity.scene.Scene;
 import org.andengine.entity.scene.background.Background;
 import org.andengine.entity.sprite.Sprite;
 import org.andengine.entity.sprite.TiledSprite;
-import org.andengine.entity.util.FPSLogger;
 import org.andengine.extension.physics.box2d.FixedStepPhysicsWorld;
 import org.andengine.extension.physics.box2d.PhysicsConnector;
 import org.andengine.extension.physics.box2d.PhysicsFactory;
@@ -42,18 +41,12 @@ import org.andengine.extension.physics.box2d.util.Vector2Pool;
 import org.andengine.opengl.texture.TextureOptions;
 import org.andengine.opengl.texture.atlas.bitmap.BitmapTextureAtlas;
 import org.andengine.opengl.texture.atlas.bitmap.BitmapTextureAtlasTextureRegionFactory;
-import org.andengine.opengl.texture.atlas.bitmap.source.EmptyBitmapTextureAtlasSource;
-import org.andengine.opengl.texture.atlas.bitmap.source.IBitmapTextureAtlasSource;
-import org.andengine.opengl.texture.atlas.bitmap.source.decorator.BaseBitmapTextureAtlasSourceDecorator;
 import org.andengine.opengl.texture.region.ITextureRegion;
-import org.andengine.opengl.texture.region.TextureRegion;
 import org.andengine.opengl.texture.region.TiledTextureRegion;
-import org.andengine.opengl.vbo.VertexBufferObjectManager;
 import org.andengine.ui.activity.SimpleBaseGameActivity;
 import org.andengine.util.math.MathUtils;
 
-import android.graphics.Canvas;
-import android.graphics.Color;
+import android.os.AsyncTask;
 import android.util.Log;
 
 import com.badlogic.gdx.math.Vector2;
@@ -64,15 +57,15 @@ import com.badlogic.gdx.physics.box2d.ContactImpulse;
 import com.badlogic.gdx.physics.box2d.ContactListener;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.Manifold;
-import com.google.zxing.BarcodeFormat;
-import com.google.zxing.MultiFormatWriter;
-import com.google.zxing.WriterException;
-import com.google.zxing.common.BitMatrix;
 
+import de.dsi8.dsi8acl.common.utils.AsyncTaskResult;
 import de.dsi8.dsi8acl.connection.model.ConnectionParameter;
-import de.dsi8.vhackandroidgame.logic.contract.IServerLogic;
-import de.dsi8.vhackandroidgame.logic.contract.IServerLogicListener;
-import de.dsi8.vhackandroidgame.logic.impl.ServerLogic;
+import de.dsi8.vhackandroidgame.logic.contract.IGameCoordinatorLogic;
+import de.dsi8.vhackandroidgame.logic.contract.IGameCoordinatorLogicListener;
+import de.dsi8.vhackandroidgame.logic.contract.IGamePresentationLogic;
+import de.dsi8.vhackandroidgame.logic.contract.IGamePresentationLogicListener;
+import de.dsi8.vhackandroidgame.logic.impl.GameCoordinatorLogic;
+import de.dsi8.vhackandroidgame.logic.impl.GamePresentationLogic;
 
 /**
  * (c) 2010 Nicolas Gramlich
@@ -81,7 +74,7 @@ import de.dsi8.vhackandroidgame.logic.impl.ServerLogic;
  * @author Nicolas Gramlich
  * @since 22:43:20 - 15.07.2010
  */
-public class RacerGameActivity extends SimpleBaseGameActivity implements IServerLogicListener, ContactListener {
+public class RacerGameActivity extends SimpleBaseGameActivity implements IGameCoordinatorLogicListener, IGamePresentationLogicListener, ContactListener {
 	// ===========================================================
 	// Constants
 	// ===========================================================
@@ -109,37 +102,19 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements IServer
 	private BitmapTextureAtlas mBoxTexture;
 	private ITextureRegion mBoxTextureRegion;
 
-	private BitmapTextureAtlas mRacetrackTexture;
-	private ITextureRegion mRacetrackStraightTextureRegion;
-	private ITextureRegion mRacetrackCurveTextureRegion;
-
-
 	private Scene mScene;
 
 	private PhysicsWorld mPhysicsWorld;
 	
-	private IServerLogic serverLogic;
+	private IGameCoordinatorLogic serverLogic;
 	
 	private final FixtureDef carFixtureDef = PhysicsFactory.createFixtureDef(1, 0.5f, 0.5f);
 	
 	private Map<Integer, CarView> cars = new HashMap<Integer, RacerGameActivity.CarView>();
 
-	private BitmapTextureAtlas qrCodeAtlas;
-
-	private TextureRegion qrCodeAtlasRegion;
-
-	// ===========================================================
-	// Constructors
-	// ===========================================================
-
-	// ===========================================================
-	// Getter & Setter
-	// ===========================================================
-
-	// ===========================================================
-	// Methods for/from SuperClass/Interfaces
-	// ===========================================================
-
+	private IGamePresentationLogic presentationLogic;
+	
+	private ConnectTask connectTask;
 	
 	/**
 	 * {@inheritDoc}
@@ -148,8 +123,11 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements IServer
 	protected void onStart() {
 		super.onStart();
 		
-		this.serverLogic = new ServerLogic(this);
+		this.serverLogic = new GameCoordinatorLogic(this);
 		this.serverLogic.start();
+		
+		connectTask = new ConnectTask();
+		connectTask.execute((Object)null);
 	}
 	
 	/**
@@ -163,6 +141,16 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements IServer
 			this.serverLogic.close();
 		} catch (IOException e) {
 			Log.w(LOG_TAG, "Can not close the server", e);
+		}
+		
+
+		connectTask.cancel(true);
+		if(presentationLogic != null) {
+			try {
+				presentationLogic.close();
+			} catch (IOException e) {
+				Log.w(LOG_TAG, "Can not close the connection the server.", e);
+			}
 		}
 	}
 	
@@ -187,18 +175,9 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements IServer
 		this.mVehiclesTextureRegion = BitmapTextureAtlasTextureRegionFactory.createTiledFromAsset(this.mVehiclesTexture, this, "vehicles.png", 0, 0, 6, 1);
 		this.mVehiclesTexture.load();
 
-		this.mRacetrackTexture = new BitmapTextureAtlas(this.getTextureManager(), 128, 256, TextureOptions.REPEATING_NEAREST);
-		this.mRacetrackStraightTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mRacetrackTexture, this, "racetrack_straight.png", 0, 0);
-		this.mRacetrackCurveTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mRacetrackTexture, this, "racetrack_curve.png", 0, 128);
-		this.mRacetrackTexture.load();
-
-		
-
 		this.mBoxTexture = new BitmapTextureAtlas(this.getTextureManager(), 32, 32, TextureOptions.BILINEAR);
 		this.mBoxTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mBoxTexture, this, "box.png", 0, 0);
 		this.mBoxTexture.load();
-		
-		createBarcode();
 	}
 
 	/**
@@ -206,92 +185,19 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements IServer
 	 */
 	@Override
 	public Scene onCreateScene() {
-		this.mEngine.registerUpdateHandler(new FPSLogger());
-
 		this.mScene = new Scene();
 		this.mScene.setBackground(new Background(0, 0, 0));
 
 		this.mPhysicsWorld = new FixedStepPhysicsWorld(30, new Vector2(0, 0), false, 8, 1);
 
 		this.mPhysicsWorld.setContactListener(this);
-		
-		this.initRacetrack();
-		this.initRacetrackBorders();
-		this.initObstacles();
-		
-		int bardcodeSize = CAMERA_HEIGHT - 2 * RACETRACK_WIDTH;
-		
-		final Sprite barcode = new Sprite(CAMERA_WIDTH / 2 - bardcodeSize/2 , RACETRACK_WIDTH, bardcodeSize, bardcodeSize, this.qrCodeAtlasRegion, this.getVertexBufferObjectManager());
-		this.mScene.attachChild(barcode);
-
 		this.mScene.registerUpdateHandler(this.mPhysicsWorld);
-
-				
 		
 		return this.mScene;
 	}
 	
-	public int getCarIdFromBody(Body body) {
-		for (CarView carView : this.cars.values()) {
-			if (carView.body == body) {
-				return carView.id;
-			}
-		}
-		
-		return -1;
-	}
-	// ===========================================================
-	// Methods
-	// ===========================================================
-
-
-	private void createBarcode() {
-		ConnectionParameter param = ConnectionParameter.getDefaultConnectionDetails();
-		MultiFormatWriter writer = new MultiFormatWriter();
-		try {
-			final BitMatrix bitmatrix = writer.encode(param.toConnectionURL(), BarcodeFormat.QR_CODE, 150, 150);
-			
-		
-			this.qrCodeAtlas = new BitmapTextureAtlas(this.getTextureManager(), 150, 150, TextureOptions.DEFAULT);
-	
-			final IBitmapTextureAtlasSource baseTextureSource = new EmptyBitmapTextureAtlasSource(150, 150);
-			final BaseBitmapTextureAtlasSourceDecorator decoratedTextureAtlasSource = new BaseBitmapTextureAtlasSourceDecorator(baseTextureSource) {
-				@Override
-				protected void onDecorateBitmap(Canvas pCanvas) throws Exception {
-					pCanvas.drawRGB(0, 0, 0);
-					this.mPaint.setColor(Color.WHITE);
-					for(int y = 0; y < bitmatrix.getHeight(); y++) {
-						for(int x = 0; x < bitmatrix.getWidth(); x++) {
-							if(!bitmatrix.get(x, y)) {
-								pCanvas.drawPoint(x, y, mPaint);
-							}
-						}
-					}
-				}
-	
-				@Override
-				public BaseBitmapTextureAtlasSourceDecorator deepCopy() {
-					throw new RuntimeException();
-				}
-			};
-
-			this.qrCodeAtlasRegion = BitmapTextureAtlasTextureRegionFactory.createFromSource(this.qrCodeAtlas, decoratedTextureAtlasSource, 0, 0);
-			this.qrCodeAtlas.load();
-		
-		
-		} catch (WriterException e) {
-			e.printStackTrace();
-		}
-	}
-
-	private void initObstacles() {
-		this.addObstacle(CAMERA_WIDTH / 2, RACETRACK_WIDTH / 2);
-		this.addObstacle(CAMERA_WIDTH / 2, RACETRACK_WIDTH / 2);
-		this.addObstacle(CAMERA_WIDTH / 2, CAMERA_HEIGHT - RACETRACK_WIDTH / 2);
-		this.addObstacle(CAMERA_WIDTH / 2, CAMERA_HEIGHT - RACETRACK_WIDTH / 2);
-	}
-
-	private void addObstacle(final float pX, final float pY) {
+	@Override
+	public void addObstacle(final float pX, final float pY) {
 		final Sprite box = new Sprite(pX, pY, OBSTACLE_SIZE, OBSTACLE_SIZE, this.mBoxTextureRegion, this.getVertexBufferObjectManager());
 
 		final FixtureDef boxFixtureDef = PhysicsFactory.createFixtureDef(0.1f, 0.5f, 0.5f);
@@ -304,96 +210,12 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements IServer
 		this.mScene.attachChild(box);
 	}
 
-	private void initRacetrack() {
-		/* Straights. */
-		{
-			final ITextureRegion racetrackHorizontalStraightTextureRegion = this.mRacetrackStraightTextureRegion.deepCopy();
-			racetrackHorizontalStraightTextureRegion.setTextureWidth(3 * this.mRacetrackStraightTextureRegion.getWidth());
-
-			final ITextureRegion racetrackVerticalStraightTextureRegion = this.mRacetrackStraightTextureRegion;
-
-			/* Top Straight */
-			this.mScene.attachChild(new Sprite(RACETRACK_WIDTH, 0, 3 * RACETRACK_WIDTH, RACETRACK_WIDTH, racetrackHorizontalStraightTextureRegion, this.getVertexBufferObjectManager()));
-			/* Bottom Straight */
-			this.mScene.attachChild(new Sprite(RACETRACK_WIDTH, CAMERA_HEIGHT - RACETRACK_WIDTH, 3 * RACETRACK_WIDTH, RACETRACK_WIDTH, racetrackHorizontalStraightTextureRegion, this.getVertexBufferObjectManager()));
-
-			/* Left Straight */
-			final Sprite leftVerticalStraight = new Sprite(0, RACETRACK_WIDTH, RACETRACK_WIDTH, RACETRACK_WIDTH, racetrackVerticalStraightTextureRegion, this.getVertexBufferObjectManager());
-			leftVerticalStraight.setRotation(90);
-			this.mScene.attachChild(leftVerticalStraight);
-			/* Right Straight */
-			final Sprite rightVerticalStraight = new Sprite(CAMERA_WIDTH - RACETRACK_WIDTH, RACETRACK_WIDTH, RACETRACK_WIDTH, RACETRACK_WIDTH, racetrackVerticalStraightTextureRegion, this.getVertexBufferObjectManager());
-			rightVerticalStraight.setRotation(90);
-			this.mScene.attachChild(rightVerticalStraight);
-		}
-
-		/* Edges */
-		{
-			final ITextureRegion racetrackCurveTextureRegion = this.mRacetrackCurveTextureRegion;
-
-			/* Upper Left */
-			final Sprite upperLeftCurve = new Sprite(0, 0, RACETRACK_WIDTH, RACETRACK_WIDTH, racetrackCurveTextureRegion, this.getVertexBufferObjectManager());
-			upperLeftCurve.setRotation(90);
-			this.mScene.attachChild(upperLeftCurve);
-
-			/* Upper Right */
-			final Sprite upperRightCurve = new Sprite(CAMERA_WIDTH - RACETRACK_WIDTH, 0, RACETRACK_WIDTH, RACETRACK_WIDTH, racetrackCurveTextureRegion, this.getVertexBufferObjectManager());
-			upperRightCurve.setRotation(180);
-			this.mScene.attachChild(upperRightCurve);
-
-			/* Lower Right */
-			final Sprite lowerRightCurve = new Sprite(CAMERA_WIDTH - RACETRACK_WIDTH, CAMERA_HEIGHT - RACETRACK_WIDTH, RACETRACK_WIDTH, RACETRACK_WIDTH, racetrackCurveTextureRegion, this.getVertexBufferObjectManager());
-			lowerRightCurve.setRotation(270);
-			this.mScene.attachChild(lowerRightCurve);
-
-			/* Lower Left */
-			final Sprite lowerLeftCurve = new Sprite(0, CAMERA_HEIGHT - RACETRACK_WIDTH, RACETRACK_WIDTH, RACETRACK_WIDTH, racetrackCurveTextureRegion, this.getVertexBufferObjectManager());
-			this.mScene.attachChild(lowerLeftCurve);
-		}
-	}
-
-
-	private void initRacetrackBorders() {
-		final VertexBufferObjectManager vertexBufferObjectManager = this.getVertexBufferObjectManager();
-
-		final Rectangle bottomOuter = new Rectangle(0, CAMERA_HEIGHT - 2, CAMERA_WIDTH, 2, vertexBufferObjectManager);
-		final Rectangle topOuter = new Rectangle(0, 0, CAMERA_WIDTH, 2, vertexBufferObjectManager);
-		final Rectangle leftOuter = new Rectangle(0, 0, 2, CAMERA_HEIGHT, vertexBufferObjectManager);
-		final Rectangle rightOuter = new Rectangle(CAMERA_WIDTH - 2, 0, 2, CAMERA_HEIGHT, vertexBufferObjectManager);
-
-		final Rectangle bottomInner = new Rectangle(RACETRACK_WIDTH, CAMERA_HEIGHT - 2 - RACETRACK_WIDTH, CAMERA_WIDTH - 2 * RACETRACK_WIDTH, 2, vertexBufferObjectManager);
-		final Rectangle topInner = new Rectangle(RACETRACK_WIDTH, RACETRACK_WIDTH, CAMERA_WIDTH - 2 * RACETRACK_WIDTH, 2, vertexBufferObjectManager);
-		final Rectangle leftInner = new Rectangle(RACETRACK_WIDTH, RACETRACK_WIDTH, 2, CAMERA_HEIGHT - 2 * RACETRACK_WIDTH, vertexBufferObjectManager);
-		final Rectangle rightInner = new Rectangle(CAMERA_WIDTH - 2 - RACETRACK_WIDTH, RACETRACK_WIDTH, 2, CAMERA_HEIGHT - 2 * RACETRACK_WIDTH, vertexBufferObjectManager);
-
-		final FixtureDef wallFixtureDef = PhysicsFactory.createFixtureDef(0, 0.5f, 0.5f);
-		PhysicsFactory.createBoxBody(this.mPhysicsWorld, bottomOuter, BodyType.StaticBody, wallFixtureDef);
-		PhysicsFactory.createBoxBody(this.mPhysicsWorld, topOuter, BodyType.StaticBody, wallFixtureDef);
-		PhysicsFactory.createBoxBody(this.mPhysicsWorld, leftOuter, BodyType.StaticBody, wallFixtureDef);
-		PhysicsFactory.createBoxBody(this.mPhysicsWorld, rightOuter, BodyType.StaticBody, wallFixtureDef);
-
-		PhysicsFactory.createBoxBody(this.mPhysicsWorld, bottomInner, BodyType.StaticBody, wallFixtureDef);
-		PhysicsFactory.createBoxBody(this.mPhysicsWorld, topInner, BodyType.StaticBody, wallFixtureDef);
-		PhysicsFactory.createBoxBody(this.mPhysicsWorld, leftInner, BodyType.StaticBody, wallFixtureDef);
-		PhysicsFactory.createBoxBody(this.mPhysicsWorld, rightInner, BodyType.StaticBody, wallFixtureDef);
-
-		this.mScene.attachChild(bottomOuter);
-		this.mScene.attachChild(topOuter);
-		this.mScene.attachChild(leftOuter);
-		this.mScene.attachChild(rightOuter);
-
-		this.mScene.attachChild(bottomInner);
-		this.mScene.attachChild(topInner);
-		this.mScene.attachChild(leftInner);
-		this.mScene.attachChild(rightInner);
-	}
-
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
 	public void driveCar(int carId, float valueX, float valueY) {
-		CarView carView = this.cars.get(carId);
+		CarView carView = this.cars.get(Integer.valueOf(carId));
 		
 		final Vector2 velocity = Vector2Pool.obtain(valueX * 5, valueY * 5);
 		carView.body.setLinearVelocity(velocity);
@@ -432,17 +254,17 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements IServer
 			this.mScene.detachChild(carView.car);
 		}
 	}
-	
-	public class CarView {
-		public int id;
-		
-		public Body body;
-		
-		public TiledSprite car;
-		
-		public PhysicsConnector physicsConnector;
-	}
 
+	private int getCarIdFromBody(Body body) {
+		for (CarView carView : this.cars.values()) {
+			if (carView.body == body) {
+				return carView.id;
+			}
+		}
+		
+		return -1;
+	}
+	
 	@Override
 	public void beginContact(Contact contact) {
 		int firstCarId = getCarIdFromBody(contact.getFixtureA().getBody());
@@ -456,6 +278,48 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements IServer
 		}
 	}
 
+	/**
+	 * The Task that should connect the client with the host.
+	 */
+	private class ConnectTask extends AsyncTask<Object, Object, AsyncTaskResult<Socket>>  {
+				/**
+				 * Connecting to the Host.
+				 */
+				@Override
+				protected AsyncTaskResult<Socket> doInBackground(
+						Object... params) {
+					try {
+						synchronized (this) {
+							// Workaround for multicall of onStart by the AndEngine
+							try {
+								this.wait(2000);
+							} catch(InterruptedException ex) {
+								Log.i(LOG_TAG, "Interrupted");
+								return null;
+							}
+						}
+						Log.i(LOG_TAG, "Not interrupted");
+						Socket socket = new Socket("127.0.0.1", ConnectionParameter.getDefaultConnectionDetails().port);
+						return new AsyncTaskResult<Socket>(socket);
+					} catch (Exception e) {
+						return new AsyncTaskResult<Socket>(e);
+					}
+				}
+				
+				/**
+				 * Connection is open, initialize the logic.
+				 */
+				@Override
+				protected void onPostExecute(AsyncTaskResult<Socket> result) {
+					if(result.getError() == null) {
+						presentationLogic = new GamePresentationLogic(RacerGameActivity.this, result.getResult());
+					} else {
+						Log.e(LOG_TAG, "IOException", result.getError());
+						finish();
+					}
+				}
+	}
+	
 
 	@Override
 	public void postSolve(Contact arg0, ContactImpulse arg1) { /* Not required */ }
@@ -465,4 +329,14 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements IServer
 
 	@Override
 	public void endContact(Contact arg0) { /* Not required */ }
+	
+	public class CarView {
+		public int id;
+		
+		public Body body;
+		
+		public TiledSprite car;
+		
+		public PhysicsConnector physicsConnector;
+	}
 }

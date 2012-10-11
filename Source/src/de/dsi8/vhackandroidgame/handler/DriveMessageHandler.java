@@ -23,9 +23,10 @@ package de.dsi8.vhackandroidgame.handler;
 import de.dsi8.dsi8acl.communication.handler.AbstractMessageHandler;
 import de.dsi8.dsi8acl.communication.impl.CommunicationPartner;
 import de.dsi8.dsi8acl.exception.InvalidMessageException;
+import de.dsi8.vhackandroidgame.communication.contract.IDrive;
 import de.dsi8.vhackandroidgame.communication.model.DriveMessage;
-import de.dsi8.vhackandroidgame.logic.contract.IServerLogicListener;
-import de.dsi8.vhackandroidgame.logic.impl.ServerLogic;
+import de.dsi8.vhackandroidgame.logic.contract.IGameCoordinatorLogicListener;
+import de.dsi8.vhackandroidgame.logic.impl.GameCoordinatorLogic;
 
 /**
  * Handles the {@link DriveMessage}.
@@ -36,15 +37,15 @@ import de.dsi8.vhackandroidgame.logic.impl.ServerLogic;
 public class DriveMessageHandler extends AbstractMessageHandler<DriveMessage> {
 
 	/**
-	 * Interface to the {@link ServerLogic}.
+	 * Interface to the {@link GameCoordinatorLogic}.
 	 */
-	private IServerLogicListener listener;
+	private IDrive listener;
 
 	/**
 	 * Creates the handler.
-	 * @param listener	Interface to the {@link ServerLogic}.	
+	 * @param listener	Interface to the {@link GameCoordinatorLogic}.	
 	 */
-	public DriveMessageHandler(IServerLogicListener listener) {
+	public DriveMessageHandler(IDrive listener) {
 		this.listener = listener;
 	}
 	

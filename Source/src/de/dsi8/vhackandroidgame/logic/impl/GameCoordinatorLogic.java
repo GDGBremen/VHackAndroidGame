@@ -20,19 +20,29 @@
  ******************************************************************************/
 package de.dsi8.vhackandroidgame.logic.impl;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import android.util.Log;
 import de.dsi8.dsi8acl.communication.contract.ICommunicationPartner;
 import de.dsi8.dsi8acl.communication.contract.IServerCommunication;
 import de.dsi8.dsi8acl.communication.contract.IServerCommunicationListener;
+import de.dsi8.dsi8acl.communication.handler.AbstractMessageHandler;
+import de.dsi8.dsi8acl.communication.impl.CommunicationPartner;
 import de.dsi8.dsi8acl.communication.impl.ServerCommunication;
 import de.dsi8.dsi8acl.connection.impl.TCPSocketConnector;
 import de.dsi8.dsi8acl.connection.model.ConnectionParameter;
 import de.dsi8.dsi8acl.exception.ConnectionProblemException;
+import de.dsi8.dsi8acl.exception.InvalidMessageException;
 import de.dsi8.vhackandroidgame.RacerGameActivity;
+import de.dsi8.vhackandroidgame.communication.model.CarMessage;
 import de.dsi8.vhackandroidgame.communication.model.CollisionMessage;
+import de.dsi8.vhackandroidgame.communication.model.GameModeMessage;
 import de.dsi8.vhackandroidgame.handler.DriveMessageHandler;
-import de.dsi8.vhackandroidgame.logic.contract.IServerLogic;
-import de.dsi8.vhackandroidgame.logic.contract.IServerLogicListener;
+import de.dsi8.vhackandroidgame.logic.contract.IGameCoordinatorLogic;
+import de.dsi8.vhackandroidgame.logic.contract.IGameCoordinatorLogicListener;
 
 /**
  * The logic on the {@link RacerGameActivity}.
@@ -40,28 +50,40 @@ import de.dsi8.vhackandroidgame.logic.contract.IServerLogicListener;
  * @author Henrik Voß <hennevoss@gmail.com>
  *
  */
-public class ServerLogic implements IServerLogic, IServerCommunicationListener {
+public class GameCoordinatorLogic implements IGameCoordinatorLogic, IServerCommunicationListener {
 
 	/**
 	 * Log-Tag.
 	 */
-	private static final String LOG_TAG = ServerLogic.class.getSimpleName();
+	private static final String LOG_TAG = GameCoordinatorLogic.class.getSimpleName();
 	
 	/**
 	 * Interface to the {@link RacerGameActivity}.
 	 */
-	private final IServerLogicListener listener;
+	private final IGameCoordinatorLogicListener listener;
 	
 	/**
 	 * Interface to the server communication.
 	 */
 	private final IServerCommunication communication;
 	
+	
+	private Map<Integer, CommunicationPartner> remotePartner = new HashMap<Integer, CommunicationPartner>();
+	
+	private int numRemotePartner = 0;
+	
+	
+	private Map<Integer, CommunicationPartner> presentationPartner = new HashMap<Integer, CommunicationPartner>();
+	
+	private int numPresentationPartner = 0;
+	
+	
+	
 	/**
 	 * Creates the logic.
 	 * @param listener	Interface to the {@link RacerGameActivity}.	
 	 */
-	public ServerLogic(IServerLogicListener listener) {
+	public GameCoordinatorLogic(IGameCoordinatorLogicListener listener) {
 		this.listener = listener;
 		
 		ConnectionParameter.setStaticCommunicationConfiguration(new VHackAndroidGameConfiguration());
@@ -92,7 +114,36 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener {
 	public void newPartner(ICommunicationPartner partner) {
 		Log.i(LOG_TAG, "newPartner");
 		partner.registerMessageHandler(new DriveMessageHandler(this.listener));
-		this.listener.addCar(partner.getId());
+		partner.registerMessageHandler(new AbstractMessageHandler<GameModeMessage>() {
+			@Override
+			public void handleMessage(CommunicationPartner partner, GameModeMessage message) throws InvalidMessageException {
+				if (message.remote) {
+					newRemotePartner(partner);
+				} else {
+					newPresentationPartner(partner);
+				}
+			}
+		});
+		
+		//this.listener.addCar(partner.getId());
+		// TODO send addCar to the GamePresentationLogic 
+	}
+	
+	private void newRemotePartner(CommunicationPartner partner) {
+		this.remotePartner.put(numRemotePartner, partner);
+		
+		for (CommunicationPartner p : this.presentationPartner.values()) {
+			p.sendMessage(new CarMessage(numRemotePartner, true));
+		}
+		numRemotePartner++;
+	}
+	
+	private void newPresentationPartner(CommunicationPartner partner) {
+		this.presentationPartner.put(numPresentationPartner, partner);
+		
+		partner.sendMessage(new CarMessage(1, true));
+		
+		numPresentationPartner++;
 	}
 
 	/**
@@ -102,7 +153,8 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener {
 	public void connectionLost(ICommunicationPartner partner,
 			ConnectionProblemException ex) {
 		Log.i(LOG_TAG, "connectionLost", ex);
-		this.listener.removeCar(partner.getId());
+		//this.listener.removeCar(partner.getId());
+		// TODO send removeCar to the GamePresentationLogic 
 	}
 
 	/**

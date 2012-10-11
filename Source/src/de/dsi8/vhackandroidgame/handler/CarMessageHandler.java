@@ -23,28 +23,31 @@ package de.dsi8.vhackandroidgame.handler;
 import de.dsi8.dsi8acl.communication.handler.AbstractMessageHandler;
 import de.dsi8.dsi8acl.communication.impl.CommunicationPartner;
 import de.dsi8.dsi8acl.exception.InvalidMessageException;
-import de.dsi8.vhackandroidgame.communication.model.CollisionMessage;
-import de.dsi8.vhackandroidgame.logic.contract.IRemoteLogicListener;
-import de.dsi8.vhackandroidgame.logic.impl.RemoteLogic;
+import de.dsi8.vhackandroidgame.communication.contract.ICar;
+import de.dsi8.vhackandroidgame.communication.contract.IDrive;
+import de.dsi8.vhackandroidgame.communication.model.CarMessage;
+import de.dsi8.vhackandroidgame.communication.model.DriveMessage;
+import de.dsi8.vhackandroidgame.logic.contract.IGameCoordinatorLogicListener;
+import de.dsi8.vhackandroidgame.logic.impl.GameCoordinatorLogic;
 
 /**
- * Handles the {@link CollisionMessage}.
+ * Handles the {@link DriveMessage}.
  *
  * @author Henrik Voß <hennevoss@gmail.com>
  *
  */
-public class CollisionMessageHandler extends AbstractMessageHandler<CollisionMessage> {
-	
-	/**
-	 * Interface to the {@link RemoteLogic}.
-	 */
-	private IRemoteLogicListener listener;
+public class CarMessageHandler extends AbstractMessageHandler<CarMessage> {
 
 	/**
-	 * Creates the MessageHandler
-	 * @param listener		Interface to the {@link RemoteLogic}.
+	 * Interface to the {@link GameCoordinatorLogic}.
 	 */
-	public CollisionMessageHandler(IRemoteLogicListener listener) {
+	private ICar listener;
+
+	/**
+	 * Creates the handler.
+	 * @param listener	Interface to the {@link GameCoordinatorLogic}.	
+	 */
+	public CarMessageHandler(ICar listener) {
 		this.listener = listener;
 	}
 	
@@ -52,7 +55,11 @@ public class CollisionMessageHandler extends AbstractMessageHandler<CollisionMes
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void handleMessage(CommunicationPartner partner, CollisionMessage message) throws InvalidMessageException {
-		this.listener.collisionDetected();
+	public void handleMessage(CommunicationPartner partner, CarMessage message) throws InvalidMessageException {
+		if (message.add) {
+			this.listener.addCar(message.id);
+		} else {
+			this.listener.removeCar(message.id);
+		}
 	}
 }
