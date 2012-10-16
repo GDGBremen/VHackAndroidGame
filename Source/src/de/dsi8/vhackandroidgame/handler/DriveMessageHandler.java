@@ -54,6 +54,6 @@ public class DriveMessageHandler extends AbstractMessageHandler<DriveMessage> {
 	 */
 	@Override
 	public void handleMessage(CommunicationPartner partner, DriveMessage message) throws InvalidMessageException {
-		this.listener.driveCar(partner.getId(), message.valueX, message.valueY);
+		this.listener.driveCar(partner, message.valueX, message.valueY);
 	}
 }

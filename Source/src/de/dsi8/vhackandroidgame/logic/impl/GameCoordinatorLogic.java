@@ -20,10 +20,10 @@
  ******************************************************************************/
 package de.dsi8.vhackandroidgame.logic.impl;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import android.util.Log;
 import de.dsi8.dsi8acl.communication.contract.ICommunicationPartner;
@@ -37,6 +37,7 @@ import de.dsi8.dsi8acl.connection.model.ConnectionParameter;
 import de.dsi8.dsi8acl.exception.ConnectionProblemException;
 import de.dsi8.dsi8acl.exception.InvalidMessageException;
 import de.dsi8.vhackandroidgame.RacerGameActivity;
+import de.dsi8.vhackandroidgame.communication.contract.IDrive;
 import de.dsi8.vhackandroidgame.communication.model.CarMessage;
 import de.dsi8.vhackandroidgame.communication.model.CollisionMessage;
 import de.dsi8.vhackandroidgame.communication.model.GameModeMessage;
@@ -50,7 +51,7 @@ import de.dsi8.vhackandroidgame.logic.contract.IGameCoordinatorLogicListener;
  * @author Henrik Voß <hennevoss@gmail.com>
  *
  */
-public class GameCoordinatorLogic implements IGameCoordinatorLogic, IServerCommunicationListener {
+public class GameCoordinatorLogic implements IGameCoordinatorLogic, IServerCommunicationListener, IDrive {
 
 	/**
 	 * Log-Tag.
@@ -113,7 +114,7 @@ public class GameCoordinatorLogic implements IGameCoordinatorLogic, IServerCommu
 	@Override
 	public void newPartner(ICommunicationPartner partner) {
 		Log.i(LOG_TAG, "newPartner");
-		partner.registerMessageHandler(new DriveMessageHandler(this.listener));
+		partner.registerMessageHandler(new DriveMessageHandler(this));
 		partner.registerMessageHandler(new AbstractMessageHandler<GameModeMessage>() {
 			@Override
 			public void handleMessage(CommunicationPartner partner, GameModeMessage message) throws InvalidMessageException {
@@ -130,20 +131,21 @@ public class GameCoordinatorLogic implements IGameCoordinatorLogic, IServerCommu
 	}
 	
 	private void newRemotePartner(CommunicationPartner partner) {
-		this.remotePartner.put(numRemotePartner, partner);
+		this.remotePartner.put(this.numRemotePartner, partner);
 		
 		for (CommunicationPartner p : this.presentationPartner.values()) {
-			p.sendMessage(new CarMessage(numRemotePartner, true));
+			p.sendMessage(new CarMessage(this.numRemotePartner, true));
 		}
-		numRemotePartner++;
+		
+		this.numRemotePartner++;
 	}
 	
 	private void newPresentationPartner(CommunicationPartner partner) {
-		this.presentationPartner.put(numPresentationPartner, partner);
+		this.presentationPartner.put(this.numPresentationPartner, partner);
 		
-		partner.sendMessage(new CarMessage(1, true));
 		
-		numPresentationPartner++;
+		
+		this.numPresentationPartner++;
 	}
 
 	/**
@@ -173,4 +175,22 @@ public class GameCoordinatorLogic implements IGameCoordinatorLogic, IServerCommu
 		this.communication.sendMessage(carId, new CollisionMessage());
 	}
 
+	@Override
+	public void driveCar(CommunicationPartner remotePartner, float valueX, float valueY) {
+		int id = getIdOfRemotePartner(remotePartner);
+		if (id > -1) {
+			
+		}
+	}
+
+	private int getIdOfRemotePartner(CommunicationPartner partner) {
+		Iterator<Entry<Integer, CommunicationPartner>> iterator = this.remotePartner.entrySet().iterator();
+		while (iterator.hasNext()) {
+			Entry<Integer, CommunicationPartner> next = iterator.next();
+			if (partner == next.getValue()) {
+				return next.getKey().intValue();
+			}
+		}
+		return -1;
+	}
 }
