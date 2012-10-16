@@ -32,6 +32,7 @@ import de.dsi8.dsi8acl.communication.contract.IServerCommunicationListener;
 import de.dsi8.dsi8acl.communication.handler.AbstractMessageHandler;
 import de.dsi8.dsi8acl.communication.impl.CommunicationPartner;
 import de.dsi8.dsi8acl.communication.impl.ServerCommunication;
+import de.dsi8.dsi8acl.connection.contract.IRemoteConnection;
 import de.dsi8.dsi8acl.connection.impl.TCPSocketConnector;
 import de.dsi8.dsi8acl.connection.model.ConnectionParameter;
 import de.dsi8.dsi8acl.exception.ConnectionProblemException;
@@ -40,6 +41,7 @@ import de.dsi8.vhackandroidgame.RacerGameActivity;
 import de.dsi8.vhackandroidgame.communication.model.CarMessage;
 import de.dsi8.vhackandroidgame.communication.model.CollisionMessage;
 import de.dsi8.vhackandroidgame.communication.model.GameModeMessage;
+import de.dsi8.vhackandroidgame.communication.model.QRCodeMessage;
 import de.dsi8.vhackandroidgame.handler.DriveMessageHandler;
 import de.dsi8.vhackandroidgame.logic.contract.IGameCoordinatorLogic;
 import de.dsi8.vhackandroidgame.logic.contract.IGameCoordinatorLogicListener;
@@ -83,12 +85,22 @@ public class GameCoordinatorLogic implements IGameCoordinatorLogic, IServerCommu
 	 * Creates the logic.
 	 * @param listener	Interface to the {@link RacerGameActivity}.	
 	 */
-	public GameCoordinatorLogic(IGameCoordinatorLogicListener listener) {
+	public GameCoordinatorLogic(IGameCoordinatorLogicListener listener, IRemoteConnection presentationConnection) {
 		this.listener = listener;
 		
 		ConnectionParameter.setStaticCommunicationConfiguration(new VHackAndroidGameConfiguration());
 		int port = ConnectionParameter.getDefaultConnectionDetails().port;
 		this.communication = new ServerCommunication(this, new TCPSocketConnector(port), 20);
+		
+		// XXX Listener set to null
+		CommunicationPartner partner = new CommunicationPartner(null, presentationConnection);
+		partner.registerMessageHandler(new AbstractMessageHandler<GameModeMessage>() {
+			@Override
+			public void handleMessage(CommunicationPartner partner, GameModeMessage message) throws InvalidMessageException {
+
+			}
+		});
+		newPresentationPartner(partner);
 	}
 	
 	/**
@@ -141,7 +153,7 @@ public class GameCoordinatorLogic implements IGameCoordinatorLogic, IServerCommu
 	private void newPresentationPartner(CommunicationPartner partner) {
 		this.presentationPartner.put(numPresentationPartner, partner);
 		
-		partner.sendMessage(new CarMessage(1, true));
+
 		
 		numPresentationPartner++;
 	}
@@ -171,6 +183,13 @@ public class GameCoordinatorLogic implements IGameCoordinatorLogic, IServerCommu
 	@Override
 	public void collisionDetected(int carId) {
 		this.communication.sendMessage(carId, new CollisionMessage());
+	}
+
+	@Override
+	public void test() {
+		CommunicationPartner partner = this.presentationPartner.get(0);
+		partner.sendMessage(new CarMessage(1, true));
+		partner.sendMessage(new QRCodeMessage("hallo"));
 	}
 
 }

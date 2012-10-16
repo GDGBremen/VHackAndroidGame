@@ -6,6 +6,7 @@ import java.net.Socket;
 import de.dsi8.dsi8acl.communication.contract.ICommunicationPartner;
 import de.dsi8.dsi8acl.communication.contract.ICommunicationPartnerListener;
 import de.dsi8.dsi8acl.communication.impl.CommunicationPartner;
+import de.dsi8.dsi8acl.connection.contract.IRemoteConnection;
 import de.dsi8.dsi8acl.connection.impl.TCPConnection;
 import de.dsi8.dsi8acl.exception.ConnectionProblemException;
 import de.dsi8.vhackandroidgame.communication.model.CarMessage;
@@ -13,6 +14,7 @@ import de.dsi8.vhackandroidgame.communication.model.GameModeMessage;
 import de.dsi8.vhackandroidgame.handler.CarMessageHandler;
 import de.dsi8.vhackandroidgame.handler.CollisionMessageHandler;
 import de.dsi8.vhackandroidgame.handler.DriveMessageHandler;
+import de.dsi8.vhackandroidgame.handler.QRCodeMessageHandler;
 import de.dsi8.vhackandroidgame.logic.contract.IGamePresentationLogic;
 import de.dsi8.vhackandroidgame.logic.contract.IGamePresentationLogicListener;
 
@@ -26,12 +28,13 @@ public class GamePresentationLogic implements IGamePresentationLogic, ICommunica
 	 */
 	private final ICommunicationPartner serverPartner;
 	
-	public GamePresentationLogic(IGamePresentationLogicListener listener, Socket socket) {
+	public GamePresentationLogic(IGamePresentationLogicListener listener, IRemoteConnection remoteConnection) {
 		this.listener = listener;
 		
-		this.serverPartner = new CommunicationPartner(this, new TCPConnection(socket));
+		this.serverPartner = new CommunicationPartner(this, remoteConnection);
 		this.serverPartner.registerMessageHandler(new DriveMessageHandler(listener));
 		this.serverPartner.registerMessageHandler(new CarMessageHandler(listener));
+		this.serverPartner.registerMessageHandler(new QRCodeMessageHandler(listener));
 		this.serverPartner.initialized();
 		this.serverPartner.sendMessage(new GameModeMessage(false));
 	}
