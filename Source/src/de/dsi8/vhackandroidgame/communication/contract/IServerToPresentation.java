@@ -1,6 +1,6 @@
 package de.dsi8.vhackandroidgame.communication.contract;
 
-public interface IPresentationServerListener {
+public interface IServerToPresentation {
 
 	/**
 	 * Adds a new car with the id <code>carId</code> to the Map.

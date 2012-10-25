@@ -23,7 +23,7 @@ package de.dsi8.vhackandroidgame.handler;
 import de.dsi8.dsi8acl.communication.handler.AbstractMessageHandler;
 import de.dsi8.dsi8acl.communication.impl.CommunicationPartner;
 import de.dsi8.dsi8acl.exception.InvalidMessageException;
-import de.dsi8.vhackandroidgame.communication.contract.IPresentationServerListener;
+import de.dsi8.vhackandroidgame.communication.contract.IServerToPresentation;
 import de.dsi8.vhackandroidgame.communication.model.CarMessage;
 import de.dsi8.vhackandroidgame.communication.model.DriveMessage;
 import de.dsi8.vhackandroidgame.logic.impl.ServerLogic;
@@ -39,13 +39,13 @@ public class CarMessageHandler extends AbstractMessageHandler<CarMessage> {
 	/**
 	 * Interface to the {@link ServerLogic}.
 	 */
-	private IPresentationServerListener listener;
+	private IServerToPresentation listener;
 
 	/**
 	 * Creates the handler.
 	 * @param listener	Interface to the {@link ServerLogic}.	
 	 */
-	public CarMessageHandler(IPresentationServerListener listener) {
+	public CarMessageHandler(IServerToPresentation listener) {
 		this.listener = listener;
 	}
 	

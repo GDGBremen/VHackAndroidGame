@@ -28,7 +28,7 @@ import de.dsi8.dsi8acl.communication.impl.CommunicationPartner;
 import de.dsi8.dsi8acl.connection.impl.TCPConnection;
 import de.dsi8.dsi8acl.exception.ConnectionProblemException;
 import de.dsi8.vhackandroidgame.RemoteActivity;
-import de.dsi8.vhackandroidgame.communication.contract.IRemoteServerListener;
+import de.dsi8.vhackandroidgame.communication.contract.IServerToRemote;
 import de.dsi8.vhackandroidgame.communication.model.DriveMessage;
 import de.dsi8.vhackandroidgame.communication.model.GameModeMessage;
 import de.dsi8.vhackandroidgame.handler.CollisionMessageHandler;
@@ -41,7 +41,7 @@ import de.dsi8.vhackandroidgame.logic.contract.IRemoteLogicListener;
  * @author Henrik Voß <hennevoss@gmail.com>
  *
  */
-public class RemoteLogic implements IRemoteLogic, ICommunicationPartnerListener, IRemoteServerListener {
+public class RemoteLogic implements IRemoteLogic, ICommunicationPartnerListener, IServerToRemote {
 
 	/**
 	 * Connection to the server.

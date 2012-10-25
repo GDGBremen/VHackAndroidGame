@@ -10,7 +10,7 @@ import de.dsi8.vhackandroidgame.logic.impl.RemoteLogic;
  * @author henrik
  *
  */
-public interface IServerRemoteListener {
+public interface IRemoteToServer {
 	
 	/**
 	 * Moves the car to a new Position.

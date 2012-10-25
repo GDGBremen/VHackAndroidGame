@@ -1,6 +1,6 @@
 package de.dsi8.vhackandroidgame.communication.contract;
 
-public interface IRemoteServerListener {
+public interface IServerToRemote {
 
 	/**
 	 * A collision was detected.

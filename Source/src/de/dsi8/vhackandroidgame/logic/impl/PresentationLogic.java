@@ -9,7 +9,7 @@ import de.dsi8.dsi8acl.communication.impl.CommunicationPartner;
 import de.dsi8.dsi8acl.connection.contract.IRemoteConnection;
 import de.dsi8.dsi8acl.connection.impl.TCPConnection;
 import de.dsi8.dsi8acl.exception.ConnectionProblemException;
-import de.dsi8.vhackandroidgame.communication.contract.IPresentationServerListener;
+import de.dsi8.vhackandroidgame.communication.contract.IServerToPresentation;
 import de.dsi8.vhackandroidgame.communication.model.GameModeMessage;
 import de.dsi8.vhackandroidgame.communication.model.QRCodeMessage;
 import de.dsi8.vhackandroidgame.handler.CarMessageHandler;
@@ -17,7 +17,7 @@ import de.dsi8.vhackandroidgame.handler.QRCodeMessageHandler;
 import de.dsi8.vhackandroidgame.logic.contract.IPresentationLogic;
 import de.dsi8.vhackandroidgame.logic.contract.IPresentationLogicListener;
 
-public class PresentationLogic implements IPresentationLogic, ICommunicationPartnerListener, IPresentationServerListener {
+public class PresentationLogic implements IPresentationLogic, ICommunicationPartnerListener, IServerToPresentation {
 
 	private IPresentationLogicListener listener;
 
