@@ -15,4 +15,6 @@ public interface IPresentationServerListener {
 	 * @param carId		Id of the car
 	 */
 	void removeCar(int carId);
+	
+	void showQRCode(String str);
 }

@@ -32,6 +32,7 @@ import de.dsi8.dsi8acl.communication.contract.IServerCommunicationListener;
 import de.dsi8.dsi8acl.communication.handler.AbstractMessageHandler;
 import de.dsi8.dsi8acl.communication.impl.CommunicationPartner;
 import de.dsi8.dsi8acl.communication.impl.ServerCommunication;
+import de.dsi8.dsi8acl.connection.contract.IRemoteConnection;
 import de.dsi8.dsi8acl.connection.impl.TCPSocketConnector;
 import de.dsi8.dsi8acl.connection.model.ConnectionParameter;
 import de.dsi8.dsi8acl.exception.ConnectionProblemException;
@@ -42,6 +43,7 @@ import de.dsi8.vhackandroidgame.communication.contract.IServerRemoteListener;
 import de.dsi8.vhackandroidgame.communication.model.CarMessage;
 import de.dsi8.vhackandroidgame.communication.model.CollisionMessage;
 import de.dsi8.vhackandroidgame.communication.model.GameModeMessage;
+import de.dsi8.vhackandroidgame.communication.model.QRCodeMessage;
 import de.dsi8.vhackandroidgame.handler.DriveMessageHandler;
 import de.dsi8.vhackandroidgame.logic.contract.IServerLogic;
 import de.dsi8.vhackandroidgame.logic.contract.IServerLogicListener;
@@ -69,14 +71,24 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener, 
 	 */
 	private final IServerCommunication communication;
 	
-	
+	/**
+	 * All connected remote partner.
+	 */
 	private Map<Integer, CommunicationPartner> remotePartner = new HashMap<Integer, CommunicationPartner>();
 	
+	/**
+	 * Number of remote partner.
+	 */
 	private int numRemotePartner = 0;
 	
-	
+	/**
+	 * 
+	 */
 	private Map<Integer, CommunicationPartner> presentationPartner = new HashMap<Integer, CommunicationPartner>();
 	
+	/**
+	 * Number of presentation partner.
+	 */
 	private int numPresentationPartner = 0;
 	
 	
@@ -85,12 +97,22 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener, 
 	 * Creates the logic.
 	 * @param listener	Interface to the {@link RacerGameActivity}.	
 	 */
-	public ServerLogic(IServerLogicListener listener) {
+	public ServerLogic(IServerLogicListener listener, IRemoteConnection presentationConnection) {
 		this.listener = listener;
 		
 		ConnectionParameter.setStaticCommunicationConfiguration(new VHackAndroidGameConfiguration());
 		int port = ConnectionParameter.getDefaultConnectionDetails().port;
 		this.communication = new ServerCommunication(this, new TCPSocketConnector(port), 20);
+		
+		// XXX Listener set to null
+		CommunicationPartner partner = new CommunicationPartner(null, presentationConnection);
+		partner.registerMessageHandler(new AbstractMessageHandler<GameModeMessage>() {
+			@Override
+			public void handleMessage(CommunicationPartner partner, GameModeMessage message) throws InvalidMessageException {
+
+			}
+		});
+		newPresentationPartner(partner);
 	}
 	
 	/**
@@ -131,6 +153,10 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener, 
 		// TODO send addCar to the GamePresentationLogic 
 	}
 	
+	/**
+	 * A new remote partner is connecting.
+	 * @param partner	the new remote partner
+	 */
 	private void newRemotePartner(CommunicationPartner partner) {
 		this.remotePartner.put(this.numRemotePartner, partner);
 		
@@ -141,10 +167,12 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener, 
 		this.numRemotePartner++;
 	}
 	
+	/**
+	 * A new presentation partner is connecting.
+	 * @param partner	the new presentation partner
+	 */
 	private void newPresentationPartner(CommunicationPartner partner) {
 		this.presentationPartner.put(this.numPresentationPartner, partner);
-		
-		
 		
 		this.numPresentationPartner++;
 	}
@@ -184,6 +212,12 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener, 
 		}
 	}
 
+	
+	/**
+	 * Return's the id of an remote partner.
+	 * @param partner	the remote partner is to be returned to the id
+	 * @return			id of the remote partner
+	 */
 	private int getIdOfRemotePartner(CommunicationPartner partner) {
 		Iterator<Entry<Integer, CommunicationPartner>> iterator = this.remotePartner.entrySet().iterator();
 		while (iterator.hasNext()) {
@@ -193,5 +227,13 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener, 
 			}
 		}
 		return -1;
+	}
+	
+
+	@Override
+	public void test() {
+		CommunicationPartner partner = this.presentationPartner.get(0);
+		partner.sendMessage(new CarMessage(1, true));
+		partner.sendMessage(new QRCodeMessage("hallo"));
 	}
 }

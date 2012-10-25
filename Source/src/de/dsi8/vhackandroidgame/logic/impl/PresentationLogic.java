@@ -6,11 +6,14 @@ import java.net.Socket;
 import de.dsi8.dsi8acl.communication.contract.ICommunicationPartner;
 import de.dsi8.dsi8acl.communication.contract.ICommunicationPartnerListener;
 import de.dsi8.dsi8acl.communication.impl.CommunicationPartner;
+import de.dsi8.dsi8acl.connection.contract.IRemoteConnection;
 import de.dsi8.dsi8acl.connection.impl.TCPConnection;
 import de.dsi8.dsi8acl.exception.ConnectionProblemException;
 import de.dsi8.vhackandroidgame.communication.contract.IPresentationServerListener;
 import de.dsi8.vhackandroidgame.communication.model.GameModeMessage;
+import de.dsi8.vhackandroidgame.communication.model.QRCodeMessage;
 import de.dsi8.vhackandroidgame.handler.CarMessageHandler;
+import de.dsi8.vhackandroidgame.handler.QRCodeMessageHandler;
 import de.dsi8.vhackandroidgame.logic.contract.IPresentationLogic;
 import de.dsi8.vhackandroidgame.logic.contract.IPresentationLogicListener;
 
@@ -23,11 +26,12 @@ public class PresentationLogic implements IPresentationLogic, ICommunicationPart
 	 */
 	private final ICommunicationPartner serverPartner;
 	
-	public PresentationLogic(IPresentationLogicListener listener, Socket socket) {
+	public PresentationLogic(IPresentationLogicListener listener, IRemoteConnection connection) {
 		this.listener = listener;
 		
-		this.serverPartner = new CommunicationPartner(this, new TCPConnection(socket));
+		this.serverPartner = new CommunicationPartner(this, connection);
 		this.serverPartner.registerMessageHandler(new CarMessageHandler(this));
+		this.serverPartner.registerMessageHandler(new QRCodeMessageHandler(this));
 		this.serverPartner.initialized();
 		this.serverPartner.sendMessage(new GameModeMessage(false));
 	}
@@ -50,14 +54,18 @@ public class PresentationLogic implements IPresentationLogic, ICommunicationPart
 
 	@Override
 	public void addCar(int carId) {
-		// TODO Auto-generated method stub
-		
+		this.listener.addCar(carId);
 	}
 
 
 	@Override
 	public void removeCar(int carId) {
-		// TODO Auto-generated method stub
-		
+		this.listener.removeCar(carId);
+	}
+
+
+	@Override
+	public void showQRCode(String str) {
+		this.listener.showQRCode(str);
 	}
 }

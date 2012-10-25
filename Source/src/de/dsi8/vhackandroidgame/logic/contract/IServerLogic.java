@@ -43,4 +43,6 @@ public interface IServerLogic extends Closeable {
 	 * @param carId
 	 */
 	void collisionDetected(int carId);
+	
+	void test();
 }
