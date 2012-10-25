@@ -23,9 +23,9 @@ package de.dsi8.vhackandroidgame.handler;
 import de.dsi8.dsi8acl.communication.handler.AbstractMessageHandler;
 import de.dsi8.dsi8acl.communication.impl.CommunicationPartner;
 import de.dsi8.dsi8acl.exception.InvalidMessageException;
-import de.dsi8.vhackandroidgame.communication.contract.IServerToPresentation;
 import de.dsi8.vhackandroidgame.communication.model.CarMessage;
 import de.dsi8.vhackandroidgame.communication.model.DriveMessage;
+import de.dsi8.vhackandroidgame.logic.impl.PresentationLogic;
 import de.dsi8.vhackandroidgame.logic.impl.ServerLogic;
 
 /**
@@ -39,14 +39,14 @@ public class CarMessageHandler extends AbstractMessageHandler<CarMessage> {
 	/**
 	 * Interface to the {@link ServerLogic}.
 	 */
-	private IServerToPresentation listener;
+	private PresentationLogic presentationLogic;
 
 	/**
 	 * Creates the handler.
-	 * @param listener	Interface to the {@link ServerLogic}.	
+	 * @param presentationLogic	Interface to the {@link ServerLogic}.	
 	 */
-	public CarMessageHandler(IServerToPresentation listener) {
-		this.listener = listener;
+	public CarMessageHandler(PresentationLogic presentationLogic) {
+		this.presentationLogic = presentationLogic;
 	}
 	
 	/**
@@ -55,9 +55,9 @@ public class CarMessageHandler extends AbstractMessageHandler<CarMessage> {
 	@Override
 	public void handleMessage(CommunicationPartner partner, CarMessage message) throws InvalidMessageException {
 		if (message.add) {
-			this.listener.addCar(message.id);
+			this.presentationLogic.getPresentationView().addCar(message.id);
 		} else {
-			this.listener.removeCar(message.id);
+			this.presentationLogic.getPresentationView().removeCar(message.id);
 		}
 	}
 }

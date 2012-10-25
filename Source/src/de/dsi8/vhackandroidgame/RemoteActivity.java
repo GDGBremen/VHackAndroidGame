@@ -48,11 +48,11 @@ import de.dsi8.dsi8acl.common.utils.AsyncTaskResult;
 import de.dsi8.dsi8acl.connection.model.ConnectionParameter;
 import de.dsi8.dsi8acl.exception.ConnectionProblemException;
 import de.dsi8.vhackandroidgame.logic.contract.IRemoteLogic;
-import de.dsi8.vhackandroidgame.logic.contract.IRemoteLogicListener;
+import de.dsi8.vhackandroidgame.logic.contract.IRemoteView;
 import de.dsi8.vhackandroidgame.logic.impl.RemoteLogic;
 import de.dsi8.vhackandroidgame.logic.impl.VHackAndroidGameConfiguration;
 
-public class RemoteActivity extends SimpleBaseGameActivity implements IRemoteLogicListener {
+public class RemoteActivity extends SimpleBaseGameActivity implements IRemoteView {
 
 	private IRemoteLogic clientLogic;
 	

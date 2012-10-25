@@ -28,12 +28,11 @@ import de.dsi8.dsi8acl.communication.impl.CommunicationPartner;
 import de.dsi8.dsi8acl.connection.impl.TCPConnection;
 import de.dsi8.dsi8acl.exception.ConnectionProblemException;
 import de.dsi8.vhackandroidgame.RemoteActivity;
-import de.dsi8.vhackandroidgame.communication.contract.IServerToRemote;
 import de.dsi8.vhackandroidgame.communication.model.DriveMessage;
 import de.dsi8.vhackandroidgame.communication.model.GameModeMessage;
 import de.dsi8.vhackandroidgame.handler.CollisionMessageHandler;
 import de.dsi8.vhackandroidgame.logic.contract.IRemoteLogic;
-import de.dsi8.vhackandroidgame.logic.contract.IRemoteLogicListener;
+import de.dsi8.vhackandroidgame.logic.contract.IRemoteView;
 
 /**
  * Logic of the remote smartphone.
@@ -41,7 +40,7 @@ import de.dsi8.vhackandroidgame.logic.contract.IRemoteLogicListener;
  * @author Henrik Voß <hennevoss@gmail.com>
  *
  */
-public class RemoteLogic implements IRemoteLogic, ICommunicationPartnerListener, IServerToRemote {
+public class RemoteLogic implements IRemoteLogic, ICommunicationPartnerListener {
 
 	/**
 	 * Connection to the server.
@@ -52,15 +51,15 @@ public class RemoteLogic implements IRemoteLogic, ICommunicationPartnerListener,
 	/**
 	 * Listener to the {@link RemoteActivity}.
 	 */
-	private final IRemoteLogicListener listener;
+	private final IRemoteView remoteView;
 	
 	/**
 	 * Creates the client-logic.
-	 * @param listener		Listenerlistener on the {@link RemoteActivity}.
+	 * @param remoteView		Listenerlistener on the {@link RemoteActivity}.
 	 * @param socket		Socket to the Server.
 	 */
-	public RemoteLogic(IRemoteLogicListener listener, Socket socket) {
-		this.listener = listener;
+	public RemoteLogic(IRemoteView remoteView, Socket socket) {
+		this.remoteView = remoteView;
 		this.serverPartner = new CommunicationPartner(this, new TCPConnection(socket));
 		this.serverPartner.registerMessageHandler(new CollisionMessageHandler(this));
 		this.serverPartner.initialized();
@@ -73,7 +72,7 @@ public class RemoteLogic implements IRemoteLogic, ICommunicationPartnerListener,
 	 */
 	@Override
 	public void connectionLost(CommunicationPartner partner, ConnectionProblemException ex) {
-		this.listener.connectionLost(ex);
+		this.remoteView.connectionLost(ex);
 	}
 
 	/**
@@ -92,9 +91,8 @@ public class RemoteLogic implements IRemoteLogic, ICommunicationPartnerListener,
 		this.serverPartner.close();
 	}
 
-	@Override
-	public void collisionDetected() {
-		this.listener.collisionDetected();
+	public IRemoteView getRemoteView() {
+		return this.remoteView;
 	}
 	
 }

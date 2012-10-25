@@ -38,12 +38,11 @@ import de.dsi8.dsi8acl.connection.model.ConnectionParameter;
 import de.dsi8.dsi8acl.exception.ConnectionProblemException;
 import de.dsi8.dsi8acl.exception.InvalidMessageException;
 import de.dsi8.vhackandroidgame.RacerGameActivity;
-import de.dsi8.vhackandroidgame.communication.contract.IPresentationToServer;
-import de.dsi8.vhackandroidgame.communication.contract.IRemoteToServer;
 import de.dsi8.vhackandroidgame.communication.model.CarMessage;
 import de.dsi8.vhackandroidgame.communication.model.CollisionMessage;
 import de.dsi8.vhackandroidgame.communication.model.GameModeMessage;
 import de.dsi8.vhackandroidgame.communication.model.QRCodeMessage;
+import de.dsi8.vhackandroidgame.communication.model.QRCodeMessage.QRCodePosition;
 import de.dsi8.vhackandroidgame.handler.DriveMessageHandler;
 import de.dsi8.vhackandroidgame.logic.contract.IServerLogic;
 import de.dsi8.vhackandroidgame.logic.contract.IServerLogicListener;
@@ -54,7 +53,7 @@ import de.dsi8.vhackandroidgame.logic.contract.IServerLogicListener;
  * @author Henrik Voß <hennevoss@gmail.com>
  *
  */
-public class ServerLogic implements IServerLogic, IServerCommunicationListener, IRemoteToServer, IPresentationToServer {
+public class ServerLogic implements IServerLogic, IServerCommunicationListener {
 
 	/**
 	 * Log-Tag.
@@ -204,14 +203,6 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener, 
 		this.communication.sendMessage(carId, new CollisionMessage());
 	}
 
-	@Override
-	public void driveCar(CommunicationPartner remotePartner, float valueX, float valueY) {
-		int id = getIdOfRemotePartner(remotePartner);
-		if (id > -1) {
-			
-		}
-	}
-
 	
 	/**
 	 * Return's the id of an remote partner.
@@ -234,6 +225,6 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener, 
 	public void test() {
 		CommunicationPartner partner = this.presentationPartner.get(0);
 		partner.sendMessage(new CarMessage(1, true));
-		partner.sendMessage(new QRCodeMessage("hallo"));
+		partner.sendMessage(new QRCodeMessage("hallo", QRCodePosition.CENTER));
 	}
 }

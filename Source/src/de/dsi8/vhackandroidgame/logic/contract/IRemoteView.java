@@ -30,7 +30,7 @@ import de.dsi8.vhackandroidgame.logic.impl.RemoteLogic;
  * @author Henrik Voß <hennevoss@gmail.com>
  *
  */
-public interface IRemoteLogicListener {
+public interface IRemoteView {
 	
 	/**
 	 * The connection to the Server lost.

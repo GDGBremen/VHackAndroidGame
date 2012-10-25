@@ -1,7 +1,9 @@
 package de.dsi8.vhackandroidgame.logic.contract;
 
+import de.dsi8.vhackandroidgame.communication.model.QRCodeMessage.QRCodePosition;
 
-public interface IPresentationLogicListener {
+
+public interface IPresentationView {
 
 	/**
 	 * Adds a new car with the id <code>carId</code> to the Map.
@@ -18,5 +20,7 @@ public interface IPresentationLogicListener {
 	void removeCar(int carId);
 	
 
-	void showQRCode(String str);
+	void showQRCode(String str, QRCodePosition position);
+
+	void updateBorders(boolean top, boolean right, boolean bottom, boolean left);
 }

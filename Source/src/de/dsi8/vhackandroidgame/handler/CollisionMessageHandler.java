@@ -23,9 +23,7 @@ package de.dsi8.vhackandroidgame.handler;
 import de.dsi8.dsi8acl.communication.handler.AbstractMessageHandler;
 import de.dsi8.dsi8acl.communication.impl.CommunicationPartner;
 import de.dsi8.dsi8acl.exception.InvalidMessageException;
-import de.dsi8.vhackandroidgame.communication.contract.IServerToRemote;
 import de.dsi8.vhackandroidgame.communication.model.CollisionMessage;
-import de.dsi8.vhackandroidgame.logic.contract.IRemoteLogicListener;
 import de.dsi8.vhackandroidgame.logic.impl.RemoteLogic;
 
 /**
@@ -39,14 +37,14 @@ public class CollisionMessageHandler extends AbstractMessageHandler<CollisionMes
 	/**
 	 * Interface to the {@link RemoteLogic}.
 	 */
-	private IServerToRemote listener;
+	private RemoteLogic remoteLogic;
 
 	/**
 	 * Creates the MessageHandler
-	 * @param listener		Interface to the {@link RemoteLogic}.
+	 * @param remoteLogic		Interface to the {@link RemoteLogic}.
 	 */
-	public CollisionMessageHandler(IServerToRemote listener) {
-		this.listener = listener;
+	public CollisionMessageHandler(RemoteLogic remoteLogic) {
+		this.remoteLogic = remoteLogic;
 	}
 	
 	/**
@@ -54,6 +52,6 @@ public class CollisionMessageHandler extends AbstractMessageHandler<CollisionMes
 	 */
 	@Override
 	public void handleMessage(CommunicationPartner partner, CollisionMessage message) throws InvalidMessageException {
-		this.listener.collisionDetected();
+		this.remoteLogic.getRemoteView().collisionDetected();
 	}
 }

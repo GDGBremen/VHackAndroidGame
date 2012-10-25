@@ -23,7 +23,6 @@ package de.dsi8.vhackandroidgame.handler;
 import de.dsi8.dsi8acl.communication.handler.AbstractMessageHandler;
 import de.dsi8.dsi8acl.communication.impl.CommunicationPartner;
 import de.dsi8.dsi8acl.exception.InvalidMessageException;
-import de.dsi8.vhackandroidgame.communication.contract.IRemoteToServer;
 import de.dsi8.vhackandroidgame.communication.model.DriveMessage;
 import de.dsi8.vhackandroidgame.logic.impl.ServerLogic;
 
@@ -38,14 +37,14 @@ public class DriveMessageHandler extends AbstractMessageHandler<DriveMessage> {
 	/**
 	 * Interface to the {@link ServerLogic}.
 	 */
-	private IRemoteToServer listener;
+	private ServerLogic serverLogic;
 
 	/**
 	 * Creates the handler.
-	 * @param listener	Interface to the {@link ServerLogic}.	
+	 * @param serverLogic	Interface to the {@link ServerLogic}.	
 	 */
-	public DriveMessageHandler(IRemoteToServer listener) {
-		this.listener = listener;
+	public DriveMessageHandler(ServerLogic serverLogic) {
+		this.serverLogic = serverLogic;
 	}
 	
 	/**
@@ -53,6 +52,6 @@ public class DriveMessageHandler extends AbstractMessageHandler<DriveMessage> {
 	 */
 	@Override
 	public void handleMessage(CommunicationPartner partner, DriveMessage message) throws InvalidMessageException {
-		this.listener.driveCar(partner, message.valueX, message.valueY);
+		//TODO driveCar
 	}
 }

@@ -67,8 +67,9 @@ import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
 
 import de.dsi8.dsi8acl.connection.impl.InternalConnector;
+import de.dsi8.vhackandroidgame.communication.model.QRCodeMessage.QRCodePosition;
 import de.dsi8.vhackandroidgame.logic.contract.IPresentationLogic;
-import de.dsi8.vhackandroidgame.logic.contract.IPresentationLogicListener;
+import de.dsi8.vhackandroidgame.logic.contract.IPresentationView;
 import de.dsi8.vhackandroidgame.logic.contract.IServerLogic;
 import de.dsi8.vhackandroidgame.logic.contract.IServerLogicListener;
 import de.dsi8.vhackandroidgame.logic.impl.PresentationLogic;
@@ -81,7 +82,7 @@ import de.dsi8.vhackandroidgame.logic.impl.ServerLogic;
  * @author Nicolas Gramlich
  * @since 22:43:20 - 15.07.2010
  */
-public class RacerGameActivity extends SimpleBaseGameActivity implements IServerLogicListener, IPresentationLogicListener, ContactListener {
+public class RacerGameActivity extends SimpleBaseGameActivity implements IServerLogicListener, IPresentationView, ContactListener {
 	// ===========================================================
 	// Constants
 	// ===========================================================
@@ -301,7 +302,7 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements IServer
 	}
 
 	@Override
-	public void showQRCode(String text) {
+	public void showQRCode(String text, QRCodePosition position) {
 		MultiFormatWriter writer = new MultiFormatWriter();
 		try {
 			final BitMatrix bitmatrix = writer.encode(text, BarcodeFormat.QR_CODE,
@@ -345,5 +346,12 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements IServer
 			e.printStackTrace();
 		}
 
+	}
+
+	@Override
+	public void updateBorders(boolean top, boolean right, boolean bottom,
+			boolean left) {
+		// TODO Auto-generated method stub
+		
 	}
 }
