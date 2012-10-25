@@ -38,6 +38,8 @@ public interface IRemoteLogicListener {
 	 */
 	void connectionLost(ConnectionProblemException ex);
 	
+	
+
 	/**
 	 * A collision was detected.
 	 */

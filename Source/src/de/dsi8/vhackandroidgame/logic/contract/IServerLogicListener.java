@@ -20,27 +20,27 @@
  ******************************************************************************/
 package de.dsi8.vhackandroidgame.logic.contract;
 
-import java.io.Closeable;
-
 import de.dsi8.vhackandroidgame.RacerGameActivity;
-import de.dsi8.vhackandroidgame.logic.impl.GameCoordinatorLogic;
+import de.dsi8.vhackandroidgame.logic.impl.ServerLogic;
 
 /**
- * Interface from the {@link GameCoordinatorLogic} to the {@link RacerGameActivity}.
+ * Interface from the {@link ServerLogic} to the {@link RacerGameActivity}.
  * 
  * @author Henrik Voß <hennevoss@gmail.com>
  *
  */
-public interface IGameCoordinatorLogic extends Closeable {
+public interface IServerLogicListener {
 	
-	/**
-	 * Starts the server.
-	 */
-	void start();
 	
+
 	/**
-	 * A collision was detected on a car.
-	 * @param carId
+	 * Moves the car to a new Position.
+	 * valueX and valueY define a unit vector of the direction and speed. 
+	 * 
+	 * @param carId		Id of the car to be moved
+	 * @param valueX 	x-value of the unit vector.	
+	 * @param valueY 	Y-value of the unit vector.	
 	 */
-	void collisionDetected(int carId);
+	void driveCar(int carId, float valueX, float valueY);
+	
 }

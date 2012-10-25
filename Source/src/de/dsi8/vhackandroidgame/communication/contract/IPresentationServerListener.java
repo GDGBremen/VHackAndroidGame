@@ -1,8 +1,7 @@
 package de.dsi8.vhackandroidgame.communication.contract;
 
-public interface ICar {
+public interface IPresentationServerListener {
 
-	
 	/**
 	 * Adds a new car with the id <code>carId</code> to the Map.
 	 *   
@@ -16,7 +15,4 @@ public interface ICar {
 	 * @param carId		Id of the car
 	 */
 	void removeCar(int carId);
-
-	
-	
 }

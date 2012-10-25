@@ -37,13 +37,14 @@ import de.dsi8.dsi8acl.connection.model.ConnectionParameter;
 import de.dsi8.dsi8acl.exception.ConnectionProblemException;
 import de.dsi8.dsi8acl.exception.InvalidMessageException;
 import de.dsi8.vhackandroidgame.RacerGameActivity;
-import de.dsi8.vhackandroidgame.communication.contract.IDrive;
+import de.dsi8.vhackandroidgame.communication.contract.IServerPresentationListener;
+import de.dsi8.vhackandroidgame.communication.contract.IServerRemoteListener;
 import de.dsi8.vhackandroidgame.communication.model.CarMessage;
 import de.dsi8.vhackandroidgame.communication.model.CollisionMessage;
 import de.dsi8.vhackandroidgame.communication.model.GameModeMessage;
 import de.dsi8.vhackandroidgame.handler.DriveMessageHandler;
-import de.dsi8.vhackandroidgame.logic.contract.IGameCoordinatorLogic;
-import de.dsi8.vhackandroidgame.logic.contract.IGameCoordinatorLogicListener;
+import de.dsi8.vhackandroidgame.logic.contract.IServerLogic;
+import de.dsi8.vhackandroidgame.logic.contract.IServerLogicListener;
 
 /**
  * The logic on the {@link RacerGameActivity}.
@@ -51,17 +52,17 @@ import de.dsi8.vhackandroidgame.logic.contract.IGameCoordinatorLogicListener;
  * @author Henrik Voß <hennevoss@gmail.com>
  *
  */
-public class GameCoordinatorLogic implements IGameCoordinatorLogic, IServerCommunicationListener, IDrive {
+public class ServerLogic implements IServerLogic, IServerCommunicationListener, IServerRemoteListener, IServerPresentationListener {
 
 	/**
 	 * Log-Tag.
 	 */
-	private static final String LOG_TAG = GameCoordinatorLogic.class.getSimpleName();
+	private static final String LOG_TAG = ServerLogic.class.getSimpleName();
 	
 	/**
 	 * Interface to the {@link RacerGameActivity}.
 	 */
-	private final IGameCoordinatorLogicListener listener;
+	private final IServerLogicListener listener;
 	
 	/**
 	 * Interface to the server communication.
@@ -84,7 +85,7 @@ public class GameCoordinatorLogic implements IGameCoordinatorLogic, IServerCommu
 	 * Creates the logic.
 	 * @param listener	Interface to the {@link RacerGameActivity}.	
 	 */
-	public GameCoordinatorLogic(IGameCoordinatorLogicListener listener) {
+	public ServerLogic(IServerLogicListener listener) {
 		this.listener = listener;
 		
 		ConnectionParameter.setStaticCommunicationConfiguration(new VHackAndroidGameConfiguration());

@@ -31,7 +31,6 @@ import org.andengine.engine.options.ScreenOrientation;
 import org.andengine.engine.options.resolutionpolicy.RatioResolutionPolicy;
 import org.andengine.entity.scene.Scene;
 import org.andengine.entity.scene.background.Background;
-import org.andengine.entity.sprite.Sprite;
 import org.andengine.entity.sprite.TiledSprite;
 import org.andengine.extension.physics.box2d.FixedStepPhysicsWorld;
 import org.andengine.extension.physics.box2d.PhysicsConnector;
@@ -46,7 +45,6 @@ import org.andengine.opengl.texture.region.TiledTextureRegion;
 import org.andengine.ui.activity.SimpleBaseGameActivity;
 import org.andengine.util.math.MathUtils;
 
-import android.os.AsyncTask;
 import android.util.Log;
 
 import com.badlogic.gdx.math.Vector2;
@@ -58,14 +56,14 @@ import com.badlogic.gdx.physics.box2d.ContactListener;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.Manifold;
 
-import de.dsi8.dsi8acl.common.utils.AsyncTaskResult;
+import de.dsi8.dsi8acl.communication.impl.CommunicationPartner;
 import de.dsi8.dsi8acl.connection.model.ConnectionParameter;
-import de.dsi8.vhackandroidgame.logic.contract.IGameCoordinatorLogic;
-import de.dsi8.vhackandroidgame.logic.contract.IGameCoordinatorLogicListener;
-import de.dsi8.vhackandroidgame.logic.contract.IGamePresentationLogic;
-import de.dsi8.vhackandroidgame.logic.contract.IGamePresentationLogicListener;
-import de.dsi8.vhackandroidgame.logic.impl.GameCoordinatorLogic;
-import de.dsi8.vhackandroidgame.logic.impl.GamePresentationLogic;
+import de.dsi8.vhackandroidgame.logic.contract.IPresentationLogic;
+import de.dsi8.vhackandroidgame.logic.contract.IPresentationLogicListener;
+import de.dsi8.vhackandroidgame.logic.contract.IServerLogic;
+import de.dsi8.vhackandroidgame.logic.contract.IServerLogicListener;
+import de.dsi8.vhackandroidgame.logic.impl.PresentationLogic;
+import de.dsi8.vhackandroidgame.logic.impl.ServerLogic;
 
 /**
  * (c) 2010 Nicolas Gramlich
@@ -74,7 +72,7 @@ import de.dsi8.vhackandroidgame.logic.impl.GamePresentationLogic;
  * @author Nicolas Gramlich
  * @since 22:43:20 - 15.07.2010
  */
-public class RacerGameActivity extends SimpleBaseGameActivity implements IGameCoordinatorLogicListener, IGamePresentationLogicListener, ContactListener {
+public class RacerGameActivity extends SimpleBaseGameActivity implements IServerLogicListener, IPresentationLogicListener, ContactListener {
 	// ===========================================================
 	// Constants
 	// ===========================================================
@@ -106,13 +104,13 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements IGameCo
 
 	private PhysicsWorld mPhysicsWorld;
 	
-	private IGameCoordinatorLogic serverLogic;
+	private IServerLogic serverLogic;
 	
 	private final FixtureDef carFixtureDef = PhysicsFactory.createFixtureDef(1, 0.5f, 0.5f);
 	
 	private Map<Integer, CarView> cars = new HashMap<Integer, RacerGameActivity.CarView>();
 
-	private IGamePresentationLogic presentationLogic;
+	private IPresentationLogic presentationLogic;
 	
 	private ConnectTask connectTask;
 	
@@ -123,11 +121,11 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements IGameCo
 	protected void onStart() {
 		super.onStart();
 		
-		this.serverLogic = new GameCoordinatorLogic(this);
+		this.serverLogic = new ServerLogic(this);
 		this.serverLogic.start();
 		
 		connectTask = new ConnectTask();
-		connectTask.execute((Object)null);
+		connectTask.start();
 	}
 	
 	/**
@@ -144,7 +142,7 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements IGameCo
 		}
 		
 
-		connectTask.cancel(true);
+		connectTask.interrupt();
 		if(presentationLogic != null) {
 			try {
 				presentationLogic.close();
@@ -194,20 +192,6 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements IGameCo
 		this.mScene.registerUpdateHandler(this.mPhysicsWorld);
 		
 		return this.mScene;
-	}
-	
-	@Override
-	public void addObstacle(final float pX, final float pY) {
-		final Sprite box = new Sprite(pX, pY, OBSTACLE_SIZE, OBSTACLE_SIZE, this.mBoxTextureRegion, this.getVertexBufferObjectManager());
-
-		final FixtureDef boxFixtureDef = PhysicsFactory.createFixtureDef(0.1f, 0.5f, 0.5f);
-		final Body boxBody = PhysicsFactory.createBoxBody(this.mPhysicsWorld, box, BodyType.DynamicBody, boxFixtureDef);
-		boxBody.setLinearDamping(10);
-		boxBody.setAngularDamping(10);
-
-		this.mPhysicsWorld.registerPhysicsConnector(new PhysicsConnector(box, boxBody, true, true));
-
-		this.mScene.attachChild(box);
 	}
 
 	/**
@@ -281,43 +265,26 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements IGameCo
 	/**
 	 * The Task that should connect the client with the host.
 	 */
-	private class ConnectTask extends AsyncTask<Object, Object, AsyncTaskResult<Socket>>  {
-				/**
-				 * Connecting to the Host.
-				 */
-				@Override
-				protected AsyncTaskResult<Socket> doInBackground(
-						Object... params) {
-					try {
-						synchronized (this) {
-							// Workaround for multicall of onStart by the AndEngine
-							try {
-								this.wait(2000);
-							} catch(InterruptedException ex) {
-								Log.i(LOG_TAG, "Interrupted");
-								return null;
-							}
-						}
-						Log.i(LOG_TAG, "Not interrupted");
-						Socket socket = new Socket("127.0.0.1", ConnectionParameter.getDefaultConnectionDetails().port);
-						return new AsyncTaskResult<Socket>(socket);
-					} catch (Exception e) {
-						return new AsyncTaskResult<Socket>(e);
-					}
+	private class ConnectTask extends Thread  {
+		
+		@Override
+		public void run() {
+			try {
+				synchronized (this) {
+					// Workaround for multicall of onStart by the AndEngine
+					this.wait(2000);
+					Log.i(LOG_TAG, "Not interrupted");
+					Socket socket = new Socket("127.0.0.1", ConnectionParameter.getDefaultConnectionDetails().port);
+					presentationLogic = new PresentationLogic(RacerGameActivity.this, socket);
 				}
+			} catch(InterruptedException ex) {
+				Log.i(LOG_TAG, "Interrupted");
 				
-				/**
-				 * Connection is open, initialize the logic.
-				 */
-				@Override
-				protected void onPostExecute(AsyncTaskResult<Socket> result) {
-					if(result.getError() == null) {
-						presentationLogic = new GamePresentationLogic(RacerGameActivity.this, result.getResult());
-					} else {
-						Log.e(LOG_TAG, "IOException", result.getError());
-						finish();
-					}
-				}
+			} catch (Exception e) {
+				Log.e(LOG_TAG, "Interrupted", e);
+			}
+		}
+		
 	}
 	
 

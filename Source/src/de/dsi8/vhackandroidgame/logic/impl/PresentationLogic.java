@@ -8,30 +8,26 @@ import de.dsi8.dsi8acl.communication.contract.ICommunicationPartnerListener;
 import de.dsi8.dsi8acl.communication.impl.CommunicationPartner;
 import de.dsi8.dsi8acl.connection.impl.TCPConnection;
 import de.dsi8.dsi8acl.exception.ConnectionProblemException;
-import de.dsi8.vhackandroidgame.communication.model.CarMessage;
+import de.dsi8.vhackandroidgame.communication.contract.IPresentationServerListener;
 import de.dsi8.vhackandroidgame.communication.model.GameModeMessage;
 import de.dsi8.vhackandroidgame.handler.CarMessageHandler;
-import de.dsi8.vhackandroidgame.handler.CollisionMessageHandler;
-import de.dsi8.vhackandroidgame.handler.DriveMessageHandler;
-import de.dsi8.vhackandroidgame.logic.contract.IGamePresentationLogic;
-import de.dsi8.vhackandroidgame.logic.contract.IGamePresentationLogicListener;
+import de.dsi8.vhackandroidgame.logic.contract.IPresentationLogic;
+import de.dsi8.vhackandroidgame.logic.contract.IPresentationLogicListener;
 
-public class GamePresentationLogic implements IGamePresentationLogic, ICommunicationPartnerListener {
+public class PresentationLogic implements IPresentationLogic, ICommunicationPartnerListener, IPresentationServerListener {
 
-	private IGamePresentationLogicListener listener;
-
+	private IPresentationLogicListener listener;
 
 	/**
 	 * Connection to the server.
 	 */
 	private final ICommunicationPartner serverPartner;
 	
-	public GamePresentationLogic(IGamePresentationLogicListener listener, Socket socket) {
+	public PresentationLogic(IPresentationLogicListener listener, Socket socket) {
 		this.listener = listener;
 		
 		this.serverPartner = new CommunicationPartner(this, new TCPConnection(socket));
-		this.serverPartner.registerMessageHandler(new DriveMessageHandler(listener));
-		this.serverPartner.registerMessageHandler(new CarMessageHandler(listener));
+		this.serverPartner.registerMessageHandler(new CarMessageHandler(this));
 		this.serverPartner.initialized();
 		this.serverPartner.sendMessage(new GameModeMessage(false));
 	}
@@ -50,7 +46,18 @@ public class GamePresentationLogic implements IGamePresentationLogic, ICommunica
 		// TODO Auto-generated method stub
 		
 	}
-	
-	
-	
+
+
+	@Override
+	public void addCar(int carId) {
+		// TODO Auto-generated method stub
+		
+	}
+
+
+	@Override
+	public void removeCar(int carId) {
+		// TODO Auto-generated method stub
+		
+	}
 }

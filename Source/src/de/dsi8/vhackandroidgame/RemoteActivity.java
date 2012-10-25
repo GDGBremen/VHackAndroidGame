@@ -146,7 +146,7 @@ public class RemoteActivity extends SimpleBaseGameActivity implements IRemoteLog
 				@Override
 				protected void onPostExecute(AsyncTaskResult<Socket> result) {
 					if(result.getError() == null) {
-						clientLogic = new RemoteLogic(RemoteActivity.this, result.getResult());
+						RemoteActivity.this.clientLogic = new RemoteLogic(RemoteActivity.this, result.getResult());
 					} else {
 						Log.e(LOG_TAG, "IOException", result.getError());
 						finish();

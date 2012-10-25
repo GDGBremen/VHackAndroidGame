@@ -20,19 +20,27 @@
  ******************************************************************************/
 package de.dsi8.vhackandroidgame.logic.contract;
 
+import java.io.Closeable;
+
 import de.dsi8.vhackandroidgame.RacerGameActivity;
-import de.dsi8.vhackandroidgame.communication.contract.IDrive;
-import de.dsi8.vhackandroidgame.logic.impl.GameCoordinatorLogic;
+import de.dsi8.vhackandroidgame.logic.impl.ServerLogic;
 
 /**
- * Interface from the {@link GameCoordinatorLogic} to the {@link RacerGameActivity}.
+ * Interface from the {@link ServerLogic} to the {@link RacerGameActivity}.
  * 
  * @author Henrik Voß <hennevoss@gmail.com>
  *
  */
-public interface IGameCoordinatorLogicListener extends IDrive {
+public interface IServerLogic extends Closeable {
 	
+	/**
+	 * Starts the server.
+	 */
+	void start();
 	
-
-	
+	/**
+	 * A collision was detected on a car.
+	 * @param carId
+	 */
+	void collisionDetected(int carId);
 }
