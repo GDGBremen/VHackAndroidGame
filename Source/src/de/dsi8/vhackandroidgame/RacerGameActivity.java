@@ -33,9 +33,6 @@ import org.andengine.entity.scene.Scene;
 import org.andengine.entity.scene.background.Background;
 import org.andengine.entity.sprite.Sprite;
 import org.andengine.entity.sprite.TiledSprite;
-import org.andengine.extension.physics.box2d.PhysicsConnector;
-import org.andengine.extension.physics.box2d.PhysicsFactory;
-import org.andengine.extension.physics.box2d.util.Vector2Pool;
 import org.andengine.opengl.texture.TextureOptions;
 import org.andengine.opengl.texture.atlas.bitmap.BitmapTextureAtlas;
 import org.andengine.opengl.texture.atlas.bitmap.BitmapTextureAtlasTextureRegionFactory;
@@ -47,15 +44,11 @@ import org.andengine.opengl.texture.region.TextureRegion;
 import org.andengine.opengl.texture.region.TiledTextureRegion;
 import org.andengine.opengl.vbo.VertexBufferObjectManager;
 import org.andengine.ui.activity.SimpleBaseGameActivity;
-import org.andengine.util.math.MathUtils;
 
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.util.Log;
 
-import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.physics.box2d.Body;
-import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.MultiFormatWriter;
 import com.google.zxing.WriterException;
@@ -87,7 +80,7 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements
 	private static final int RACETRACK_WIDTH = 64;
 
 	private static final int OBSTACLE_SIZE = 16;
-	private static final int CAR_SIZE = 16;
+	public static final int CAR_SIZE = 16;
 
 	private static final int CAMERA_WIDTH = RACETRACK_WIDTH * 5;
 	private static final int CAMERA_HEIGHT = RACETRACK_WIDTH * 3;
@@ -106,11 +99,13 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements
 
 	private Scene mScene;
 
+
+
+
 	private IServerLogic serverLogic;
-
-	private final FixtureDef carFixtureDef = PhysicsFactory.createFixtureDef(1,
-			0.5f, 0.5f);
-
+	
+	
+	
 	private Map<Integer, CarView> cars = new HashMap<Integer, RacerGameActivity.CarView>();
 
 	private IPresentationLogic presentationLogic;
@@ -221,8 +216,8 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements
 		this.borderRight = new Rectangle(CAMERA_WIDTH - 2, 0, 2, CAMERA_HEIGHT,
 				vertexBufferObjectManager);
 		this.serverLogic.onCreateScene();
-		// this.mScene.registerUpdateHandler(this.mPhysicsWorld);
-
+		this.mScene.registerUpdateHandler(this.serverLogic.getPhysicsWorld()); // TODO Move this to the ServerLogic
+		
 		this.serverLogic.test();
 
 		return this.mScene;
@@ -233,16 +228,8 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements
 	 */
 	@Override
 	public void driveCar(int carId, float valueX, float valueY) {
-		CarView carView = this.cars.get(Integer.valueOf(carId));
 
-		final Vector2 velocity = Vector2Pool.obtain(valueX * 5, valueY * 5);
-		carView.body.setLinearVelocity(velocity);
-		Vector2Pool.recycle(velocity);
 
-		final float rotationInRad = (float) Math.atan2(-valueX, valueY);
-		carView.body.setTransform(carView.body.getWorldCenter(), rotationInRad);
-
-		carView.car.setRotation(MathUtils.radToDeg(rotationInRad));
 	}
 
 	/**
@@ -257,13 +244,9 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements
 				this.mVehiclesTextureRegion, this.getVertexBufferObjectManager());
 		carView.car.setCurrentTileIndex(carId % 6);
 
-		// carView.body = PhysicsFactory.createBoxBody(this.mPhysicsWorld,
-		// carView.car, BodyType.DynamicBody, carFixtureDef);
 
 		this.mScene.attachChild(carView.car);
-		carView.physicsConnector = new PhysicsConnector(carView.car, carView.body,
-				true, false);
-		// this.mPhysicsWorld.registerPhysicsConnector(carView.physicsConnector);
+
 		this.cars.put(carId, carView);
 	}
 
@@ -278,9 +261,7 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements
 
 	public class CarView {
 		public int id;
-		public Body body;
 		public TiledSprite car;
-		public PhysicsConnector physicsConnector;
 	}
 
 	@Override
