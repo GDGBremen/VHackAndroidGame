@@ -25,6 +25,16 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.andengine.extension.physics.box2d.FixedStepPhysicsWorld;
+import org.andengine.extension.physics.box2d.PhysicsWorld;
+
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.physics.box2d.Body;
+import com.badlogic.gdx.physics.box2d.Contact;
+import com.badlogic.gdx.physics.box2d.ContactImpulse;
+import com.badlogic.gdx.physics.box2d.ContactListener;
+import com.badlogic.gdx.physics.box2d.Manifold;
+
 import android.util.Log;
 import de.dsi8.dsi8acl.communication.contract.ICommunicationPartner;
 import de.dsi8.dsi8acl.communication.contract.IServerCommunication;
@@ -38,6 +48,7 @@ import de.dsi8.dsi8acl.connection.model.ConnectionParameter;
 import de.dsi8.dsi8acl.exception.ConnectionProblemException;
 import de.dsi8.dsi8acl.exception.InvalidMessageException;
 import de.dsi8.vhackandroidgame.RacerGameActivity;
+import de.dsi8.vhackandroidgame.RacerGameActivity.CarView;
 import de.dsi8.vhackandroidgame.communication.model.CarMessage;
 import de.dsi8.vhackandroidgame.communication.model.CollisionMessage;
 import de.dsi8.vhackandroidgame.communication.model.GameModeMessage;
@@ -55,7 +66,7 @@ import de.dsi8.vhackandroidgame.logic.model.RemotePartner;
  * @author Henrik Voß <hennevoss@gmail.com>
  *
  */
-public class ServerLogic implements IServerLogic, IServerCommunicationListener {
+public class ServerLogic implements IServerLogic, IServerCommunicationListener, ContactListener {
 
 	/**
 	 * Log-Tag.
@@ -71,6 +82,10 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener {
 	 * Interface to the server communication.
 	 */
 	private final IServerCommunication communication;
+	
+
+
+	private PhysicsWorld mPhysicsWorld;
 	
 	/**
 	 * All connected remote partner.
@@ -234,5 +249,49 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener {
 		CommunicationPartner partner = this.presentationPartner.get(0).communicationPartner;
 		partner.sendMessage(new CarMessage(1, true));
 		partner.sendMessage(new QRCodeMessage("hallo", QRCodePosition.CENTER));
+	}
+	
+
+	@Override
+	public void onCreateScene() {
+		this.mPhysicsWorld = new FixedStepPhysicsWorld(30, new Vector2(0, 0), false, 8, 1);
+
+		this.mPhysicsWorld.setContactListener(this);
+	}
+	
+	@Override
+	public void beginContact(Contact contact) {
+		int firstCarId = getCarIdFromBody(contact.getFixtureA().getBody());
+		if (firstCarId > -1) {
+			collisionDetected(firstCarId);
+		}
+		
+		int secondCarId = getCarIdFromBody(contact.getFixtureB().getBody());
+		if (secondCarId > -1) {
+			collisionDetected(secondCarId);
+		}
+	}
+		
+
+	@Override
+	public void postSolve(Contact arg0, ContactImpulse arg1) { /* Not required */
+	}
+
+	@Override
+	public void preSolve(Contact arg0, Manifold arg1) { /* Not required */
+	}
+
+	@Override
+	public void endContact(Contact arg0) { /* Not required */
+	}
+	
+	private int getCarIdFromBody(Body body) {
+		for (RemotePartner carView : this.remotePartner.values()) {
+			if (carView.body == body) {
+				return carView.id;
+			}
+		}
+		
+		return -1;
 	}
 }

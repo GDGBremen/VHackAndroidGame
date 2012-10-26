@@ -82,7 +82,7 @@ import de.dsi8.vhackandroidgame.logic.impl.ServerLogic;
  * @author Nicolas Gramlich
  * @since 22:43:20 - 15.07.2010
  */
-public class RacerGameActivity extends SimpleBaseGameActivity implements IServerLogicListener, IPresentationView, ContactListener {
+public class RacerGameActivity extends SimpleBaseGameActivity implements IServerLogicListener, IPresentationView {
 	// ===========================================================
 	// Constants
 	// ===========================================================
@@ -112,7 +112,6 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements IServer
 
 	private Scene mScene;
 
-	private PhysicsWorld mPhysicsWorld;
 
 	private IServerLogic serverLogic;
 	
@@ -200,10 +199,8 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements IServer
 		this.mScene = new Scene();
 		this.mScene.setBackground(new Background(0, 0, 0));
 
-		this.mPhysicsWorld = new FixedStepPhysicsWorld(30, new Vector2(0, 0), false, 8, 1);
-
-		this.mPhysicsWorld.setContactListener(this);
-		this.mScene.registerUpdateHandler(this.mPhysicsWorld);
+		this.serverLogic.onCreateScene();
+//		this.mScene.registerUpdateHandler(this.mPhysicsWorld);
 		
 		this.serverLogic.test();
 		
@@ -239,13 +236,13 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements IServer
 				this.mVehiclesTextureRegion, this.getVertexBufferObjectManager());
 		carView.car.setCurrentTileIndex(carId % 6);
 
-		carView.body = PhysicsFactory.createBoxBody(this.mPhysicsWorld,
-				carView.car, BodyType.DynamicBody, carFixtureDef);
+//		carView.body = PhysicsFactory.createBoxBody(this.mPhysicsWorld,
+//				carView.car, BodyType.DynamicBody, carFixtureDef);
 
 		this.mScene.attachChild(carView.car);
 		carView.physicsConnector = new PhysicsConnector(carView.car, carView.body,
 				true, false);
-		this.mPhysicsWorld.registerPhysicsConnector(carView.physicsConnector);
+//		this.mPhysicsWorld.registerPhysicsConnector(carView.physicsConnector);
 		this.cars.put(carId, carView);
 	}
 
@@ -253,46 +250,12 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements IServer
 	public void removeCar(int carId) {
 		CarView carView = this.cars.remove(carId);
 		if (carView != null) {
-			this.mPhysicsWorld.unregisterPhysicsConnector(carView.physicsConnector);
+//			this.mPhysicsWorld.unregisterPhysicsConnector(carView.physicsConnector);
 			this.mScene.detachChild(carView.car);
 		}
 	}
 
-	private int getCarIdFromBody(Body body) {
-		for (CarView carView : this.cars.values()) {
-			if (carView.body == body) {
-				return carView.id;
-			}
-		}
-		
-		return -1;
-	}
-	
-	@Override
-	public void beginContact(Contact contact) {
-		int firstCarId = getCarIdFromBody(contact.getFixtureA().getBody());
-		if (firstCarId > -1) {
-			RacerGameActivity.this.serverLogic.collisionDetected(firstCarId);
-		}
-		
-		int secondCarId = getCarIdFromBody(contact.getFixtureB().getBody());
-		if (secondCarId > -1) {
-			RacerGameActivity.this.serverLogic.collisionDetected(secondCarId);
-		}
-	}
-		
 
-	@Override
-	public void postSolve(Contact arg0, ContactImpulse arg1) { /* Not required */
-	}
-
-	@Override
-	public void preSolve(Contact arg0, Manifold arg1) { /* Not required */
-	}
-
-	@Override
-	public void endContact(Contact arg0) { /* Not required */
-	}
 
 	public class CarView {
 		public int id;
