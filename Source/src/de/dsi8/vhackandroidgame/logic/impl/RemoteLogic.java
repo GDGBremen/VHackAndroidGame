@@ -22,6 +22,12 @@ package de.dsi8.vhackandroidgame.logic.impl;
 
 import java.net.Socket;
 
+import org.andengine.entity.scene.Scene;
+import org.andengine.extension.physics.box2d.FixedStepPhysicsWorld;
+import org.andengine.extension.physics.box2d.PhysicsWorld;
+
+import com.badlogic.gdx.math.Vector2;
+
 import de.dsi8.dsi8acl.communication.contract.ICommunicationPartner;
 import de.dsi8.dsi8acl.communication.contract.ICommunicationPartnerListener;
 import de.dsi8.dsi8acl.communication.impl.CommunicationPartner;
@@ -52,6 +58,7 @@ public class RemoteLogic implements IRemoteLogic, ICommunicationPartnerListener 
 	 * Listener to the {@link RemoteActivity}.
 	 */
 	private final IRemoteView remoteView;
+	
 	
 	/**
 	 * Creates the client-logic.
@@ -94,5 +101,6 @@ public class RemoteLogic implements IRemoteLogic, ICommunicationPartnerListener 
 	public IRemoteView getRemoteView() {
 		return this.remoteView;
 	}
+
 	
 }

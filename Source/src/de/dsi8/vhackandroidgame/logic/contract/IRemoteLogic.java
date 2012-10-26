@@ -22,6 +22,8 @@ package de.dsi8.vhackandroidgame.logic.contract;
 
 import java.io.Closeable;
 
+import org.andengine.entity.scene.Scene;
+
 import de.dsi8.vhackandroidgame.RemoteActivity;
 import de.dsi8.vhackandroidgame.logic.impl.RemoteLogic;
 

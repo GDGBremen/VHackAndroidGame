@@ -25,7 +25,18 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.andengine.extension.physics.box2d.FixedStepPhysicsWorld;
+import org.andengine.extension.physics.box2d.PhysicsWorld;
+
 import android.util.Log;
+
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.physics.box2d.Body;
+import com.badlogic.gdx.physics.box2d.Contact;
+import com.badlogic.gdx.physics.box2d.ContactImpulse;
+import com.badlogic.gdx.physics.box2d.ContactListener;
+import com.badlogic.gdx.physics.box2d.Manifold;
+
 import de.dsi8.dsi8acl.communication.contract.ICommunicationPartner;
 import de.dsi8.dsi8acl.communication.contract.IServerCommunication;
 import de.dsi8.dsi8acl.communication.contract.IServerCommunicationListener;
@@ -47,6 +58,8 @@ import de.dsi8.vhackandroidgame.communication.model.QRCodeMessage.QRCodePosition
 import de.dsi8.vhackandroidgame.handler.DriveMessageHandler;
 import de.dsi8.vhackandroidgame.logic.contract.IServerLogic;
 import de.dsi8.vhackandroidgame.logic.contract.IServerLogicListener;
+import de.dsi8.vhackandroidgame.logic.model.PresentationPartner;
+import de.dsi8.vhackandroidgame.logic.model.RemotePartner;
 
 /**
  * The logic on the {@link RacerGameActivity}.
@@ -54,7 +67,7 @@ import de.dsi8.vhackandroidgame.logic.contract.IServerLogicListener;
  * @author Henrik Voß <hennevoss@gmail.com>
  *
  */
-public class ServerLogic implements IServerLogic, IServerCommunicationListener {
+public class ServerLogic implements IServerLogic, IServerCommunicationListener, ContactListener {
 
 	/**
 	 * Log-Tag.
@@ -71,10 +84,14 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener {
 	 */
 	private final IServerCommunication communication;
 	
+
+
+	private PhysicsWorld mPhysicsWorld;
+	
 	/**
 	 * All connected remote partner.
 	 */
-	private Map<Integer, CommunicationPartner> remotePartner = new HashMap<Integer, CommunicationPartner>();
+	private Map<Integer, RemotePartner> remotePartner = new HashMap<Integer, RemotePartner>();
 	
 	/**
 	 * Number of remote partner.
@@ -84,7 +101,7 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener {
 	/**
 	 * 
 	 */
-	private Map<Integer, CommunicationPartner> presentationPartner = new HashMap<Integer, CommunicationPartner>();
+	private Map<Integer, PresentationPartner> presentationPartner = new HashMap<Integer, PresentationPartner>();
 	
 	/**
 	 * Number of presentation partner.
@@ -158,13 +175,15 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener {
 	 * @param partner	the new remote partner
 	 */
 	private void newRemotePartner(CommunicationPartner partner) {
-		this.remotePartner.put(this.numRemotePartner, partner);
+		RemotePartner rPartner = new RemotePartner();
+		rPartner.communicationPartner = partner;
+		rPartner.id = this.numRemotePartner++;
 		
-		for (CommunicationPartner p : this.presentationPartner.values()) {
-			p.sendMessage(new CarMessage(this.numRemotePartner, true));
+		this.remotePartner.put(rPartner.id, rPartner);
+		
+		for (PresentationPartner p : this.presentationPartner.values()) {
+			p.communicationPartner.sendMessage(new CarMessage(rPartner.id, true));
 		}
-		
-		this.numRemotePartner++;
 	}
 	
 	/**
@@ -172,7 +191,11 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener {
 	 * @param partner	the new presentation partner
 	 */
 	private void newPresentationPartner(CommunicationPartner partner) {
-		this.presentationPartner.put(this.numPresentationPartner, partner);
+		PresentationPartner pPartner = new PresentationPartner();
+		pPartner.communicationPartner = partner;
+		pPartner.id = this.numPresentationPartner++;
+		
+		this.presentationPartner.put(pPartner.id, pPartner);
 		
 		this.numPresentationPartner++;
 	}
@@ -211,10 +234,10 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener {
 	 * @return			id of the remote partner
 	 */
 	private int getIdOfRemotePartner(CommunicationPartner partner) {
-		Iterator<Entry<Integer, CommunicationPartner>> iterator = this.remotePartner.entrySet().iterator();
+		Iterator<Entry<Integer, RemotePartner>> iterator = this.remotePartner.entrySet().iterator();
 		while (iterator.hasNext()) {
-			Entry<Integer, CommunicationPartner> next = iterator.next();
-			if (partner == next.getValue()) {
+			Entry<Integer, RemotePartner> next = iterator.next();
+			if (partner == next.getValue().communicationPartner) {
 				return next.getKey().intValue();
 			}
 		}
@@ -224,7 +247,7 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener {
 
 	@Override
 	public void test() {
-		CommunicationPartner partner = this.presentationPartner.get(0);
+		CommunicationPartner partner = this.presentationPartner.get(0).communicationPartner;
 		partner.sendMessage(new CarMessage(1, true));
 		partner.sendMessage(new QRCodeMessage("hallo CENTER", QRCodePosition.CENTER));
 		partner.sendMessage(new QRCodeMessage("hallo TOP", QRCodePosition.TOP));
@@ -232,5 +255,49 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener {
 		partner.sendMessage(new QRCodeMessage("hallo BOTTOM", QRCodePosition.BOTTOM));
 		partner.sendMessage(new QRCodeMessage("hallo LEFT", QRCodePosition.LEFT));
 		partner.sendMessage(new BorderMessage(true, true, true, true));
+	}
+	
+
+	@Override
+	public void onCreateScene() {
+		this.mPhysicsWorld = new FixedStepPhysicsWorld(30, new Vector2(0, 0), false, 8, 1);
+
+		this.mPhysicsWorld.setContactListener(this);
+	}
+	
+	@Override
+	public void beginContact(Contact contact) {
+		int firstCarId = getCarIdFromBody(contact.getFixtureA().getBody());
+		if (firstCarId > -1) {
+			collisionDetected(firstCarId);
+		}
+		
+		int secondCarId = getCarIdFromBody(contact.getFixtureB().getBody());
+		if (secondCarId > -1) {
+			collisionDetected(secondCarId);
+		}
+	}
+		
+
+	@Override
+	public void postSolve(Contact arg0, ContactImpulse arg1) { /* Not required */
+	}
+
+	@Override
+	public void preSolve(Contact arg0, Manifold arg1) { /* Not required */
+	}
+
+	@Override
+	public void endContact(Contact arg0) { /* Not required */
+	}
+	
+	private int getCarIdFromBody(Body body) {
+		for (RemotePartner carView : this.remotePartner.values()) {
+			if (carView.body == body) {
+				return carView.id;
+			}
+		}
+		
+		return -1;
 	}
 }
