@@ -93,7 +93,7 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements IServer
 	private static final int RACETRACK_WIDTH = 64;
 
 	private static final int OBSTACLE_SIZE = 16;
-	private static final int CAR_SIZE = 16;
+	public static final int CAR_SIZE = 16;
 
 	private static final int CAMERA_WIDTH = RACETRACK_WIDTH * 5;
 	private static final int CAMERA_HEIGHT = RACETRACK_WIDTH * 3;
@@ -115,7 +115,7 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements IServer
 
 	private IServerLogic serverLogic;
 	
-	private final FixtureDef carFixtureDef = PhysicsFactory.createFixtureDef(1, 0.5f, 0.5f);
+	
 	
 	private Map<Integer, CarView> cars = new HashMap<Integer, RacerGameActivity.CarView>();
 
@@ -200,7 +200,7 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements IServer
 		this.mScene.setBackground(new Background(0, 0, 0));
 
 		this.serverLogic.onCreateScene();
-//		this.mScene.registerUpdateHandler(this.mPhysicsWorld);
+		this.mScene.registerUpdateHandler(this.serverLogic.getPhysicsWorld()); // TODO Move this to the ServerLogic
 		
 		this.serverLogic.test();
 		
@@ -212,16 +212,7 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements IServer
 	 */
 	@Override
 	public void driveCar(int carId, float valueX, float valueY) {
-		CarView carView = this.cars.get(Integer.valueOf(carId));
-		
-		final Vector2 velocity = Vector2Pool.obtain(valueX * 5, valueY * 5);
-		carView.body.setLinearVelocity(velocity);
-		Vector2Pool.recycle(velocity);
 
-		final float rotationInRad = (float)Math.atan2(-valueX, valueY);
-		carView.body.setTransform(carView.body.getWorldCenter(), rotationInRad);
-
-		carView.car.setRotation(MathUtils.radToDeg(rotationInRad));
 	}
 
 	/**
@@ -236,13 +227,8 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements IServer
 				this.mVehiclesTextureRegion, this.getVertexBufferObjectManager());
 		carView.car.setCurrentTileIndex(carId % 6);
 
-//		carView.body = PhysicsFactory.createBoxBody(this.mPhysicsWorld,
-//				carView.car, BodyType.DynamicBody, carFixtureDef);
-
 		this.mScene.attachChild(carView.car);
-		carView.physicsConnector = new PhysicsConnector(carView.car, carView.body,
-				true, false);
-//		this.mPhysicsWorld.registerPhysicsConnector(carView.physicsConnector);
+		
 		this.cars.put(carId, carView);
 	}
 
@@ -255,13 +241,9 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements IServer
 		}
 	}
 
-
-
 	public class CarView {
 		public int id;
-		public Body body;
 		public TiledSprite car;
-		public PhysicsConnector physicsConnector;
 	}
 
 	@Override

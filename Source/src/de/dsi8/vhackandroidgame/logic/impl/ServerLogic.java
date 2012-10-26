@@ -25,14 +25,22 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.andengine.entity.primitive.Rectangle;
+import org.andengine.entity.shape.RectangularShape;
 import org.andengine.extension.physics.box2d.FixedStepPhysicsWorld;
+import org.andengine.extension.physics.box2d.PhysicsConnector;
+import org.andengine.extension.physics.box2d.PhysicsFactory;
 import org.andengine.extension.physics.box2d.PhysicsWorld;
+import org.andengine.opengl.vbo.IVertexBufferObject;
+import org.andengine.opengl.vbo.VertexBufferObjectManager;
 
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
+import com.badlogic.gdx.physics.box2d.BodyDef.BodyType;
 import com.badlogic.gdx.physics.box2d.Contact;
 import com.badlogic.gdx.physics.box2d.ContactImpulse;
 import com.badlogic.gdx.physics.box2d.ContactListener;
+import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.Manifold;
 
 import android.util.Log;
@@ -83,6 +91,7 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener, 
 	 */
 	private final IServerCommunication communication;
 	
+	private final FixtureDef carFixtureDef = PhysicsFactory.createFixtureDef(1, 0.5f, 0.5f);
 
 
 	private PhysicsWorld mPhysicsWorld;
@@ -178,6 +187,17 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener, 
 		rPartner.communicationPartner = partner;
 		rPartner.id = this.numRemotePartner++;
 		
+		// TODO make network-magic to the rectangle
+		Rectangle rectangle = new Rectangle(20, 20, RacerGameActivity.CAR_SIZE, RacerGameActivity.CAR_SIZE, (VertexBufferObjectManager) null);
+		
+		float[] test = rectangle.getSceneCenterCoordinates();
+		
+		
+		rPartner.body = PhysicsFactory.createBoxBody(this.mPhysicsWorld, rectangle, BodyType.DynamicBody, carFixtureDef);
+		
+		rPartner.physicsConnector = new PhysicsConnector(rectangle, rPartner.body, true, false);
+		this.mPhysicsWorld.registerPhysicsConnector(rPartner.physicsConnector);
+		
 		this.remotePartner.put(rPartner.id, rPartner);
 		
 		for (PresentationPartner p : this.presentationPartner.values()) {
@@ -246,9 +266,12 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener, 
 
 	@Override
 	public void test() {
-		CommunicationPartner partner = this.presentationPartner.get(0).communicationPartner;
-		partner.sendMessage(new CarMessage(1, true));
-		partner.sendMessage(new QRCodeMessage("hallo", QRCodePosition.CENTER));
+//		CommunicationPartner partner = this.presentationPartner.get(0).communicationPartner;
+//		partner.sendMessage(new CarMessage(1, true));
+//		partner.sendMessage(new QRCodeMessage("hallo", QRCodePosition.CENTER));
+		
+		newRemotePartner(null);
+		newRemotePartner(null);
 	}
 	
 
@@ -286,12 +309,27 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener, 
 	}
 	
 	private int getCarIdFromBody(Body body) {
-		for (RemotePartner carView : this.remotePartner.values()) {
-			if (carView.body == body) {
-				return carView.id;
+		for (RemotePartner rPartner : this.remotePartner.values()) {
+			if (rPartner.body == body) {
+				return rPartner.id;
 			}
 		}
 		
 		return -1;
+	}
+	
+	public Body getCarBody(CommunicationPartner partner) {
+		for (RemotePartner rPartner : this.remotePartner.values()) {
+			if (rPartner.communicationPartner == partner) {
+				return rPartner.body;
+			}
+		}
+		
+		return null;
+	}
+
+	@Override
+	public PhysicsWorld getPhysicsWorld() {
+		return this.mPhysicsWorld;
 	}
 }
