@@ -28,8 +28,10 @@ import org.andengine.engine.camera.Camera;
 import org.andengine.engine.options.EngineOptions;
 import org.andengine.engine.options.ScreenOrientation;
 import org.andengine.engine.options.resolutionpolicy.RatioResolutionPolicy;
+import org.andengine.entity.primitive.Rectangle;
 import org.andengine.entity.scene.Scene;
 import org.andengine.entity.scene.background.Background;
+import org.andengine.entity.shape.Shape;
 import org.andengine.entity.sprite.Sprite;
 import org.andengine.entity.sprite.TiledSprite;
 import org.andengine.extension.physics.box2d.FixedStepPhysicsWorld;
@@ -46,6 +48,7 @@ import org.andengine.opengl.texture.atlas.bitmap.source.decorator.BaseBitmapText
 import org.andengine.opengl.texture.region.ITextureRegion;
 import org.andengine.opengl.texture.region.TextureRegion;
 import org.andengine.opengl.texture.region.TiledTextureRegion;
+import org.andengine.opengl.vbo.VertexBufferObjectManager;
 import org.andengine.ui.activity.SimpleBaseGameActivity;
 import org.andengine.util.math.MathUtils;
 
@@ -125,6 +128,11 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements IServer
 	private BitmapTextureAtlas qrCodeAtlas;
 
 	private TextureRegion qrCodeAtlasRegion;
+	
+	private Rectangle borderTop;
+	private Rectangle borderRight;
+	private Rectangle borderBottom;
+	private Rectangle borderLeft;
 
 	/**
 	 * {@inheritDoc}
@@ -204,6 +212,12 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements IServer
 
 		this.mPhysicsWorld.setContactListener(this);
 		this.mScene.registerUpdateHandler(this.mPhysicsWorld);
+		
+		final VertexBufferObjectManager vertexBufferObjectManager = this.getVertexBufferObjectManager();
+		this.borderBottom = new Rectangle(0, CAMERA_HEIGHT - 2, CAMERA_WIDTH, 2, vertexBufferObjectManager);
+    this.borderTop = new Rectangle(0, 0, CAMERA_WIDTH, 2, vertexBufferObjectManager);
+    this.borderLeft = new Rectangle(0, 0, 2, CAMERA_HEIGHT, vertexBufferObjectManager);
+    this.borderRight = new Rectangle(CAMERA_WIDTH - 2, 0, 2, CAMERA_HEIGHT, vertexBufferObjectManager);
 		
 		this.serverLogic.test();
 		
@@ -303,6 +317,7 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements IServer
 
 	@Override
 	public void showQRCode(String text, QRCodePosition position) {
+		//TODO: use the given position information.
 		MultiFormatWriter writer = new MultiFormatWriter();
 		try {
 			final BitMatrix bitmatrix = writer.encode(text, BarcodeFormat.QR_CODE,
@@ -351,7 +366,27 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements IServer
 	@Override
 	public void updateBorders(boolean top, boolean right, boolean bottom,
 			boolean left) {
-		// TODO Auto-generated method stub
-		
+		if(top) {
+			this.mScene.attachChild(this.borderTop);
+			Log.i(LOG_TAG, "top: true");
+		} else {
+			this.mScene.detachChild(this.borderTop);
+			Log.i(LOG_TAG, "top: false");
+		}
+		if(right) {
+			this.mScene.attachChild(this.borderRight);
+		} else {
+			this.mScene.detachChild(this.borderRight);
+		}
+		if(bottom) {
+			this.mScene.attachChild(this.borderBottom);
+		} else {
+			this.mScene.detachChild(this.borderBottom);
+		}
+		if(left) {
+			this.mScene.attachChild(this.borderLeft);
+		} else {
+			this.mScene.detachChild(this.borderLeft);
+		}
 	}
 }

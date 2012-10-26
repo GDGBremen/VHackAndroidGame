@@ -8,6 +8,7 @@ import de.dsi8.dsi8acl.communication.impl.CommunicationPartner;
 import de.dsi8.dsi8acl.connection.contract.IRemoteConnection;
 import de.dsi8.dsi8acl.exception.ConnectionProblemException;
 import de.dsi8.vhackandroidgame.communication.model.GameModeMessage;
+import de.dsi8.vhackandroidgame.handler.BorderMessageHandler;
 import de.dsi8.vhackandroidgame.handler.CarMessageHandler;
 import de.dsi8.vhackandroidgame.handler.QRCodeMessageHandler;
 import de.dsi8.vhackandroidgame.logic.contract.IPresentationLogic;
@@ -28,6 +29,7 @@ public class PresentationLogic implements IPresentationLogic, ICommunicationPart
 		this.serverPartner = new CommunicationPartner(this, connection);
 		this.serverPartner.registerMessageHandler(new CarMessageHandler(this));
 		this.serverPartner.registerMessageHandler(new QRCodeMessageHandler(this));
+		this.serverPartner.registerMessageHandler(new BorderMessageHandler(this));
 		this.serverPartner.initialized();
 		this.serverPartner.sendMessage(new GameModeMessage(false));
 	}
