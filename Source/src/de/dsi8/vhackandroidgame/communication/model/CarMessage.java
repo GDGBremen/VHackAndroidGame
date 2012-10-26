@@ -6,13 +6,15 @@ import de.dsi8.dsi8acl.connection.model.Message;
 
 public class CarMessage extends Message {
 
-	public CarMessage(@JsonProperty("id") int id,
-			@JsonProperty("add") boolean add) {
-		this.id = id;
-		this.add = add;
-	}
+	public static enum ACTION {ADD, REMOVE, MOVE, ROTATE}
+	
+	public int id;
 
-	public final int id;
-
-	public final boolean add;
+	public ACTION action;
+	
+	public float positionX;
+	
+	public float positionY;
+	
+	public float rotation;
 }

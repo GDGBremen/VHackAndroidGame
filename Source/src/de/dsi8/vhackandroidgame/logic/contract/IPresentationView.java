@@ -10,7 +10,7 @@ public interface IPresentationView {
 	 *   
 	 * @param carId		Id of the car.
 	 */
-	void addCar(int carId);
+	void addCar(int carId, float pX, float pY, float rotation);
 	
 	/**
 	 * Removes the car with the Id <code>carId</code> from the Map.
@@ -18,6 +18,10 @@ public interface IPresentationView {
 	 * @param carId		Id of the car
 	 */
 	void removeCar(int carId);
+	
+	void moveCar(int carId, float pX, float pY);
+	
+	void rotateCar(int carId, float rotation);
 	
 
 	void showQRCode(String str, QRCodePosition position);

@@ -224,13 +224,14 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements IServer
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void addCar(int carId) {
+	public void addCar(int carId, float pX, float pY, float rotation) {
 		CarView carView = new CarView();
 		carView.id = carId;
 
-		carView.car = new TiledSprite(20, 20, CAR_SIZE, CAR_SIZE,
+		carView.car = new TiledSprite(pX, pY, CAR_SIZE, CAR_SIZE,
 				this.mVehiclesTextureRegion, this.getVertexBufferObjectManager());
 		carView.car.setCurrentTileIndex(carId % 6);
+		carView.car.setRotation(rotation);
 
 		this.mScene.attachChild(carView.car);
 		
@@ -323,6 +324,23 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements IServer
 			this.mScene.attachChild(this.borderLeft);
 		} else {
 			this.mScene.detachChild(this.borderLeft);
+		}
+	}
+
+
+	@Override
+	public void moveCar(int carId, float pX, float pY) {
+		CarView carView = this.cars.get(carId);
+		if (carView != null && carView.car != null) {
+			carView.car.setPosition(pX, pY);
+		}
+	}
+
+	@Override
+	public void rotateCar(int carId, float rotation) {
+		CarView carView = this.cars.get(carId);
+		if (carView != null && carView.car != null) {
+			carView.car.setRotation(rotation);
 		}
 	}
 }

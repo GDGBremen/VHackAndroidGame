@@ -54,10 +54,24 @@ public class CarMessageHandler extends AbstractMessageHandler<CarMessage> {
 	 */
 	@Override
 	public void handleMessage(CommunicationPartner partner, CarMessage message) throws InvalidMessageException {
-		if (message.add) {
-			this.presentationLogic.getPresentationView().addCar(message.id);
-		} else {
+		switch (message.action) {
+		case ADD:
+			this.presentationLogic.getPresentationView().addCar(message.id, message.positionX, message.positionY, message.rotation);
+			break;
+
+		case REMOVE:
 			this.presentationLogic.getPresentationView().removeCar(message.id);
+			break;
+			
+		case MOVE:
+			this.presentationLogic.getPresentationView().moveCar(message.id, message.positionX, message.positionY);
+			break;
+			
+		case ROTATE:
+			this.presentationLogic.getPresentationView().rotateCar(message.id, message.rotation);
+			break;
+		default:
+			break;
 		}
 	}
 }

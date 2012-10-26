@@ -57,8 +57,10 @@ import de.dsi8.dsi8acl.connection.model.ConnectionParameter;
 import de.dsi8.dsi8acl.exception.ConnectionProblemException;
 import de.dsi8.dsi8acl.exception.InvalidMessageException;
 import de.dsi8.vhackandroidgame.RacerGameActivity;
+import de.dsi8.vhackandroidgame.communication.NetworkRectangle;
 import de.dsi8.vhackandroidgame.communication.model.BorderMessage;
 import de.dsi8.vhackandroidgame.communication.model.CarMessage;
+import de.dsi8.vhackandroidgame.communication.model.CarMessage.ACTION;
 import de.dsi8.vhackandroidgame.communication.model.CollisionMessage;
 import de.dsi8.vhackandroidgame.communication.model.GameModeMessage;
 import de.dsi8.vhackandroidgame.communication.model.QRCodeMessage;
@@ -188,11 +190,12 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener, 
 		rPartner.communicationPartner = partner;
 		rPartner.id = this.numRemotePartner++;
 		
+		final float PX = 20;
+		final float PY = 20;
+		final float ROTATION = 0;
+		
 		// TODO make network-magic to the rectangle
-		Rectangle rectangle = new Rectangle(20, 20, RacerGameActivity.CAR_SIZE, RacerGameActivity.CAR_SIZE, (VertexBufferObjectManager) null);
-		
-		float[] test = rectangle.getSceneCenterCoordinates();
-		
+		Rectangle rectangle = new NetworkRectangle(rPartner.id, this.presentationPartner.values(), PX, PY, RacerGameActivity.CAR_SIZE, RacerGameActivity.CAR_SIZE);
 		
 		rPartner.body = PhysicsFactory.createBoxBody(this.mPhysicsWorld, rectangle, BodyType.DynamicBody, carFixtureDef);
 		
@@ -202,7 +205,12 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener, 
 		this.remotePartner.put(rPartner.id, rPartner);
 		
 		for (PresentationPartner p : this.presentationPartner.values()) {
-			p.communicationPartner.sendMessage(new CarMessage(rPartner.id, true));
+			CarMessage message = new CarMessage();
+			message.positionX = PX;
+			message.positionY = PY;
+			message.rotation = ROTATION;
+			message.action = ACTION.ADD;
+			p.communicationPartner.sendMessage(message);
 		}
 	}
 	
@@ -274,7 +282,6 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener, 
 		newRemotePartner(null);
 		newRemotePartner(null);
 		CommunicationPartner partner = this.presentationPartner.get(0).communicationPartner;
-		partner.sendMessage(new CarMessage(1, true));
 		partner.sendMessage(new QRCodeMessage("hallo CENTER", QRCodePosition.CENTER));
 		partner.sendMessage(new QRCodeMessage("hallo TOP", QRCodePosition.TOP));
 		partner.sendMessage(new QRCodeMessage("hallo RIGHT", QRCodePosition.RIGHT));
