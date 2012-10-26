@@ -71,20 +71,19 @@ import de.dsi8.vhackandroidgame.logic.impl.PresentationLogic;
 import de.dsi8.vhackandroidgame.logic.impl.ServerLogic;
 
 /**
- * (c) 2010 Nicolas Gramlich
- * (c) 2011 Zynga
- *
+ * (c) 2010 Nicolas Gramlich (c) 2011 Zynga
+ * 
  * @author Nicolas Gramlich
  * @since 22:43:20 - 15.07.2010
  */
-public class RacerGameActivity extends SimpleBaseGameActivity implements IServerLogicListener, IPresentationView {
+public class RacerGameActivity extends SimpleBaseGameActivity implements
+		IServerLogicListener, IPresentationView {
 	// ===========================================================
 	// Constants
 	// ===========================================================
 
-
 	private static final String LOG_TAG = RacerGameActivity.class.getSimpleName();
-	
+
 	private static final int RACETRACK_WIDTH = 64;
 
 	private static final int OBSTACLE_SIZE = 16;
@@ -107,23 +106,27 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements IServer
 
 	private Scene mScene;
 
-
 	private IServerLogic serverLogic;
-	
-	private final FixtureDef carFixtureDef = PhysicsFactory.createFixtureDef(1, 0.5f, 0.5f);
-	
+
+	private final FixtureDef carFixtureDef = PhysicsFactory.createFixtureDef(1,
+			0.5f, 0.5f);
+
 	private Map<Integer, CarView> cars = new HashMap<Integer, RacerGameActivity.CarView>();
 
 	private IPresentationLogic presentationLogic;
 
 	private BitmapTextureAtlas qrCodeAtlas;
 
-	private TextureRegion qrCodeAtlasRegion;
-	
 	private Rectangle borderTop;
 	private Rectangle borderRight;
 	private Rectangle borderBottom;
 	private Rectangle borderLeft;
+
+	private Sprite barcodeCenter;
+	private Sprite barcodeTop;
+	private Sprite barcodeRight;
+	private Sprite barcodeBottom;
+	private Sprite barcodeLeft;
 
 	/**
 	 * {@inheritDoc}
@@ -133,27 +136,27 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements IServer
 		super.onStart();
 
 		InternalConnector connector = new InternalConnector();
-		
+
 		this.serverLogic = new ServerLogic(this, connector.getFirstConnection());
 		this.serverLogic.start();
-		
-		this.presentationLogic = new PresentationLogic(RacerGameActivity.this, connector.getSecondConnection());
-		
+
+		this.presentationLogic = new PresentationLogic(RacerGameActivity.this,
+				connector.getSecondConnection());
+
 	}
-	
+
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
 	protected void onStop() {
 		super.onStop();
-		
+
 		try {
 			this.serverLogic.close();
 		} catch (IOException e) {
 			Log.w(LOG_TAG, "Can not close the server", e);
 		}
-		
 
 		if (presentationLogic != null) {
 			try {
@@ -163,7 +166,7 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements IServer
 			}
 		}
 	}
-	
+
 	/**
 	 * {@inheritDoc}
 	 */
@@ -182,12 +185,17 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements IServer
 	public void onCreateResources() {
 		BitmapTextureAtlasTextureRegionFactory.setAssetBasePath("gfx/");
 
-		this.mVehiclesTexture = new BitmapTextureAtlas(this.getTextureManager(), 128, 16, TextureOptions.BILINEAR);
-		this.mVehiclesTextureRegion = BitmapTextureAtlasTextureRegionFactory.createTiledFromAsset(this.mVehiclesTexture, this, "vehicles.png", 0, 0, 6, 1);
+		this.mVehiclesTexture = new BitmapTextureAtlas(this.getTextureManager(),
+				128, 16, TextureOptions.BILINEAR);
+		this.mVehiclesTextureRegion = BitmapTextureAtlasTextureRegionFactory
+				.createTiledFromAsset(this.mVehiclesTexture, this, "vehicles.png", 0,
+						0, 6, 1);
 		this.mVehiclesTexture.load();
 
-		this.mBoxTexture = new BitmapTextureAtlas(this.getTextureManager(), 32, 32, TextureOptions.BILINEAR);
-		this.mBoxTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mBoxTexture, this, "box.png", 0, 0);
+		this.mBoxTexture = new BitmapTextureAtlas(this.getTextureManager(), 32, 32,
+				TextureOptions.BILINEAR);
+		this.mBoxTextureRegion = BitmapTextureAtlasTextureRegionFactory
+				.createFromAsset(this.mBoxTexture, this, "box.png", 0, 0);
 		this.mBoxTexture.load();
 	}
 
@@ -199,16 +207,24 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements IServer
 		this.mScene = new Scene();
 		this.mScene.setBackground(new Background(0, 0, 0));
 
-		final VertexBufferObjectManager vertexBufferObjectManager = this.getVertexBufferObjectManager();
-		this.borderBottom = new Rectangle(0, CAMERA_HEIGHT - 2, CAMERA_WIDTH, 2, vertexBufferObjectManager);
-    this.borderTop = new Rectangle(0, 0, CAMERA_WIDTH, 2, vertexBufferObjectManager);
-    this.borderLeft = new Rectangle(0, 0, 2, CAMERA_HEIGHT, vertexBufferObjectManager);
-    this.borderRight = new Rectangle(CAMERA_WIDTH - 2, 0, 2, CAMERA_HEIGHT, vertexBufferObjectManager);
+		this.qrCodeAtlas = new BitmapTextureAtlas(this.getTextureManager(), 150,
+				750, TextureOptions.DEFAULT);
+
+		final VertexBufferObjectManager vertexBufferObjectManager = this
+				.getVertexBufferObjectManager();
+		this.borderBottom = new Rectangle(0, CAMERA_HEIGHT - 2, CAMERA_WIDTH, 2,
+				vertexBufferObjectManager);
+		this.borderTop = new Rectangle(0, 0, CAMERA_WIDTH, 2,
+				vertexBufferObjectManager);
+		this.borderLeft = new Rectangle(0, 0, 2, CAMERA_HEIGHT,
+				vertexBufferObjectManager);
+		this.borderRight = new Rectangle(CAMERA_WIDTH - 2, 0, 2, CAMERA_HEIGHT,
+				vertexBufferObjectManager);
 		this.serverLogic.onCreateScene();
-//		this.mScene.registerUpdateHandler(this.mPhysicsWorld);
-		
+		// this.mScene.registerUpdateHandler(this.mPhysicsWorld);
+
 		this.serverLogic.test();
-		
+
 		return this.mScene;
 	}
 
@@ -218,12 +234,12 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements IServer
 	@Override
 	public void driveCar(int carId, float valueX, float valueY) {
 		CarView carView = this.cars.get(Integer.valueOf(carId));
-		
+
 		final Vector2 velocity = Vector2Pool.obtain(valueX * 5, valueY * 5);
 		carView.body.setLinearVelocity(velocity);
 		Vector2Pool.recycle(velocity);
 
-		final float rotationInRad = (float)Math.atan2(-valueX, valueY);
+		final float rotationInRad = (float) Math.atan2(-valueX, valueY);
 		carView.body.setTransform(carView.body.getWorldCenter(), rotationInRad);
 
 		carView.car.setRotation(MathUtils.radToDeg(rotationInRad));
@@ -241,13 +257,13 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements IServer
 				this.mVehiclesTextureRegion, this.getVertexBufferObjectManager());
 		carView.car.setCurrentTileIndex(carId % 6);
 
-//		carView.body = PhysicsFactory.createBoxBody(this.mPhysicsWorld,
-//				carView.car, BodyType.DynamicBody, carFixtureDef);
+		// carView.body = PhysicsFactory.createBoxBody(this.mPhysicsWorld,
+		// carView.car, BodyType.DynamicBody, carFixtureDef);
 
 		this.mScene.attachChild(carView.car);
 		carView.physicsConnector = new PhysicsConnector(carView.car, carView.body,
 				true, false);
-//		this.mPhysicsWorld.registerPhysicsConnector(carView.physicsConnector);
+		// this.mPhysicsWorld.registerPhysicsConnector(carView.physicsConnector);
 		this.cars.put(carId, carView);
 	}
 
@@ -255,12 +271,10 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements IServer
 	public void removeCar(int carId) {
 		CarView carView = this.cars.remove(carId);
 		if (carView != null) {
-//			this.mPhysicsWorld.unregisterPhysicsConnector(carView.physicsConnector);
+			// this.mPhysicsWorld.unregisterPhysicsConnector(carView.physicsConnector);
 			this.mScene.detachChild(carView.car);
 		}
 	}
-
-
 
 	public class CarView {
 		public int id;
@@ -271,13 +285,11 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements IServer
 
 	@Override
 	public void showQRCode(String text, QRCodePosition position) {
-		//TODO: use the given position information.
+		// TODO: use the given position information.
 		MultiFormatWriter writer = new MultiFormatWriter();
 		try {
 			final BitMatrix bitmatrix = writer.encode(text, BarcodeFormat.QR_CODE,
 					150, 150);
-			this.qrCodeAtlas = new BitmapTextureAtlas(this.getTextureManager(), 150,
-					150, TextureOptions.DEFAULT);
 
 			final IBitmapTextureAtlasSource baseTextureSource = new EmptyBitmapTextureAtlasSource(
 					150, 150);
@@ -301,16 +313,66 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements IServer
 					throw new RuntimeException();
 				}
 			};
+			final int bardcodeSize = CAMERA_HEIGHT - 2 * RACETRACK_WIDTH;
 
-			this.qrCodeAtlasRegion = BitmapTextureAtlasTextureRegionFactory
-					.createFromSource(this.qrCodeAtlas, decoratedTextureAtlasSource, 0, 0);
-			this.qrCodeAtlas.load();
+			final TextureRegion qrCodeAtlasRegion;
 
-			int bardcodeSize = CAMERA_HEIGHT - 2 * RACETRACK_WIDTH;
-			final Sprite barcode = new Sprite(CAMERA_WIDTH / 2 - bardcodeSize / 2,
-					RACETRACK_WIDTH, bardcodeSize, bardcodeSize, this.qrCodeAtlasRegion,
-					this.getVertexBufferObjectManager());
-			this.mScene.attachChild(barcode);
+			switch (position) {
+				case CENTER:
+					qrCodeAtlasRegion = BitmapTextureAtlasTextureRegionFactory
+							.createFromSource(this.qrCodeAtlas, decoratedTextureAtlasSource,
+									0, 0);
+					this.qrCodeAtlas.load();
+					this.barcodeCenter = new Sprite(CAMERA_WIDTH / 2 - bardcodeSize / 2,
+							RACETRACK_WIDTH, bardcodeSize, bardcodeSize, qrCodeAtlasRegion,
+							this.getVertexBufferObjectManager());
+					this.mScene.attachChild(this.barcodeCenter);
+					break;
+				case TOP:
+					qrCodeAtlasRegion = BitmapTextureAtlasTextureRegionFactory
+							.createFromSource(this.qrCodeAtlas, decoratedTextureAtlasSource,
+									0, 150);
+					this.qrCodeAtlas.load();
+					this.barcodeTop = new Sprite(CAMERA_WIDTH / 2 - bardcodeSize / 2, 2,
+							bardcodeSize, bardcodeSize, qrCodeAtlasRegion,
+							this.getVertexBufferObjectManager());
+					this.mScene.attachChild(this.barcodeTop);
+					break;
+				case RIGHT:
+					qrCodeAtlasRegion = BitmapTextureAtlasTextureRegionFactory
+							.createFromSource(this.qrCodeAtlas, decoratedTextureAtlasSource,
+									0, 300);
+					this.qrCodeAtlas.load();
+					this.barcodeRight = new Sprite(CAMERA_WIDTH - 2 - bardcodeSize,
+							RACETRACK_WIDTH, bardcodeSize, bardcodeSize, qrCodeAtlasRegion,
+							this.getVertexBufferObjectManager());
+					this.mScene.attachChild(this.barcodeRight);
+					break;
+				case BOTTOM:
+					qrCodeAtlasRegion = BitmapTextureAtlasTextureRegionFactory
+							.createFromSource(this.qrCodeAtlas, decoratedTextureAtlasSource,
+									0, 450);
+					this.qrCodeAtlas.load();
+					this.barcodeBottom = new Sprite(CAMERA_WIDTH / 2 - bardcodeSize / 2,
+							CAMERA_HEIGHT - 2 - bardcodeSize, bardcodeSize, bardcodeSize,
+							qrCodeAtlasRegion, this.getVertexBufferObjectManager());
+					this.mScene.attachChild(this.barcodeBottom);
+					break;
+				case LEFT:
+					qrCodeAtlasRegion = BitmapTextureAtlasTextureRegionFactory
+							.createFromSource(this.qrCodeAtlas, decoratedTextureAtlasSource,
+									0, 600);
+					this.qrCodeAtlas.load();
+					this.barcodeLeft = new Sprite(2, RACETRACK_WIDTH, bardcodeSize,
+							bardcodeSize, qrCodeAtlasRegion,
+							this.getVertexBufferObjectManager());
+					this.mScene.attachChild(this.barcodeLeft);
+					break;
+				default:
+					// impossible
+					break;
+
+			}
 		} catch (WriterException e) {
 			e.printStackTrace();
 		}
@@ -320,24 +382,22 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements IServer
 	@Override
 	public void updateBorders(boolean top, boolean right, boolean bottom,
 			boolean left) {
-		if(top) {
+		if (top) {
 			this.mScene.attachChild(this.borderTop);
-			Log.i(LOG_TAG, "top: true");
 		} else {
 			this.mScene.detachChild(this.borderTop);
-			Log.i(LOG_TAG, "top: false");
 		}
-		if(right) {
+		if (right) {
 			this.mScene.attachChild(this.borderRight);
 		} else {
 			this.mScene.detachChild(this.borderRight);
 		}
-		if(bottom) {
+		if (bottom) {
 			this.mScene.attachChild(this.borderBottom);
 		} else {
 			this.mScene.detachChild(this.borderBottom);
 		}
-		if(left) {
+		if (left) {
 			this.mScene.attachChild(this.borderLeft);
 		} else {
 			this.mScene.detachChild(this.borderLeft);
