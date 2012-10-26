@@ -28,14 +28,13 @@ import org.andengine.engine.camera.Camera;
 import org.andengine.engine.options.EngineOptions;
 import org.andengine.engine.options.ScreenOrientation;
 import org.andengine.engine.options.resolutionpolicy.RatioResolutionPolicy;
+import org.andengine.entity.primitive.Rectangle;
 import org.andengine.entity.scene.Scene;
 import org.andengine.entity.scene.background.Background;
 import org.andengine.entity.sprite.Sprite;
 import org.andengine.entity.sprite.TiledSprite;
-import org.andengine.extension.physics.box2d.FixedStepPhysicsWorld;
 import org.andengine.extension.physics.box2d.PhysicsConnector;
 import org.andengine.extension.physics.box2d.PhysicsFactory;
-import org.andengine.extension.physics.box2d.PhysicsWorld;
 import org.andengine.extension.physics.box2d.util.Vector2Pool;
 import org.andengine.opengl.texture.TextureOptions;
 import org.andengine.opengl.texture.atlas.bitmap.BitmapTextureAtlas;
@@ -46,6 +45,7 @@ import org.andengine.opengl.texture.atlas.bitmap.source.decorator.BaseBitmapText
 import org.andengine.opengl.texture.region.ITextureRegion;
 import org.andengine.opengl.texture.region.TextureRegion;
 import org.andengine.opengl.texture.region.TiledTextureRegion;
+import org.andengine.opengl.vbo.VertexBufferObjectManager;
 import org.andengine.ui.activity.SimpleBaseGameActivity;
 import org.andengine.util.math.MathUtils;
 
@@ -55,12 +55,7 @@ import android.util.Log;
 
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
-import com.badlogic.gdx.physics.box2d.BodyDef.BodyType;
-import com.badlogic.gdx.physics.box2d.Contact;
-import com.badlogic.gdx.physics.box2d.ContactImpulse;
-import com.badlogic.gdx.physics.box2d.ContactListener;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
-import com.badlogic.gdx.physics.box2d.Manifold;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.MultiFormatWriter;
 import com.google.zxing.WriterException;
@@ -124,6 +119,11 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements IServer
 	private BitmapTextureAtlas qrCodeAtlas;
 
 	private TextureRegion qrCodeAtlasRegion;
+	
+	private Rectangle borderTop;
+	private Rectangle borderRight;
+	private Rectangle borderBottom;
+	private Rectangle borderLeft;
 
 	/**
 	 * {@inheritDoc}
@@ -199,6 +199,11 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements IServer
 		this.mScene = new Scene();
 		this.mScene.setBackground(new Background(0, 0, 0));
 
+		final VertexBufferObjectManager vertexBufferObjectManager = this.getVertexBufferObjectManager();
+		this.borderBottom = new Rectangle(0, CAMERA_HEIGHT - 2, CAMERA_WIDTH, 2, vertexBufferObjectManager);
+    this.borderTop = new Rectangle(0, 0, CAMERA_WIDTH, 2, vertexBufferObjectManager);
+    this.borderLeft = new Rectangle(0, 0, 2, CAMERA_HEIGHT, vertexBufferObjectManager);
+    this.borderRight = new Rectangle(CAMERA_WIDTH - 2, 0, 2, CAMERA_HEIGHT, vertexBufferObjectManager);
 		this.serverLogic.onCreateScene();
 		this.mScene.registerUpdateHandler(this.serverLogic.getPhysicsWorld()); // TODO Move this to the ServerLogic
 		
@@ -248,6 +253,7 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements IServer
 
 	@Override
 	public void showQRCode(String text, QRCodePosition position) {
+		//TODO: use the given position information.
 		MultiFormatWriter writer = new MultiFormatWriter();
 		try {
 			final BitMatrix bitmatrix = writer.encode(text, BarcodeFormat.QR_CODE,
@@ -296,7 +302,27 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements IServer
 	@Override
 	public void updateBorders(boolean top, boolean right, boolean bottom,
 			boolean left) {
-		// TODO Auto-generated method stub
-		
+		if(top) {
+			this.mScene.attachChild(this.borderTop);
+			Log.i(LOG_TAG, "top: true");
+		} else {
+			this.mScene.detachChild(this.borderTop);
+			Log.i(LOG_TAG, "top: false");
+		}
+		if(right) {
+			this.mScene.attachChild(this.borderRight);
+		} else {
+			this.mScene.detachChild(this.borderRight);
+		}
+		if(bottom) {
+			this.mScene.attachChild(this.borderBottom);
+		} else {
+			this.mScene.detachChild(this.borderBottom);
+		}
+		if(left) {
+			this.mScene.attachChild(this.borderLeft);
+		} else {
+			this.mScene.detachChild(this.borderLeft);
+		}
 	}
 }

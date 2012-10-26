@@ -34,6 +34,8 @@ import org.andengine.extension.physics.box2d.PhysicsWorld;
 import org.andengine.opengl.vbo.IVertexBufferObject;
 import org.andengine.opengl.vbo.VertexBufferObjectManager;
 
+import android.util.Log;
+
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef.BodyType;
@@ -43,7 +45,6 @@ import com.badlogic.gdx.physics.box2d.ContactListener;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.Manifold;
 
-import android.util.Log;
 import de.dsi8.dsi8acl.communication.contract.ICommunicationPartner;
 import de.dsi8.dsi8acl.communication.contract.IServerCommunication;
 import de.dsi8.dsi8acl.communication.contract.IServerCommunicationListener;
@@ -56,7 +57,7 @@ import de.dsi8.dsi8acl.connection.model.ConnectionParameter;
 import de.dsi8.dsi8acl.exception.ConnectionProblemException;
 import de.dsi8.dsi8acl.exception.InvalidMessageException;
 import de.dsi8.vhackandroidgame.RacerGameActivity;
-import de.dsi8.vhackandroidgame.RacerGameActivity.CarView;
+import de.dsi8.vhackandroidgame.communication.model.BorderMessage;
 import de.dsi8.vhackandroidgame.communication.model.CarMessage;
 import de.dsi8.vhackandroidgame.communication.model.CollisionMessage;
 import de.dsi8.vhackandroidgame.communication.model.GameModeMessage;
@@ -272,6 +273,14 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener, 
 		
 		newRemotePartner(null);
 		newRemotePartner(null);
+		CommunicationPartner partner = this.presentationPartner.get(0).communicationPartner;
+		partner.sendMessage(new CarMessage(1, true));
+		partner.sendMessage(new QRCodeMessage("hallo CENTER", QRCodePosition.CENTER));
+		partner.sendMessage(new QRCodeMessage("hallo TOP", QRCodePosition.TOP));
+		partner.sendMessage(new QRCodeMessage("hallo RIGHT", QRCodePosition.RIGHT));
+		partner.sendMessage(new QRCodeMessage("hallo BOTTOM", QRCodePosition.BOTTOM));
+		partner.sendMessage(new QRCodeMessage("hallo LEFT", QRCodePosition.LEFT));
+		partner.sendMessage(new BorderMessage(true, true, true, true));
 	}
 	
 
