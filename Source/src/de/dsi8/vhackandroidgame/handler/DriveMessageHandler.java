@@ -21,7 +21,6 @@
 package de.dsi8.vhackandroidgame.handler;
 
 import org.andengine.extension.physics.box2d.util.Vector2Pool;
-import org.andengine.util.math.MathUtils;
 
 import android.util.Log;
 
@@ -31,7 +30,6 @@ import com.badlogic.gdx.physics.box2d.Body;
 import de.dsi8.dsi8acl.communication.handler.AbstractMessageHandler;
 import de.dsi8.dsi8acl.communication.impl.CommunicationPartner;
 import de.dsi8.dsi8acl.exception.InvalidMessageException;
-import de.dsi8.vhackandroidgame.RacerGameActivity.CarView;
 import de.dsi8.vhackandroidgame.communication.model.DriveMessage;
 import de.dsi8.vhackandroidgame.logic.impl.ServerLogic;
 
