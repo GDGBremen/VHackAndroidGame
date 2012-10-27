@@ -127,7 +127,6 @@ public class RacerGameActivity extends AbstractConnectionActivity implements
 	protected void onCreate(Bundle pSavedInstanceState) {
 		super.onCreate(pSavedInstanceState);
 		
-		// TODO: rm
 		this.connectionParameter.setParameter("host", "192.168.11.27");
 	}
 	
