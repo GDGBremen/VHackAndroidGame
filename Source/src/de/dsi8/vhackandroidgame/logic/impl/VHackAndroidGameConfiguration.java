@@ -20,7 +20,6 @@ public class VHackAndroidGameConfiguration {
 	
 	static {
 		protocol = new TCPProtocol(URL_BASE, PORT);
-		SocketConnection.registerProtocol(protocol);
 	}
 	
 	public static final TCPProtocol getProtocol() {
@@ -30,5 +29,9 @@ public class VHackAndroidGameConfiguration {
 	// TODO: Add some custom parameters 
 	public static ConnectionParameter getConnectionDetails() {
 		return protocol.getConnectionDetails(DEFAULT_PASSWORD);
+	}
+	
+	public static void registerProtocols() {
+		SocketConnection.registerProtocol(protocol);
 	}
 }
