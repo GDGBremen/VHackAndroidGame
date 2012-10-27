@@ -14,6 +14,10 @@ import android.widget.TextView;
 import de.dsi8.vhackandroidgame.R;
 import de.dsi8.vhackandroidgame.server.model.Player;
 
+/**
+ * @author tmesserschmidt
+ * @author zero
+ */
 public class ScoreboardAdapater extends BaseAdapter {
 	private List<Player>	players;
 	private LayoutInflater	inflater;
