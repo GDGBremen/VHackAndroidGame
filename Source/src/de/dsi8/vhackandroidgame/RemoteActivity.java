@@ -54,7 +54,7 @@ import de.dsi8.vhackandroidgame.logic.contract.IRemoteView;
 import de.dsi8.vhackandroidgame.logic.impl.RemoteLogic;
 import de.dsi8.vhackandroidgame.logic.impl.VHackAndroidGameConfiguration;
 
-public class RemoteActivity extends SimpleBaseGameActivity implements IRemoteView {
+public class RemoteActivity extends AbstractConnectionActivity implements IRemoteView {
 
 	private IRemoteLogic clientLogic;
 	
@@ -79,105 +79,10 @@ public class RemoteActivity extends SimpleBaseGameActivity implements IRemoteVie
 	
 	private Scene mScene;
 	
-	private ConnectionParameter connectionParameter;
-	private ConnectTask connectTask;
-	private VHackAndroidGameConfiguration gameConfig = new VHackAndroidGameConfiguration(this);
-	
-	private AlertDialog sameNetworkDialog;
-	
-	private Handler handler;
-	
-	@Override
-	protected void onCreate(Bundle pSavedInstanceState) {
-		super.onCreate(pSavedInstanceState);
-		
-		try {
-			this.connectionParameter = new ConnectionParameter(getIntent().getData().toString());
-			
-			connectionParameter = new ConnectionParameter(getIntent().getData().toString());
-		} catch (MalformedURLException e) {
-			Log.e(LOG_TAG, "Invalid Connection Parameter", e);
-			finish();
-		}
-	}
-	
-	@Override
-	protected void onStart() {
-		super.onStart();
-		Log.i(LOG_TAG, "onStart");
-		
-		handler = new Handler();
-		handler.postDelayed(connectRunnable, 2000);
-	}
-	
-	private Runnable connectRunnable = new Runnable() {
-		@Override
-		public void run() {
-			// Connect
-			if(gameConfig.getWiFiChecker().inSameNetwork(connectionParameter)) {
-				connect();
-			} else {
-				if(sameNetworkDialog == null) {
-					sameNetworkDialog = buildSameNetworkAlertDialog();
-					sameNetworkDialog.show();
-				}
-			}
-		}
-	};
-	
-	private AlertDialog buildSameNetworkAlertDialog() {
-		AlertDialog.Builder builder = new AlertDialog.Builder(this);
-		builder.setTitle(R.string.same_network_dialog_title);
-		builder.setMessage(R.string.same_network_dialog_msg);
-		// Add the buttons
-		builder.setPositiveButton(android.R.string.yes, reconnectDialogClickListener);
-		builder.setNegativeButton(android.R.string.no, reconnectDialogClickListener);
-		
-		return builder.create();
-	}
-	
-	DialogInterface.OnClickListener reconnectDialogClickListener = new DialogInterface.OnClickListener() {
-	    @Override
-	    public void onClick(DialogInterface dialog, int which) {
-	    	sameNetworkDialog = null;
-	    	
-	        switch (which){
-	        case DialogInterface.BUTTON_POSITIVE:
-	            connect();
-	            break;
-
-	        case DialogInterface.BUTTON_NEGATIVE:
-	            finish();
-	            break;
-	        }
-	    }
-	};
-
-	private void showConnectionFailedDialog() {
-		AlertDialog.Builder builder = new AlertDialog.Builder(this);
-		builder.setTitle(R.string.connection_falied_dialog_title);
-		builder.setMessage(R.string.connection_falied_dialog_msg);
-		// Add the buttons
-		builder.setPositiveButton(R.string.retry, reconnectDialogClickListener);
-		builder.setNegativeButton(android.R.string.cancel, reconnectDialogClickListener);
-		
-		builder.create().show();
-	}
-		
-	private void connect() {
-		connectTask = new ConnectTask();
-		connectTask.start();
-	}
-	
 	@Override
 	protected void onStop() {
 		super.onStop();
-		Log.i(LOG_TAG, "onStop");
 		
-		handler.removeCallbacks(connectRunnable);
-		if(connectTask != null) {
-			connectTask.interrupt();
-		}
 		if(clientLogic != null) {
 			try {
 				clientLogic.close();
@@ -186,38 +91,12 @@ public class RemoteActivity extends SimpleBaseGameActivity implements IRemoteVie
 			}
 		}
 	}
-	
-	/**
-	 * The Task that should connect the client with the host.
-	 */
-	private class ConnectTask extends Thread  {
-		/**
-		 * Connecting to the Host.
-		 */
-		@Override
-		public void run() {
-			try {
-				if (RemoteActivity.this.clientLogic == null) {
-					final SocketConnection s = SocketConnection.connect(connectionParameter);
-					handler.post(new Runnable() {
-						
-						@Override
-						public void run() {
-							RemoteActivity.this.clientLogic = new RemoteLogic(RemoteActivity.this, s);
-						}
-					});
-				}
-			} catch (Exception e) {
-				handler.post(new Runnable() {
-					@Override
-					public void run() {
-						showConnectionFailedDialog();
-					}
-				});
-				Log.i(LOG_TAG, "ConnectionTask", e);
-			}
-		}
+
+	@Override
+	protected void onConnected(SocketConnection connection) {
+		this.clientLogic = new RemoteLogic(RemoteActivity.this, connection);
 	}
+	
 	
 	/**
 	 * {@inheritDoc}
@@ -298,6 +177,5 @@ public class RemoteActivity extends SimpleBaseGameActivity implements IRemoteVie
 		Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 		v.vibrate(300);
 	}
-
 	
 }

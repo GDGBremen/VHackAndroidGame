@@ -60,6 +60,7 @@ import com.google.zxing.common.BitMatrix;
 
 import de.dsi8.dsi8acl.connection.impl.SocketConnection;
 import de.dsi8.dsi8acl.connection.model.ConnectionParameter;
+import de.dsi8.vhackandroidgame.communication.model.GameModeMessage;
 import de.dsi8.vhackandroidgame.communication.model.QRCodeMessage.QRCodePosition;
 import de.dsi8.vhackandroidgame.logic.contract.IPresentationLogic;
 import de.dsi8.vhackandroidgame.logic.contract.IPresentationView;
@@ -73,7 +74,7 @@ import de.dsi8.vhackandroidgame.logic.impl.VHackAndroidGameConfiguration;
  * @author Nicolas Gramlich
  * @since 22:43:20 - 15.07.2010
  */
-public class RacerGameActivity extends SimpleBaseGameActivity implements
+public class RacerGameActivity extends AbstractConnectionActivity implements
 		IServerLogicListener, IPresentationView {
 	// ===========================================================
 	// Constants
@@ -103,8 +104,6 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements
 
 	private Scene mScene;
 	
-	
-	
 	private Map<Integer, CarView> cars = new HashMap<Integer, RacerGameActivity.CarView>();
 
 	private IPresentationLogic presentationLogic;
@@ -124,112 +123,17 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements
 	private Sprite barcodeBottom;
 	private Sprite barcodeLeft;
 	
-	private AlertDialog sameNetworkDialog;
-
-	private ConnectionParameter connectionParameter;
-	
-	private ConnectTask connectTask;
-	
-	private VHackAndroidGameConfiguration gameConfig;
-
-	private Handler handler;
-	
-	
 	@Override
 	protected void onCreate(Bundle pSavedInstanceState) {
 		super.onCreate(pSavedInstanceState);
 		
-		this.gameConfig = new VHackAndroidGameConfiguration(this);
-	}
-	
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected void onStart() {
-		super.onStart();
-
-		
-		
-		this.connectionParameter = this.gameConfig.getConnectionDetails();
+		// TODO: rm
 		this.connectionParameter.setParameter("host", "192.168.11.27");
-		
-		handler = new Handler();
-		handler.postDelayed(connectRunnable, 2000);
 	}
 	
-	private Runnable connectRunnable = new Runnable() {
-		@Override
-		public void run() {
-			connectTask = new ConnectTask();
-			connectTask.start();
-		}
-	};
-	
-
-	/**
-	 * The Task that should connect the client with the host.
-	 */
-	private class ConnectTask extends Thread  {
-		/**
-		 * Connecting to the Host.
-		 */
-		@Override
-		public void run() {
-			try {
-				if (RacerGameActivity.this.presentationLogic == null) {
-					final SocketConnection s = SocketConnection.connect(connectionParameter);
-					handler.post(new Runnable() {
-						
-						@Override
-						public void run() {
-							RacerGameActivity.this.presentationLogic = new PresentationLogic(RacerGameActivity.this, s);
-						}
-					});
-				}
-			} catch (Exception e) {
-				handler.post(new Runnable() {
-					@Override
-					public void run() {
-						showConnectionFailedDialog();
-					}
-				});
-				Log.i(LOG_TAG, "ConnectionTask", e);
-			}
-		}
-	}
-
-	private void showConnectionFailedDialog() {
-		AlertDialog.Builder builder = new AlertDialog.Builder(this);
-		builder.setTitle(R.string.connection_falied_dialog_title);
-		builder.setMessage(R.string.connection_falied_dialog_msg);
-		// Add the buttons
-		builder.setPositiveButton(R.string.retry, reconnectDialogClickListener);
-		builder.setNegativeButton(android.R.string.cancel, reconnectDialogClickListener);
-		
-		builder.create().show();
-	}
-		
-	DialogInterface.OnClickListener reconnectDialogClickListener = new DialogInterface.OnClickListener() {
-	    @Override
-	    public void onClick(DialogInterface dialog, int which) {
-	    	sameNetworkDialog = null;
-	    	
-	        switch (which){
-	        case DialogInterface.BUTTON_POSITIVE:
-	            connect();
-	            break;
-
-	        case DialogInterface.BUTTON_NEGATIVE:
-	            finish();
-	            break;
-	        }
-	    }
-	};
-	
-	private void connect() {
-		connectTask = new ConnectTask();
-		connectTask.start();
+	@Override
+	protected void onConnected(SocketConnection connection) {
+		this.presentationLogic = new PresentationLogic(RacerGameActivity.this, connection);
 	}
 	
 	/**
@@ -239,8 +143,6 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements
 	protected void onStop() {
 		super.onStop();
 
-		this.handler.removeCallbacks(connectRunnable);
-		
 		if (presentationLogic != null) {
 			try {
 				presentationLogic.close();
