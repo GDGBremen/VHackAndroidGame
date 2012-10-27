@@ -33,8 +33,6 @@ import org.andengine.entity.scene.Scene;
 import org.andengine.entity.scene.background.Background;
 import org.andengine.entity.sprite.Sprite;
 import org.andengine.entity.sprite.TiledSprite;
-import org.andengine.extension.physics.box2d.PhysicsConnector;
-import org.andengine.extension.physics.box2d.PhysicsFactory;
 import org.andengine.opengl.texture.TextureOptions;
 import org.andengine.opengl.texture.atlas.bitmap.BitmapTextureAtlas;
 import org.andengine.opengl.texture.atlas.bitmap.BitmapTextureAtlasTextureRegionFactory;
@@ -47,30 +45,26 @@ import org.andengine.opengl.texture.region.TiledTextureRegion;
 import org.andengine.opengl.vbo.VertexBufferObjectManager;
 import org.andengine.ui.activity.SimpleBaseGameActivity;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 
-import com.badlogic.gdx.physics.box2d.Body;
-import com.badlogic.gdx.physics.box2d.BodyDef.BodyType;
-import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.MultiFormatWriter;
 import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
 
-import de.dsi8.dsi8acl.connection.impl.InternalConnectionHolder;
 import de.dsi8.dsi8acl.connection.impl.SocketConnection;
 import de.dsi8.dsi8acl.connection.model.ConnectionParameter;
 import de.dsi8.vhackandroidgame.communication.model.QRCodeMessage.QRCodePosition;
 import de.dsi8.vhackandroidgame.logic.contract.IPresentationLogic;
 import de.dsi8.vhackandroidgame.logic.contract.IPresentationView;
-import de.dsi8.vhackandroidgame.logic.contract.IServerLogic;
 import de.dsi8.vhackandroidgame.logic.contract.IServerLogicListener;
 import de.dsi8.vhackandroidgame.logic.impl.PresentationLogic;
-import de.dsi8.vhackandroidgame.logic.impl.RemoteLogic;
-import de.dsi8.vhackandroidgame.logic.impl.ServerLogic;
 import de.dsi8.vhackandroidgame.logic.impl.VHackAndroidGameConfiguration;
 
 /**
@@ -129,12 +123,16 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements
 	private Sprite barcodeRight;
 	private Sprite barcodeBottom;
 	private Sprite barcodeLeft;
+	
+	private AlertDialog sameNetworkDialog;
 
 	private ConnectionParameter connectionParameter;
 	
 	private ConnectTask connectTask;
 	
 	private VHackAndroidGameConfiguration gameConfig;
+
+	private Handler handler;
 	
 	
 	@Override
@@ -156,10 +154,19 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements
 		this.connectionParameter = this.gameConfig.getConnectionDetails();
 		this.connectionParameter.setParameter("host", "192.168.11.27");
 		
-		connectTask = new ConnectTask();
-		connectTask.start();
+		handler = new Handler();
+		handler.postDelayed(connectRunnable, 2000);
 	}
 	
+	private Runnable connectRunnable = new Runnable() {
+		@Override
+		public void run() {
+			connectTask = new ConnectTask();
+			connectTask.start();
+		}
+	};
+	
+
 	/**
 	 * The Task that should connect the client with the host.
 	 */
@@ -170,25 +177,61 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements
 		@Override
 		public void run() {
 			try {
-				synchronized (this) {
-					// Workaround for multicall of onStart by the AndEngine
-					try {
-						this.wait(2000);
-						Log.i(LOG_TAG, "Not interrupted");
-						if (RacerGameActivity.this.presentationLogic == null) {
-							SocketConnection s = SocketConnection.connect(connectionParameter);
+				if (RacerGameActivity.this.presentationLogic == null) {
+					final SocketConnection s = SocketConnection.connect(connectionParameter);
+					handler.post(new Runnable() {
+						
+						@Override
+						public void run() {
 							RacerGameActivity.this.presentationLogic = new PresentationLogic(RacerGameActivity.this, s);
 						}
-					} catch(InterruptedException ex) {
-						Log.i(LOG_TAG, "Interrupted");
-					}
+					});
 				}
 			} catch (Exception e) {
+				handler.post(new Runnable() {
+					@Override
+					public void run() {
+						showConnectionFailedDialog();
+					}
+				});
 				Log.i(LOG_TAG, "ConnectionTask", e);
 			}
 		}
 	}
 
+	private void showConnectionFailedDialog() {
+		AlertDialog.Builder builder = new AlertDialog.Builder(this);
+		builder.setTitle(R.string.connection_falied_dialog_title);
+		builder.setMessage(R.string.connection_falied_dialog_msg);
+		// Add the buttons
+		builder.setPositiveButton(R.string.retry, reconnectDialogClickListener);
+		builder.setNegativeButton(android.R.string.cancel, reconnectDialogClickListener);
+		
+		builder.create().show();
+	}
+		
+	DialogInterface.OnClickListener reconnectDialogClickListener = new DialogInterface.OnClickListener() {
+	    @Override
+	    public void onClick(DialogInterface dialog, int which) {
+	    	sameNetworkDialog = null;
+	    	
+	        switch (which){
+	        case DialogInterface.BUTTON_POSITIVE:
+	            connect();
+	            break;
+
+	        case DialogInterface.BUTTON_NEGATIVE:
+	            finish();
+	            break;
+	        }
+	    }
+	};
+	
+	private void connect() {
+		connectTask = new ConnectTask();
+		connectTask.start();
+	}
+	
 	/**
 	 * {@inheritDoc}
 	 */
@@ -196,7 +239,7 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements
 	protected void onStop() {
 		super.onStop();
 
-		this.connectTask.interrupt();
+		this.handler.removeCallbacks(connectRunnable);
 		
 		if (presentationLogic != null) {
 			try {
