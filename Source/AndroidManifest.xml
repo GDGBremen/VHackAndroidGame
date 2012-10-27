@@ -34,6 +34,11 @@
 				<data android:host="vhackandroidgame.dsi8.de" android:pathPrefix="/connect"  android:scheme="http"></data>
 			</intent-filter>
         </activity>
+        <activity android:name=".ServerGameActivity">
+            <intent-filter>
+            <action android:name="android.intent.action.MAIN" />
+            </intent-filter>
+        </activity>
     </application>
 
 </manifest>

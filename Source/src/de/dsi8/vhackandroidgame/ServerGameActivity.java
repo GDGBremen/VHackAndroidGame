@@ -16,5 +16,9 @@ public class ServerGameActivity extends ListActivity {
 		this.listView = getListView();
 		this.adapter = new ScoreboardAdapater(this);
 		this.listView.setAdapter(adapter);
+        final ActionBar actionbar=getActionBar();
+        actionbar.setDisplayUseLogoEnabled(false);
+        actionbar.setDisplayShowHomeEnabled(false);
+        actionbar.setTitle(R.string.scoreboard_title);
 	}
 }
