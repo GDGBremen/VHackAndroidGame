@@ -1,8 +1,12 @@
 package de.dsi8.vhackandroidgame.server.list;
 
-import android.animation.ObjectAnimator;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import android.content.Context;
 import android.graphics.Color;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
 import android.view.LayoutInflater;
@@ -13,37 +17,38 @@ import android.widget.TextView;
 import de.dsi8.vhackandroidgame.R;
 import de.dsi8.vhackandroidgame.server.model.Player;
 
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
 /**
  * @author tmesserschmidt
  * @author zero
  */
 
 public class ScoreboardAdapater extends BaseAdapter {
-	private List<Player>	players;
-	private LayoutInflater	inflater;
-	private Context			context;
-	private Player			dirty;
-    private static final long ROTATE_DURATION =400 ; //in milliseconds
-    private static final long TEXT_ANIM_DURATION=200; //in milliseconds
+	private List<Player>		players;
+	private LayoutInflater		inflater;
+	private Context				context;
+	private Player				dirty;
+	private static final long	ROTATE_DURATION		= 400;		// in
+																// milliseconds
+	private static final long	TEXT_ANIM_DURATION	= 200;		// in
+																// milliseconds
 
-    private Handler handler=new Handler(new Handler.Callback(){
-        @Override
-        public boolean handleMessage(Message message) {
-           ((View)message.obj)
-                 .animate()
-                .scaleX(1).scaleY(1)
-                .setDuration(TEXT_ANIM_DURATION/2)
-                .start();
-           return true;
-        }
-    });
+	private Handler				handler				= new Handler(
+															new Handler.Callback() {
+																@Override
+																public boolean handleMessage(
+																		Message message) {
+																	((View) message.obj)
+																			.animate()
+																			.scaleX(1)
+																			.scaleY(1)
+																			.setDuration(
+																					TEXT_ANIM_DURATION / 2)
+																			.start();
+																	return true;
+																}
+															});
 
-    /**
+	/**
 	 * @param context
 	 */
 	public ScoreboardAdapater(Context context) {
@@ -73,7 +78,7 @@ public class ScoreboardAdapater extends BaseAdapter {
 	 * Returns the {@link Player}'s position.
 	 * 
 	 * @param player
-	 * @return
+	 * @return the player's position
 	 */
 	public int getPosition(Player player) {
 		return this.players.indexOf(player);
@@ -149,9 +154,11 @@ public class ScoreboardAdapater extends BaseAdapter {
 			holder.container
 					.setBackgroundColor(getColorForPlayer(player, false));
 			holder.border.setBackgroundColor(getColorForPlayer(player, true));
-            rotateAnimation(player,holder.container);
-            checkTextAnimations(player,holder);
 
+			if (Build.VERSION.SDK_INT >= 14) {
+				rotateAnimation(player, holder.container);
+				checkTextAnimations(player, holder);
+			}
 		}
 
 		return convertView;
@@ -184,44 +191,6 @@ public class ScoreboardAdapater extends BaseAdapter {
 		}
 	}
 
-    public void rotateAnimation(final Player player,final View view){
-
-        view.setRotationY(0);
-        if(player==this.dirty){
-            view.animate().rotationY(360f).setDuration(ROTATE_DURATION);
-        }
-    }
-
-    public void setTextSizeAnimation(final Player player, final TextView textView,final long delay) {
-        if(player==this.dirty){
-            final float size=textView.getTextSize();
-
-
-
-           textView.animate()
-                   .scaleX(2).scaleY(2)
-                   .setDuration(TEXT_ANIM_DURATION)
-                   .setStartDelay(delay);
-            Message msg=handler.obtainMessage(1);
-            msg.obj=textView;
-            handler.sendMessageDelayed(msg,TEXT_ANIM_DURATION+delay);
-
-
-        }
-
-    }
-
-    public void checkTextAnimations(final Player player,final  ViewHolder holder){
-        if(player!=this.dirty){
-            return;
-        }
-        setTextSizeAnimation(player,holder.checkpoints,ROTATE_DURATION+20);
-
-        if(player.hasFinishedNewRound()){
-            setTextSizeAnimation(player,holder.rounds,ROTATE_DURATION+40);
-        }
-    }
-
 	/**
 	 * This method gets triggered whenever a player passes a checkpoint. It
 	 * makes sure that the list is always refreshed.
@@ -232,5 +201,49 @@ public class ScoreboardAdapater extends BaseAdapter {
 		this.dirty = player;
 		Collections.sort(this.players);
 		this.notifyDataSetChanged();
+	}
+
+	/**
+	 * @param player
+	 * @param view
+	 */
+	public void rotateAnimation(final Player player, final View view) {
+		view.setRotationY(0);
+		if (player == this.dirty) {
+			view.animate().rotationY(360f).setDuration(ROTATE_DURATION);
+		}
+	}
+
+	/**
+	 * @param player
+	 * @param textView
+	 * @param delay
+	 */
+	public void setTextSizeAnimation(final Player player,
+			final TextView textView, final long delay) {
+		if (player == this.dirty) {
+			final float size = textView.getTextSize();
+
+			textView.animate().scaleX(2).scaleY(2)
+					.setDuration(TEXT_ANIM_DURATION).setStartDelay(delay);
+			Message msg = handler.obtainMessage(1);
+			msg.obj = textView;
+			handler.sendMessageDelayed(msg, TEXT_ANIM_DURATION + delay);
+		}
+	}
+
+	/**
+	 * @param player
+	 * @param holder
+	 */
+	public void checkTextAnimations(final Player player, final ViewHolder holder) {
+		if (player != this.dirty) {
+			return;
+		}
+		setTextSizeAnimation(player, holder.checkpoints, ROTATE_DURATION + 20);
+
+		if (player.hasFinishedNewRound()) {
+			setTextSizeAnimation(player, holder.rounds, ROTATE_DURATION + 40);
+		}
 	}
 }
