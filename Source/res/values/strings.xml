@@ -15,4 +15,6 @@
     <string name="scoreboard_player_id">Player %1$s</string>
     <string name="scoreboard_player_rounds">Rounds %1$s</string>
     <string name="scoreboard_player_checkpoints">Checkpoints %1$s</string>
+    
+    <string name="show_qr_code">Show/Hide QR-Code</string>
 </resources>

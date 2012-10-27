@@ -6,11 +6,15 @@
     android:gravity="center"
     android:orientation="vertical" >
 
+    <Button 
+        android:text="@string/show_qr_code"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="onShowQRCodeClick" />
     <ListView
         android:id="@android:id/list"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@android:color/transparent"
-        android:onClick="onListViewClicked" />
+        android:background="@android:color/transparent" />
 
 </LinearLayout>
