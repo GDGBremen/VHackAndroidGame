@@ -4,5 +4,9 @@
     <string name="menu_settings">Settings</string>
     <string name="title_activity_remote">VHackAndroidGame - Client</string>
     <string name="title_activity_server">VHackAndroidGame - Server</string>
+    <string name="scoreboard_title">Scoreboard</string>
+    <string name="scoreboard_player_id">Player %1$s</string>
+    <string name="scoreboard_player_rounds">Rounds %1$s</string>
+    <string name="scoreboard_player_checkpoints">Checkpoints %1$s</string>
 
 </resources>
