@@ -89,6 +89,8 @@ public class RemoteActivity extends SimpleBaseGameActivity implements IClientLog
 	protected void onCreate(Bundle pSavedInstanceState) {
 		super.onCreate(pSavedInstanceState);
 		
+		VHackAndroidGameConfiguration.registerProtocols();
+		
 		try {
 			connectionParameter = new ConnectionParameter(getIntent().getData().toString());
 		} catch (MalformedURLException e) {
