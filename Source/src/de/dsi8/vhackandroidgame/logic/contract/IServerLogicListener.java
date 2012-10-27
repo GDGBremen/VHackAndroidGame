@@ -30,7 +30,7 @@ import de.dsi8.vhackandroidgame.logic.impl.ServerLogic;
  *
  */
 public interface IServerLogicListener {
-	
-	
-	
+	void registerPlayer(int id);
+	void removePlayer(int id);
+	void incrementCheckpointsPassed(int id);
 }

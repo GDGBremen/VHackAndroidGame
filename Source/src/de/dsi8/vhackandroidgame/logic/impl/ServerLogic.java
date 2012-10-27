@@ -209,6 +209,8 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener, 
 		message.action = ACTION.ADD;
 		message.id = rPartner.id;
 		sendMessageToAllPresentationPartner(message);
+		
+		this.listener.registerPlayer(rPartner.id);
 	}
 	
 	/**
@@ -248,6 +250,7 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener, 
 			rPartner.communicationPartner.close();
 			rPartner.communicationPartner = null;
 			this.remotePartner.remove(rPartner);
+			this.listener.removePlayer(rPartner.id);
 		}
 	}
 
@@ -386,5 +389,9 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener, 
 				}
 			}
 		}
+	}
+	
+	public void checkpointsPassed(RemotePartner remotePartner) {
+		listener.incrementCheckpointsPassed(remotePartner.id);
 	}
 }

@@ -75,7 +75,7 @@ import de.dsi8.vhackandroidgame.logic.impl.VHackAndroidGameConfiguration;
  * @since 22:43:20 - 15.07.2010
  */
 public class RacerGameActivity extends AbstractConnectionActivity implements
-		IServerLogicListener, IPresentationView {
+		IPresentationView {
 	// ===========================================================
 	// Constants
 	// ===========================================================

@@ -78,4 +78,26 @@ public class ServerGameActivity extends ListActivity implements
 
 		mHandler.sendEmptyMessageDelayed(1, 3000);
 	}
+
+	@Override
+	public void registerPlayer(int id) {
+		Player p = new Player(id);
+		mPlayers.add(p);
+		adapter.addPlayer(p);
+		// TODO: works?
+	}
+
+	@Override
+	public void removePlayer(int id) {
+		Player p = mPlayers.get(id);
+		mPlayers.remove(id);
+		adapter.removePlayer(p);
+		// TODO: works?
+	}
+
+	@Override
+	public void incrementCheckpointsPassed(int id) {
+		Player p = mPlayers.get(id);
+		p.incrementCheckpointsPassed();
+	}
 }
