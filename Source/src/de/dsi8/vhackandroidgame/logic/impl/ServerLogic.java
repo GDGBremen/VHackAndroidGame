@@ -20,17 +20,21 @@
  ******************************************************************************/
 package de.dsi8.vhackandroidgame.logic.impl;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import org.andengine.entity.primitive.Rectangle;
+import org.andengine.entity.shape.IAreaShape;
 import org.andengine.extension.physics.box2d.FixedStepPhysicsWorld;
 import org.andengine.extension.physics.box2d.PhysicsConnector;
 import org.andengine.extension.physics.box2d.PhysicsFactory;
 import org.andengine.extension.physics.box2d.PhysicsWorld;
+import org.andlabs.andengine.extension.physicsloader.PhysicsEditorLoader;
 
+import android.content.Context;
 import android.util.Log;
 
 import com.badlogic.gdx.math.Vector2;
@@ -124,11 +128,19 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener, 
 	 * Creates the logic.
 	 * @param listener	Interface to the {@link RacerGameActivity}.	
 	 */
-	public ServerLogic(VHackAndroidGameConfiguration gameConfig, IServerLogicListener listener) {
+	public ServerLogic(Context context, VHackAndroidGameConfiguration gameConfig, IServerLogicListener listener) {
 		this.listener = listener;
 		this.gameConfig = gameConfig;
 		IConnector connector = gameConfig.getProtocol().createConnector();
 		this.communication = new ServerCommunication(this, connector, 20);
+		
+		
+		final PhysicsEditorLoader loader = new PhysicsEditorLoader();
+		try {
+			loader.load(context, this.mPhysicsWorld, "track.xml", (IAreaShape) null, false, false);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 		
 		new UpdateThread().start();
 		

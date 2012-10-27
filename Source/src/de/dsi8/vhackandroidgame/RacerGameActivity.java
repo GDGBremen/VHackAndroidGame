@@ -34,9 +34,6 @@ import org.andengine.entity.scene.Scene;
 import org.andengine.entity.scene.background.Background;
 import org.andengine.entity.sprite.Sprite;
 import org.andengine.entity.sprite.TiledSprite;
-import org.andengine.extension.physics.box2d.PhysicsConnector;
-import org.andengine.extension.physics.box2d.PhysicsFactory;
-import org.andengine.input.sensor.acceleration.AccelerationData;
 import org.andengine.opengl.texture.PixelFormat;
 import org.andengine.opengl.texture.TextureManager;
 import org.andengine.opengl.texture.TextureOptions;
@@ -53,7 +50,6 @@ import org.andengine.opengl.texture.region.TextureRegionFactory;
 import org.andengine.opengl.texture.region.TiledTextureRegion;
 import org.andengine.opengl.vbo.VertexBufferObjectManager;
 import org.andengine.util.adt.io.in.IInputStreamOpener;
-import org.andlabs.andengine.extension.physicsloader.PhysicsEditorLoader;
 
 import android.content.Context;
 import android.graphics.Canvas;
@@ -62,8 +58,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 
-import com.badlogic.gdx.physics.box2d.Body;
-import com.badlogic.gdx.physics.box2d.BodyDef.BodyType;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.MultiFormatWriter;
 import com.google.zxing.WriterException;
@@ -137,7 +131,7 @@ public class RacerGameActivity extends AbstractConnectionActivity implements
 	
 	@Override
 	protected void onCreate(Bundle pSavedInstanceState) {
-		getIntent().setData(Uri.parse("http://vhackandroidgame.dsi8.de/connect/?port=4254&protocol=tcp&host=192.168.11.27&password=&wifiap=smex4"));
+		getIntent().setData(Uri.parse("http://vhackandroidgame.dsi8.de/connect/?port=4254&protocol=tcp&host=192.168.178.20&password=&wifiap=Jans%20WLAN"));
 		super.onCreate(pSavedInstanceState);
 	}
 	
@@ -236,13 +230,7 @@ public class RacerGameActivity extends AbstractConnectionActivity implements
 //		Body ballBody = PhysicsFactory.createCircleBody(this.serverLogic.getPhysicsWorld(), ball, BodyType.DynamicBody, PhysicsFactory.createFixtureDef(1, 0.1f, 0.5f));
 		//this.serverLogic.getPhysicsWorld().registerPhysicsConnector(new PhysicsConnector(ball, ballBody, true, true));
 		
-//		final PhysicsEditorLoader loader = new PhysicsEditorLoader();
-//		try {
-//			loader.load(this, this.serverLogic.getPhysicsWorld(),
-//					"track.xml", track, false, false);
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		}
+
 
 		return this.mScene;
 	}
