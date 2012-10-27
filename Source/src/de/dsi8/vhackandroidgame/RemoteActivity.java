@@ -40,18 +40,16 @@ import org.andengine.ui.activity.SimpleBaseGameActivity;
 
 import android.content.Context;
 import android.opengl.GLES20;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Vibrator;
 import android.util.Log;
-import de.dsi8.dsi8acl.common.utils.AsyncTaskResult;
-import de.dsi8.dsi8acl.connection.contract.IRemoteConnection;
 import de.dsi8.dsi8acl.connection.impl.SocketConnection;
 import de.dsi8.dsi8acl.connection.model.ConnectionParameter;
 import de.dsi8.dsi8acl.exception.ConnectionProblemException;
 import de.dsi8.vhackandroidgame.logic.contract.IRemoteLogic;
 import de.dsi8.vhackandroidgame.logic.contract.IRemoteView;
 import de.dsi8.vhackandroidgame.logic.impl.RemoteLogic;
+import de.dsi8.vhackandroidgame.logic.impl.VHackAndroidGameConfiguration;
 
 public class RemoteActivity extends SimpleBaseGameActivity implements IRemoteView {
 
@@ -133,14 +131,15 @@ public class RemoteActivity extends SimpleBaseGameActivity implements IRemoteVie
 							// Workaround for multicall of onStart by the AndEngine
 							try {
 								this.wait(2000);
+								Log.i(LOG_TAG, "Not interrupted");
+								if (RemoteActivity.this.clientLogic == null) {
+									SocketConnection s = SocketConnection.connect(connectionParameter);
+									RemoteActivity.this.clientLogic = new RemoteLogic(RemoteActivity.this, s);
+								}
 							} catch(InterruptedException ex) {
 								Log.i(LOG_TAG, "Interrupted");
 							}
 						}
-						Log.i(LOG_TAG, "Not interrupted");
-						
-						SocketConnection s = SocketConnection.connect(connectionParameter);
-						RemoteActivity.this.clientLogic = new RemoteLogic(RemoteActivity.this, s);
 					} catch (Exception e) {
 						Log.i(LOG_TAG, "ConnectionTask", e);
 					}

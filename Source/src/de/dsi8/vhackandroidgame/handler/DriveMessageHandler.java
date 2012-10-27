@@ -23,6 +23,8 @@ package de.dsi8.vhackandroidgame.handler;
 import org.andengine.extension.physics.box2d.util.Vector2Pool;
 import org.andengine.util.math.MathUtils;
 
+import android.util.Log;
+
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 
@@ -61,6 +63,8 @@ public class DriveMessageHandler extends AbstractMessageHandler<DriveMessage> {
 	public void handleMessage(CommunicationPartner partner, DriveMessage message) throws InvalidMessageException {
 		//TODO driveCar
 		Body body = this.serverLogic.getCarBody(partner);
+		
+		Log.d("DriveMessageHandler", "new DriveMessage " + message.valueX + "   "  + message.valueY);
 		
 		final Vector2 velocity = Vector2Pool.obtain(message.valueX * 5, message.valueY * 5);
 		

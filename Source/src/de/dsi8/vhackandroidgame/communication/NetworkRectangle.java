@@ -5,6 +5,8 @@ import java.util.Collection;
 import org.andengine.entity.primitive.Rectangle;
 import org.andengine.opengl.vbo.VertexBufferObjectManager;
 
+import android.util.Log;
+
 import de.dsi8.vhackandroidgame.communication.model.CarMessage;
 import de.dsi8.vhackandroidgame.communication.model.CarMessage.ACTION;
 import de.dsi8.vhackandroidgame.logic.model.PresentationPartner;
@@ -30,6 +32,9 @@ public class NetworkRectangle extends Rectangle {
 			message.action = ACTION.ROTATE;
 			message.id = this.id;
 			p.communicationPartner.sendMessage(message);
+			
+			Log.d("NetworkRectangle", "setRotation(" + pRotation + ")");
+			
 		}
 	}
 	
@@ -41,6 +46,9 @@ public class NetworkRectangle extends Rectangle {
 			message.positionY = pY;
 			message.id = this.id;
 			message.action = ACTION.MOVE;
+			
+			Log.d("NetworkRectangle", "setPosition(" + pX + ", " + pY + ")");
+			
 			p.communicationPartner.sendMessage(message);
 		}
 	}

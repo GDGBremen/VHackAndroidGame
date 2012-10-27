@@ -210,6 +210,7 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener, 
 			message.positionY = PY;
 			message.rotation = ROTATION;
 			message.action = ACTION.ADD;
+			message.id = rPartner.id;
 			p.communicationPartner.sendMessage(message);
 		}
 	}
@@ -278,9 +279,11 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener, 
 //		CommunicationPartner partner = this.presentationPartner.get(0).communicationPartner;
 //		partner.sendMessage(new CarMessage(1, true));
 //		partner.sendMessage(new QRCodeMessage("hallo", QRCodePosition.CENTER));
+//		
+//		newRemotePartner(null);
+//		newRemotePartner(null);
 		
-		newRemotePartner(null);
-		newRemotePartner(null);
+		
 		CommunicationPartner partner = this.presentationPartner.get(0).communicationPartner;
 		
 		ConnectionParameter connectionDetails = VHackAndroidGameConfiguration.getConnectionDetails();
