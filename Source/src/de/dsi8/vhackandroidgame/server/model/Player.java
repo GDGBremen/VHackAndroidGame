@@ -4,24 +4,22 @@ import android.widget.Adapter;
 import de.dsi8.vhackandroidgame.server.list.ScoreboardAdapater;
 
 public class Player implements Comparable<Player> {
-	private int					id;
-	private int					checkpointsPassed	= 0;
-	private int					roundsFinished		= 0;
-	private static ScoreboardAdapater	adpater;
+	private static ScoreboardAdapater	adapter;
+	private int							id;
+	private int							checkpointsPassed	= 0;
+	private int							roundsFinished		= 0;
 
 	/**
 	 * @param id
-	 * @param checkpointsPassed
-	 * @param roundsFinished
 	 */
 	public Player(int id) {
 		this.id = id;
-
 	}
 
-    public static void setAdapter(final Adapter adapter){
-        Player.adpater = (ScoreboardAdapater) adapter;
-    }
+	public static void setAdapter(final Adapter adapter) {
+		Player.adapter = (ScoreboardAdapater) adapter;
+	}
+
 	/**
 	 * @return the id
 	 */
@@ -44,7 +42,7 @@ public class Player implements Comparable<Player> {
 		if ((this.checkpointsPassed % 4) == 0) {
 			this.roundsFinished++;
 		}
-		this.adpater.sortPlayers();
+		adapter.sortPlayers(this);
 	}
 
 	/**
