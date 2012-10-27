@@ -2,9 +2,11 @@ package de.dsi8.vhackandroidgame.server.list;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -102,12 +104,27 @@ public class ScoreboardAdapater extends BaseAdapter {
 			holder.rounds.setText(this.context.getString(
 					R.string.scoreboard_player_rounds,
 					player.getRoundsFinished()));
+            convertView.setBackgroundColor(getColorForPlayer(player));
 		}
 
 		return convertView;
 	}
 
-	/**
+    private int getColorForPlayer(final Player player) {
+        switch(player.getId()){
+            case 0:
+            return Color.CYAN;
+            case 1:
+            return Color.RED;
+            case 2:
+            return Color.GREEN;
+            case 3:
+            return Color.YELLOW;
+        }
+        return Color.TRANSPARENT;
+    }
+
+    /**
 	 * This method gets triggered whenever a player passes a checkpoint. It
 	 * makes sure that the list is always refreshed.
 	 */
