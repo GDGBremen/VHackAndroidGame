@@ -152,7 +152,7 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements
 		
 		
 		this.connectionParameter = this.gameConfig.getConnectionDetails();
-		this.connectionParameter.setParameter("host", "192.168.11.27");
+		this.connectionParameter.setParameter("host", "192.168.178.20");
 		
 		handler = new Handler();
 		handler.postDelayed(connectRunnable, 2000);
