@@ -10,4 +10,9 @@
     <string name="connection_falied_dialog_title">Connecting to the server failed</string>
     <string name="connection_falied_dialog_msg">Please check that you\'re in the same network.</string>
     <string name="retry">Retry</string>
+
+    <string name="scoreboard_title">Scoreboard</string>
+    <string name="scoreboard_player_id">Player %1$s</string>
+    <string name="scoreboard_player_rounds">Rounds %1$s</string>
+    <string name="scoreboard_player_checkpoints">Checkpoints %1$s</string>
 </resources>
