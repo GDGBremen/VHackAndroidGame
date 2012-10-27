@@ -58,6 +58,7 @@ import org.andlabs.andengine.extension.physicsloader.PhysicsEditorLoader;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 
@@ -136,9 +137,8 @@ public class RacerGameActivity extends AbstractConnectionActivity implements
 	
 	@Override
 	protected void onCreate(Bundle pSavedInstanceState) {
+		getIntent().setData(Uri.parse("http://vhackandroidgame.dsi8.de/connect/?port=4254&protocol=tcp&host=192.168.11.27&password=&wifiap=smex4"));
 		super.onCreate(pSavedInstanceState);
-		
-		this.connectionParameter.setParameter("host", "192.168.11.27");
 	}
 	
 	@Override
