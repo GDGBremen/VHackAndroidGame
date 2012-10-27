@@ -166,7 +166,7 @@ public class RacerGameActivity extends AbstractConnectionActivity implements
 		return new EngineOptions(true, ScreenOrientation.LANDSCAPE_FIXED,
 				new FillResolutionPolicy(), this.mCamera);
 	}
-
+ 
 	/**
 	 * {@inheritDoc}
 	 */
