@@ -30,6 +30,9 @@ import org.andengine.engine.options.EngineOptions;
 import org.andengine.engine.options.ScreenOrientation;
 import org.andengine.engine.options.resolutionpolicy.FillResolutionPolicy;
 import org.andengine.engine.options.resolutionpolicy.RatioResolutionPolicy;
+import org.andengine.entity.modifier.LoopEntityModifier;
+import org.andengine.entity.modifier.MoveModifier;
+import org.andengine.entity.modifier.RotationModifier;
 import org.andengine.entity.primitive.Rectangle;
 import org.andengine.entity.scene.Scene;
 import org.andengine.entity.scene.background.Background;
@@ -38,6 +41,7 @@ import org.andengine.entity.sprite.TiledSprite;
 import org.andengine.extension.physics.box2d.PhysicsConnector;
 import org.andengine.extension.physics.box2d.PhysicsFactory;
 import org.andengine.extension.physics.box2d.util.Vector2Pool;
+import org.andengine.extension.physics.box2d.util.constants.PhysicsConstants;
 import org.andengine.input.sensor.acceleration.AccelerationData;
 import org.andengine.input.sensor.acceleration.IAccelerationListener;
 import org.andengine.opengl.texture.PixelFormat;
@@ -56,7 +60,9 @@ import org.andengine.opengl.texture.region.TextureRegionFactory;
 import org.andengine.opengl.texture.region.TiledTextureRegion;
 import org.andengine.opengl.vbo.VertexBufferObjectManager;
 import org.andengine.ui.activity.SimpleBaseGameActivity;
+import org.andengine.util.Constants;
 import org.andengine.util.adt.io.in.IInputStreamOpener;
+import org.andengine.util.modifier.ease.EaseCubicInOut;
 import org.andlabs.andengine.extension.physicsloader.PhysicsEditorLoader;
 
 import android.content.Context;
@@ -66,6 +72,12 @@ import android.util.Log;
 
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
+import com.badlogic.gdx.physics.box2d.BodyDef;
+import com.badlogic.gdx.physics.box2d.Contact;
+import com.badlogic.gdx.physics.box2d.ContactImpulse;
+import com.badlogic.gdx.physics.box2d.ContactListener;
+import com.badlogic.gdx.physics.box2d.Manifold;
+import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.badlogic.gdx.physics.box2d.BodyDef.BodyType;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.google.zxing.BarcodeFormat;
@@ -127,7 +139,7 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements
 
 	private IPresentationLogic presentationLogic;
 
-	private BitmapTextureAtlas qrCodeAtlas;
+//	private BitmapTextureAtlas qrCodeAtlas;
 
 	private TextureRegion qrCodeAtlasRegion;
 
@@ -148,6 +160,14 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements
 
 	private TextureRegion mBallTextureRegion;
 
+	private TextureRegion mEffectSunTextureRegion;
+
+//	private TextureRegion mEffect1TextureRegion;
+//
+//	private TextureRegion mEffect2TextureRegion;
+//
+//	private TextureRegion mEffect3TextureRegion;
+
 	/**
 	 * {@inheritDoc}
 	 */
@@ -157,7 +177,7 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements
 
 		InternalConnectionHolder connectionHolder = new InternalConnectionHolder();
 
-		this.serverLogic = new ServerLogic(gameConfig, this,
+		this.serverLogic = new ServerLogic(this.gameConfig, this,
 				connectionHolder.getFirstConnection());
 		this.serverLogic.start();
 
@@ -179,9 +199,9 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements
 			Log.w(LOG_TAG, "Can not close the server", e);
 		}
 
-		if (presentationLogic != null) {
+		if (this.presentationLogic != null) {
 			try {
-				presentationLogic.close();
+				this.presentationLogic.close();
 			} catch (IOException e) {
 				Log.w(LOG_TAG, "Can not close the connection the server.", e);
 			}
@@ -218,10 +238,26 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements
 		this.mBoxTextureRegion = BitmapTextureAtlasTextureRegionFactory
 				.createFromAsset(this.mBoxTexture, this, "box.png", 0, 0);
 		this.mBoxTexture.load();
-		
+
 		try {
-			this.mTrackTextureRegion = loadResource(this, getTextureManager(), PixelFormat.RGBA_8888, TextureOptions.BILINEAR, "gfx/track.png");
-			this.mBallTextureRegion = loadResource(this, getTextureManager(), PixelFormat.RGBA_8888, TextureOptions.BILINEAR, "gfx/ball.png");
+			this.mTrackTextureRegion = loadResource(this, getTextureManager(),
+					PixelFormat.RGBA_8888, TextureOptions.BILINEAR,
+					"gfx/track.png");
+			this.mBallTextureRegion = loadResource(this, getTextureManager(),
+					PixelFormat.RGBA_8888, TextureOptions.BILINEAR,
+					"gfx/ball.png");
+			this.mEffectSunTextureRegion = loadResource(this, getTextureManager(),
+					PixelFormat.RGBA_8888, TextureOptions.BILINEAR,
+					"gfx/suneffect.png");
+//			this.mEffect1TextureRegion = loadResource(this, getTextureManager(),
+//					PixelFormat.RGBA_8888, TextureOptions.BILINEAR,
+//					"gfx/effect1.png");
+//			this.mEffect2TextureRegion = loadResource(this, getTextureManager(),
+//					PixelFormat.RGBA_8888, TextureOptions.BILINEAR,
+//					"gfx/effect2.png");
+//			this.mEffect3TextureRegion = loadResource(this, getTextureManager(),
+//					PixelFormat.RGBA_8888, TextureOptions.BILINEAR,
+//					"gfx/effect3.png");
 
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -236,8 +272,8 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements
 		this.mScene = new Scene();
 		this.mScene.setBackground(new Background(0, 0, 0));
 
-		this.qrCodeAtlas = new BitmapTextureAtlas(this.getTextureManager(),
-				150, 750, TextureOptions.DEFAULT);
+//		this.qrCodeAtlas = new BitmapTextureAtlas(this.getTextureManager(),
+//				150, 750, TextureOptions.DEFAULT);
 
 		final VertexBufferObjectManager vertexBufferObjectManager = this
 				.getVertexBufferObjectManager();
@@ -259,30 +295,133 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements
 
 		this.serverLogic.test();
 		
-		Sprite track = new Sprite(0, 0, this.mTrackTextureRegion, vertexBufferObjectManager);
+		Sprite effectSun = new Sprite(1920/2, 0, this.mEffectSunTextureRegion, vertexBufferObjectManager);
+		effectSun.setScale(2.5f);
+		this.mScene.attachChild(effectSun);
+		
+		LoopEntityModifier loop = new LoopEntityModifier(new RotationModifier(60 , 0, 360));
+		effectSun.registerEntityModifier(loop);
+		
+//		Sprite effectSun2 = new Sprite(-1920/2, 0, this.mEffectSunTextureRegion, vertexBufferObjectManager);
+//		effectSun2.setScale(2.5f);
+//		this.mScene.attachChild(effectSun2);
+//		
+//		LoopEntityModifier loop2 = new LoopEntityModifier(new RotationModifier(60 , 0, -360));
+//
+//		effectSun2.registerEntityModifier(loop2);
+		
+//		Sprite effect1 = new Sprite(0, 0, this.mEffect1TextureRegion, vertexBufferObjectManager);
+//		this.mScene.attachChild(effect1);
+//		effect1.registerEntityModifier(new MoveModifier(20, 0, 1920, 0,
+//				1020, EaseCubicInOut.getInstance()));
+//		
+//		Sprite effect2 = new Sprite(0, 0, this.mEffect2TextureRegion, vertexBufferObjectManager);
+//		this.mScene.attachChild(effect2);
+//		effect2.registerEntityModifier(new MoveModifier(20, 600, 600, 0,
+//				1020, EaseCubicInOut.getInstance()));
+//		
+//		Sprite effect3 = new Sprite(0, 0, this.mEffect3TextureRegion, vertexBufferObjectManager);
+//		this.mScene.attachChild(effect3);
+//		effect3.registerEntityModifier(new MoveModifier(20, 1300, 1300, 0,
+//				1020, EaseCubicInOut.getInstance()));
+
+		Sprite track = new Sprite(0, 0, this.mTrackTextureRegion,
+				vertexBufferObjectManager);
 		track.setSize(CAMERA_WIDTH, CAMERA_HEIGHT);
 		this.mScene.attachChild(track);
 
-		Sprite ball = new Sprite(200, 300, this.mBallTextureRegion, vertexBufferObjectManager);
+		Sprite ball = new Sprite(200, 300, this.mBallTextureRegion,
+				vertexBufferObjectManager);
 		ball.setScale(0.7f);
 		ball.setColor(org.andengine.util.color.Color.BLUE);
 		this.mScene.attachChild(ball);
-		
-		Body ballBody = PhysicsFactory.createCircleBody(this.serverLogic.getPhysicsWorld(), ball, BodyType.DynamicBody, PhysicsFactory.createFixtureDef(1, 0.1f, 0.5f));
-		this.serverLogic.getPhysicsWorld().registerPhysicsConnector(new PhysicsConnector(ball,
-				ballBody, true, true));
-		
+
+		Body ballBody = PhysicsFactory.createCircleBody(
+				this.serverLogic.getPhysicsWorld(), ball, BodyType.DynamicBody,
+				PhysicsFactory.createFixtureDef(1, 0.1f, 0.5f));
+		this.serverLogic.getPhysicsWorld().registerPhysicsConnector(
+				new PhysicsConnector(ball, ballBody, true, true));
+
 		final PhysicsEditorLoader loader = new PhysicsEditorLoader();
 		try {
-			loader.load(this, this.serverLogic.getPhysicsWorld(),
-					"track.xml", track, false, false);
+			loader.load(this, this.serverLogic.getPhysicsWorld(), "track.xml",
+					track, false, false);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 
+		Rectangle goal = new Rectangle(1095, 810, 80, 120,
+				getVertexBufferObjectManager());
+		goal.setColor(org.andengine.util.color.Color.TRANSPARENT);
+		this.mScene.attachChild(goal);
+
+		Body goalBody = PhysicsFactory.createBoxBody(
+				this.serverLogic.getPhysicsWorld(), goal, BodyType.StaticBody,
+				PhysicsFactory.createFixtureDef(0, 0, 0, true));
+		goalBody.setUserData("goal");
+
+		Rectangle firstCheckpoint = new Rectangle(1085, 535, 160, 55,
+				getVertexBufferObjectManager());
+		firstCheckpoint.setColor(org.andengine.util.color.Color.TRANSPARENT);
+		this.mScene.attachChild(firstCheckpoint);
+
+		Body firstCheckpointBody = PhysicsFactory.createBoxBody(
+				this.serverLogic.getPhysicsWorld(), firstCheckpoint,
+				BodyType.StaticBody,
+				PhysicsFactory.createFixtureDef(0, 0, 0, true));
+		firstCheckpointBody.setUserData("first");
+
+		Rectangle secondCheckpoint = new Rectangle(915, 100, 55, 150,
+				getVertexBufferObjectManager());
+		secondCheckpoint.setColor(org.andengine.util.color.Color.TRANSPARENT);
+		this.mScene.attachChild(secondCheckpoint);
+
+		Body secondCheckpointBody = PhysicsFactory.createBoxBody(
+				this.serverLogic.getPhysicsWorld(), secondCheckpoint,
+				BodyType.StaticBody,
+				PhysicsFactory.createFixtureDef(0, 0, 0, true));
+		secondCheckpointBody.setUserData("second");
+
+		this.serverLogic.getPhysicsWorld().setContactListener(
+				new ContactListener() {
+
+					@Override
+					public void preSolve(Contact contact, Manifold oldManifold) {
+					}
+
+					@Override
+					public void postSolve(Contact contact,
+							ContactImpulse impulse) {
+					}
+
+					@Override
+					public void endContact(Contact contact) {
+					}
+
+					@Override
+					public void beginContact(Contact contact) {
+						if ("goal".equals(contact.getFixtureA().getBody()
+								.getUserData())
+								|| "goal".equals(contact.getFixtureA()
+										.getBody().getUserData())) {
+							Log.d("GOAL", "GOAL");
+						} else if ("first".equals(contact.getFixtureA()
+								.getBody().getUserData())
+								|| "first".equals(contact.getFixtureA()
+										.getBody().getUserData())) {
+							Log.d("FIRST", "FIRST");
+						} else if ("second".equals(contact.getFixtureA()
+								.getBody().getUserData())
+								|| "second".equals(contact.getFixtureA()
+										.getBody().getUserData())) {
+							Log.d("SECOND", "SECOND");
+						}
+					}
+				});
+
 		return this.mScene;
 	}
-	
+
 	@Override
 	public synchronized void onResumeGame() {
 		super.onResumeGame();
@@ -299,11 +438,12 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements
 
 	@Override
 	public void onAccelerationChanged(final AccelerationData pAccelerationData) {
-		final Vector2 gravity = Vector2Pool.obtain(pAccelerationData.getX() * 2, pAccelerationData.getY() * 2);
+		final Vector2 gravity = Vector2Pool.obtain(
+				pAccelerationData.getX() * 2, pAccelerationData.getY() * 2);
 		this.serverLogic.getPhysicsWorld().setGravity(gravity);
 		Vector2Pool.recycle(gravity);
 	}
-	
+
 	// ===========================================================
 	// Methods
 	// ===========================================================
@@ -352,98 +492,98 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements
 	@Override
 	public void showQRCode(String text, QRCodePosition position) {
 		// TODO: use the given position information.
-		MultiFormatWriter writer = new MultiFormatWriter();
-		try {
-			final BitMatrix bitmatrix = writer.encode(text,
-					BarcodeFormat.QR_CODE, 150, 150);
-
-			final IBitmapTextureAtlasSource baseTextureSource = new EmptyBitmapTextureAtlasSource(
-					150, 150);
-			final BaseBitmapTextureAtlasSourceDecorator decoratedTextureAtlasSource = new BaseBitmapTextureAtlasSourceDecorator(
-					baseTextureSource) {
-				@Override
-				protected void onDecorateBitmap(Canvas pCanvas)
-						throws Exception {
-					pCanvas.drawRGB(0, 0, 0);
-					this.mPaint.setColor(Color.WHITE);
-					for (int y = 0; y < bitmatrix.getHeight(); y++) {
-						for (int x = 0; x < bitmatrix.getWidth(); x++) {
-							if (!bitmatrix.get(x, y)) {
-								pCanvas.drawPoint(x, y, mPaint);
-							}
-						}
-					}
-				}
-
-				@Override
-				public BaseBitmapTextureAtlasSourceDecorator deepCopy() {
-					throw new RuntimeException();
-				}
-			};
-			final int bardcodeSize = CAMERA_HEIGHT - 2 * RACETRACK_WIDTH;
-
-			final TextureRegion qrCodeAtlasRegion;
-
-			switch (position) {
-			case CENTER:
-				qrCodeAtlasRegion = BitmapTextureAtlasTextureRegionFactory
-						.createFromSource(this.qrCodeAtlas,
-								decoratedTextureAtlasSource, 0, 0);
-				this.qrCodeAtlas.load();
-				this.barcodeCenter = new Sprite(CAMERA_WIDTH / 2 - bardcodeSize
-						/ 2, RACETRACK_WIDTH, bardcodeSize, bardcodeSize,
-						qrCodeAtlasRegion, this.getVertexBufferObjectManager());
-				this.mScene.attachChild(this.barcodeCenter);
-				break;
-			case TOP:
-				qrCodeAtlasRegion = BitmapTextureAtlasTextureRegionFactory
-						.createFromSource(this.qrCodeAtlas,
-								decoratedTextureAtlasSource, 0, 150);
-				this.qrCodeAtlas.load();
-				this.barcodeTop = new Sprite(CAMERA_WIDTH / 2 - bardcodeSize
-						/ 2, 2, bardcodeSize, bardcodeSize, qrCodeAtlasRegion,
-						this.getVertexBufferObjectManager());
-				this.mScene.attachChild(this.barcodeTop);
-				break;
-			case RIGHT:
-				qrCodeAtlasRegion = BitmapTextureAtlasTextureRegionFactory
-						.createFromSource(this.qrCodeAtlas,
-								decoratedTextureAtlasSource, 0, 300);
-				this.qrCodeAtlas.load();
-				this.barcodeRight = new Sprite(CAMERA_WIDTH - 2 - bardcodeSize,
-						RACETRACK_WIDTH, bardcodeSize, bardcodeSize,
-						qrCodeAtlasRegion, this.getVertexBufferObjectManager());
-				this.mScene.attachChild(this.barcodeRight);
-				break;
-			case BOTTOM:
-				qrCodeAtlasRegion = BitmapTextureAtlasTextureRegionFactory
-						.createFromSource(this.qrCodeAtlas,
-								decoratedTextureAtlasSource, 0, 450);
-				this.qrCodeAtlas.load();
-				this.barcodeBottom = new Sprite(CAMERA_WIDTH / 2 - bardcodeSize
-						/ 2, CAMERA_HEIGHT - 2 - bardcodeSize, bardcodeSize,
-						bardcodeSize, qrCodeAtlasRegion,
-						this.getVertexBufferObjectManager());
-				this.mScene.attachChild(this.barcodeBottom);
-				break;
-			case LEFT:
-				qrCodeAtlasRegion = BitmapTextureAtlasTextureRegionFactory
-						.createFromSource(this.qrCodeAtlas,
-								decoratedTextureAtlasSource, 0, 600);
-				this.qrCodeAtlas.load();
-				this.barcodeLeft = new Sprite(2, RACETRACK_WIDTH, bardcodeSize,
-						bardcodeSize, qrCodeAtlasRegion,
-						this.getVertexBufferObjectManager());
-				this.mScene.attachChild(this.barcodeLeft);
-				break;
-			default:
-				// impossible
-				break;
-
-			}
-		} catch (WriterException e) {
-			e.printStackTrace();
-		}
+//		MultiFormatWriter writer = new MultiFormatWriter();
+//		try {
+//			final BitMatrix bitmatrix = writer.encode(text,
+//					BarcodeFormat.QR_CODE, 150, 150);
+//
+//			final IBitmapTextureAtlasSource baseTextureSource = new EmptyBitmapTextureAtlasSource(
+//					150, 150);
+//			final BaseBitmapTextureAtlasSourceDecorator decoratedTextureAtlasSource = new BaseBitmapTextureAtlasSourceDecorator(
+//					baseTextureSource) {
+//				@Override
+//				protected void onDecorateBitmap(Canvas pCanvas)
+//						throws Exception {
+//					pCanvas.drawRGB(0, 0, 0);
+//					this.mPaint.setColor(Color.WHITE);
+//					for (int y = 0; y < bitmatrix.getHeight(); y++) {
+//						for (int x = 0; x < bitmatrix.getWidth(); x++) {
+//							if (!bitmatrix.get(x, y)) {
+//								pCanvas.drawPoint(x, y, mPaint);
+//							}
+//						}
+//					}
+//				}
+//
+//				@Override
+//				public BaseBitmapTextureAtlasSourceDecorator deepCopy() {
+//					throw new RuntimeException();
+//				}
+//			};
+//			final int bardcodeSize = CAMERA_HEIGHT - 2 * RACETRACK_WIDTH;
+//
+//			final TextureRegion qrCodeAtlasRegion;
+//
+//			switch (position) {
+//			case CENTER:
+//				qrCodeAtlasRegion = BitmapTextureAtlasTextureRegionFactory
+//						.createFromSource(this.qrCodeAtlas,
+//								decoratedTextureAtlasSource, 0, 0);
+//				this.qrCodeAtlas.load();
+//				this.barcodeCenter = new Sprite(CAMERA_WIDTH / 2 - bardcodeSize
+//						/ 2, RACETRACK_WIDTH, bardcodeSize, bardcodeSize,
+//						qrCodeAtlasRegion, this.getVertexBufferObjectManager());
+//				this.mScene.attachChild(this.barcodeCenter);
+//				break;
+//			case TOP:
+//				qrCodeAtlasRegion = BitmapTextureAtlasTextureRegionFactory
+//						.createFromSource(this.qrCodeAtlas,
+//								decoratedTextureAtlasSource, 0, 150);
+//				this.qrCodeAtlas.load();
+//				this.barcodeTop = new Sprite(CAMERA_WIDTH / 2 - bardcodeSize
+//						/ 2, 2, bardcodeSize, bardcodeSize, qrCodeAtlasRegion,
+//						this.getVertexBufferObjectManager());
+//				this.mScene.attachChild(this.barcodeTop);
+//				break;
+//			case RIGHT:
+//				qrCodeAtlasRegion = BitmapTextureAtlasTextureRegionFactory
+//						.createFromSource(this.qrCodeAtlas,
+//								decoratedTextureAtlasSource, 0, 300);
+//				this.qrCodeAtlas.load();
+//				this.barcodeRight = new Sprite(CAMERA_WIDTH - 2 - bardcodeSize,
+//						RACETRACK_WIDTH, bardcodeSize, bardcodeSize,
+//						qrCodeAtlasRegion, this.getVertexBufferObjectManager());
+//				this.mScene.attachChild(this.barcodeRight);
+//				break;
+//			case BOTTOM:
+//				qrCodeAtlasRegion = BitmapTextureAtlasTextureRegionFactory
+//						.createFromSource(this.qrCodeAtlas,
+//								decoratedTextureAtlasSource, 0, 450);
+//				this.qrCodeAtlas.load();
+//				this.barcodeBottom = new Sprite(CAMERA_WIDTH / 2 - bardcodeSize
+//						/ 2, CAMERA_HEIGHT - 2 - bardcodeSize, bardcodeSize,
+//						bardcodeSize, qrCodeAtlasRegion,
+//						this.getVertexBufferObjectManager());
+//				this.mScene.attachChild(this.barcodeBottom);
+//				break;
+//			case LEFT:
+//				qrCodeAtlasRegion = BitmapTextureAtlasTextureRegionFactory
+//						.createFromSource(this.qrCodeAtlas,
+//								decoratedTextureAtlasSource, 0, 600);
+//				this.qrCodeAtlas.load();
+//				this.barcodeLeft = new Sprite(2, RACETRACK_WIDTH, bardcodeSize,
+//						bardcodeSize, qrCodeAtlasRegion,
+//						this.getVertexBufferObjectManager());
+//				this.mScene.attachChild(this.barcodeLeft);
+//				break;
+//			default:
+//				// impossible
+//				break;
+//
+//			}
+//		} catch (WriterException e) {
+//			e.printStackTrace();
+//		}
 
 	}
 
@@ -508,6 +648,6 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements
 	@Override
 	public void onAccelerationAccuracyChanged(AccelerationData pAccelerationData) {
 		// TODO Auto-generated method stub
-		
+
 	}
 }

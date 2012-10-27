@@ -92,7 +92,7 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener, 
 	private final IServerCommunication communication;
 	
 	private final VHackAndroidGameConfiguration gameConfig;
-	private final FixtureDef carFixtureDef = PhysicsFactory.createFixtureDef(1, 0.5f, 0.5f);
+	private final FixtureDef carFixtureDef = PhysicsFactory.createFixtureDef(1, 0.0f, 0.5f);
 
 
 	private PhysicsWorld mPhysicsWorld;
