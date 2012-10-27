@@ -15,7 +15,7 @@
     <TextView
         android:id="@+id/adapter_player_rounds"
         style="@style/ScoreboardText"
-        android:text="@string/scoreboard_player_checkpoints" />
+        android:text="@string/scoreboard_player_rounds" />
     
     <View style="@style/ScoreboardDivider" />
 
