@@ -49,6 +49,7 @@ public class ServerGameActivity extends ListActivity implements
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		mPlayers = new ArrayList<Player>();
 		setContentView(R.layout.activity_scoreboard);
 		this.listView = getListView();
 		this.adapter = new ScoreboardAdapater(this);
@@ -69,7 +70,6 @@ public class ServerGameActivity extends ListActivity implements
 	}
 
 	private void createFakePlayers() {
-		mPlayers = new ArrayList<Player>();
 		ScoreboardAdapater adapter = new ScoreboardAdapater(this);
 		for (int i = 0; i < 4; i++) {
 			Player p = new Player(i);
@@ -105,7 +105,7 @@ public class ServerGameActivity extends ListActivity implements
 		p.incrementCheckpointsPassed();
 	}
 	
-	public void onListViewClicked(View v) {
+	public void onShowQRCodeClick(View v) {
 		serverLogic.showBardcode();
 	}
 }

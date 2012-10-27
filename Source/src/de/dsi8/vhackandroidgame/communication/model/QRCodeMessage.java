@@ -15,13 +15,13 @@ public class QRCodeMessage extends Message {
 	
 
 	public QRCodeMessage(@JsonProperty("text") String text,
-			@JsonProperty("position") QRCodePosition position) {
+						 @JsonProperty("position") QRCodePosition position) {
 		this.text = text;
 		this.position = position;
 	}
 	
-	public boolean QRCodeVisible() {
-		return text == null;
+	public boolean QRCodeProvided() {
+		return text != null;
 	}
 	
 	public static enum QRCodePosition {
