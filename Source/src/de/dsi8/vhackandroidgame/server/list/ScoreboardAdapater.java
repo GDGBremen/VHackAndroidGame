@@ -170,27 +170,27 @@ public class ScoreboardAdapater extends BaseAdapter {
 
     public void rotateAnimation(final Player player,final View view){
         if(player==this.dirty){
-            view.animate().rotationY(360f).setDuration(ROTATE_DURATION)
-                    .withEndAction(new Runnable() {
-                        @Override
-                        public void run() {
-                            view.setRotationY(0);
-                        }
-                    });
+//            view.animate().rotationY(360f).setDuration(ROTATE_DURATION)
+//                    .withEndAction(new Runnable() {
+//                        @Override
+//                        public void run() {
+//                            view.setRotationY(0);
+//                        }
+//                    });
         }
     }
 
     public void setTextSizeAnimation(final Player player, final TextView textView,final long delay) {
-        if(player==this.dirty){
-            final float size=textView.getTextSize();
-           textView.animate().scaleX(2).scaleY(2).withEndAction(new Runnable() {
-               @Override
-               public void run() {
-                   textView.setScaleX(1);
-                   textView.setScaleY(1);
-               }
-           }).setStartDelay(delay);
-        }
+//        if(player==this.dirty){
+//            final float size=textView.getTextSize();
+//           textView.animate().scaleX(2).scaleY(2).withEndAction(new Runnable() {
+//               @Override
+//               public void run() {
+//                   textView.setScaleX(1);
+//                   textView.setScaleY(1);
+//               }
+//           }).setStartDelay(delay);
+//        }
     }
 
     public void checkTextAnimations(final Player player,final  ViewHolder holder){
