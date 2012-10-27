@@ -1,27 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/adapter_border"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="4dp"
-    android:orientation="horizontal" >
+    android:orientation="horizontal"
+    android:padding="4dp" >
 
-    <TextView
-        android:id="@+id/adapter_player_id"
-        style="@style/ScoreboardText"
-        android:text="@string/scoreboard_player_id" />
-    
-    <View style="@style/ScoreboardDivider" />
+    <LinearLayout
+        android:id="@+id/adapter_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="4dp"
+        android:orientation="horizontal" >
 
-    <TextView
-        android:id="@+id/adapter_player_rounds"
-        style="@style/ScoreboardText"
-        android:text="@string/scoreboard_player_checkpoints" />
-    
-    <View style="@style/ScoreboardDivider" />
+        <TextView
+            android:id="@+id/adapter_player_id"
+            style="@style/ScoreboardText"
+            android:text="@string/scoreboard_player_id" />
 
-    <TextView
-        android:id="@+id/adapter_player_checkpoints"
-        style="@style/ScoreboardText"
-        android:text="@string/scoreboard_player_checkpoints" />
+        <View style="@style/ScoreboardDivider" />
+
+        <TextView
+            android:id="@+id/adapter_player_rounds"
+            style="@style/ScoreboardText"
+            android:text="@string/scoreboard_player_rounds" />
+
+        <View style="@style/ScoreboardDivider" />
+
+        <TextView
+            android:id="@+id/adapter_player_checkpoints"
+            style="@style/ScoreboardText"
+            android:text="@string/scoreboard_player_checkpoints" />
+    </LinearLayout>
 
 </LinearLayout>

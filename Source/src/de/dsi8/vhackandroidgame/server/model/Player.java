@@ -1,25 +1,23 @@
 package de.dsi8.vhackandroidgame.server.model;
 
+import android.widget.Adapter;
 import de.dsi8.vhackandroidgame.server.list.ScoreboardAdapater;
 
 public class Player implements Comparable<Player> {
-	private int					id;
-	private int					checkpointsPassed	= 0;
-	private int					roundsFinished		= 0;
-	private ScoreboardAdapater	adpater;
+	private static ScoreboardAdapater	adapter;
+	private int							id;
+	private int							checkpointsPassed	= 0;
+	private int							roundsFinished		= 0;
 
 	/**
 	 * @param id
-	 * @param checkpointsPassed
-	 * @param roundsFinished
-	 * @param adapter 
 	 */
-	public Player(int id, int checkpointsPassed, int roundsFinished,
-			ScoreboardAdapater adapter) {
+	public Player(int id) {
 		this.id = id;
-		this.checkpointsPassed = checkpointsPassed;
-		this.roundsFinished = roundsFinished;
-		this.adpater = adapter;
+	}
+
+	public static void setAdapter(final Adapter adapter) {
+		Player.adapter = (ScoreboardAdapater) adapter;
 	}
 
 	/**
@@ -44,7 +42,7 @@ public class Player implements Comparable<Player> {
 		if ((this.checkpointsPassed % 4) == 0) {
 			this.roundsFinished++;
 		}
-		this.adpater.sortPlayers();
+		adapter.sortPlayers(this);
 	}
 
 	/**
@@ -57,9 +55,9 @@ public class Player implements Comparable<Player> {
 	@Override
 	public int compareTo(Player another) {
 		if (this.checkpointsPassed > another.checkpointsPassed) {
-			return 1;
-		} else if (this.checkpointsPassed < another.checkpointsPassed) {
 			return -1;
+		} else if (this.checkpointsPassed < another.checkpointsPassed) {
+			return 1;
 		}
 		return 0;
 	}
