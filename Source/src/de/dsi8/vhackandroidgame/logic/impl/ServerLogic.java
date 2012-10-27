@@ -305,11 +305,37 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener, 
 		int firstCarId = getCarIdFromBody(contact.getFixtureA().getBody());
 		if (firstCarId > -1) {
 			collisionDetected(firstCarId);
+			checkCheckpointCollision(contact, firstCarId);
 		}
 		
 		int secondCarId = getCarIdFromBody(contact.getFixtureB().getBody());
 		if (secondCarId > -1) {
 			collisionDetected(secondCarId);
+			checkCheckpointCollision(contact, secondCarId);
+		}
+		
+		
+	}
+
+	private void checkCheckpointCollision(Contact contact, int carId) {
+		if ("goal".equals(contact.getFixtureA().getBody()
+				.getUserData())
+				|| "goal".equals(contact.getFixtureA()
+						.getBody().getUserData())) {
+			//TODO: call scoreboard
+			Log.d("GOAL", "GOAL");
+		} else if ("first".equals(contact.getFixtureA()
+				.getBody().getUserData())
+				|| "first".equals(contact.getFixtureA()
+						.getBody().getUserData())) {
+			//TODO: call scoreboard
+			Log.d("FIRST", "FIRST");
+		} else if ("second".equals(contact.getFixtureA()
+				.getBody().getUserData())
+				|| "second".equals(contact.getFixtureA()
+						.getBody().getUserData())) {
+			//TODO: call scoreboard
+			Log.d("SECOND", "SECOND");
 		}
 	}
 		
