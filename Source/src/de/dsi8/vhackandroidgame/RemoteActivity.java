@@ -151,7 +151,7 @@ public class RemoteActivity extends SimpleBaseGameActivity implements IRemoteVie
 	    }
 	};
 
-	private AlertDialog showConnectionFailedDialog() {
+	private void showConnectionFailedDialog() {
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
 		builder.setTitle(R.string.connection_falied_dialog_title);
 		builder.setMessage(R.string.connection_falied_dialog_msg);
@@ -159,7 +159,7 @@ public class RemoteActivity extends SimpleBaseGameActivity implements IRemoteVie
 		builder.setPositiveButton(R.string.retry, reconnectDialogClickListener);
 		builder.setNegativeButton(android.R.string.cancel, reconnectDialogClickListener);
 		
-		return builder.create();
+		builder.create().show();
 	}
 		
 	private void connect() {
@@ -173,8 +173,9 @@ public class RemoteActivity extends SimpleBaseGameActivity implements IRemoteVie
 		Log.i(LOG_TAG, "onStop");
 		
 		handler.removeCallbacks(connectRunnable);
-		connectTask.interrupt();
-		
+		if(connectTask != null) {
+			connectTask.interrupt();
+		}
 		if(clientLogic != null) {
 			try {
 				clientLogic.close();
@@ -205,6 +206,12 @@ public class RemoteActivity extends SimpleBaseGameActivity implements IRemoteVie
 					});
 				}
 			} catch (Exception e) {
+				handler.post(new Runnable() {
+					@Override
+					public void run() {
+						showConnectionFailedDialog();
+					}
+				});
 				Log.i(LOG_TAG, "ConnectionTask", e);
 			}
 		}
