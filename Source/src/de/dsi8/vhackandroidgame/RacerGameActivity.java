@@ -37,6 +37,9 @@ import org.andengine.entity.sprite.Sprite;
 import org.andengine.entity.sprite.TiledSprite;
 import org.andengine.extension.physics.box2d.PhysicsConnector;
 import org.andengine.extension.physics.box2d.PhysicsFactory;
+import org.andengine.extension.physics.box2d.util.Vector2Pool;
+import org.andengine.input.sensor.acceleration.AccelerationData;
+import org.andengine.input.sensor.acceleration.IAccelerationListener;
 import org.andengine.opengl.texture.PixelFormat;
 import org.andengine.opengl.texture.TextureManager;
 import org.andengine.opengl.texture.TextureOptions;
@@ -61,6 +64,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.util.Log;
 
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef.BodyType;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
@@ -87,7 +91,7 @@ import de.dsi8.vhackandroidgame.logic.impl.VHackAndroidGameConfiguration;
  * @since 22:43:20 - 15.07.2010
  */
 public class RacerGameActivity extends SimpleBaseGameActivity implements
-		IServerLogicListener, IPresentationView {
+		IServerLogicListener, IPresentationView, IAccelerationListener {
 	// ===========================================================
 	// Constants
 	// ===========================================================
@@ -100,8 +104,8 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements
 	private static final int OBSTACLE_SIZE = 16;
 	public static final int CAR_SIZE = 16;
 
-	private static final int CAMERA_WIDTH = RACETRACK_WIDTH * 5;
-	private static final int CAMERA_HEIGHT = RACETRACK_WIDTH * 3;
+	private static final int CAMERA_WIDTH = 1920;
+	private static final int CAMERA_HEIGHT = 1080;
 
 	// ===========================================================
 	// Fields
@@ -141,6 +145,8 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements
 	private Sprite barcodeLeft;
 
 	private ITextureRegion mTrackTextureRegion;
+
+	private TextureRegion mBallTextureRegion;
 
 	/**
 	 * {@inheritDoc}
@@ -214,7 +220,9 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements
 		this.mBoxTexture.load();
 		
 		try {
-			this.mTrackTextureRegion = loadResource(this, getTextureManager(), PixelFormat.RGBA_8888, TextureOptions.BILINEAR, "track.png");
+			this.mTrackTextureRegion = loadResource(this, getTextureManager(), PixelFormat.RGBA_8888, TextureOptions.BILINEAR, "gfx/track.png");
+			this.mBallTextureRegion = loadResource(this, getTextureManager(), PixelFormat.RGBA_8888, TextureOptions.BILINEAR, "gfx/ball.png");
+
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -251,9 +259,19 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements
 
 		this.serverLogic.test();
 		
-		Sprite track = new Sprite(0, 0, this.mTrackTextureRegion, getVertexBufferObjectManager());
+		Sprite track = new Sprite(0, 0, this.mTrackTextureRegion, vertexBufferObjectManager);
 		track.setSize(CAMERA_WIDTH, CAMERA_HEIGHT);
+		this.mScene.attachChild(track);
 
+		Sprite ball = new Sprite(200, 300, this.mBallTextureRegion, vertexBufferObjectManager);
+		ball.setScale(0.7f);
+		ball.setColor(org.andengine.util.color.Color.BLUE);
+		this.mScene.attachChild(ball);
+		
+		Body ballBody = PhysicsFactory.createCircleBody(this.serverLogic.getPhysicsWorld(), ball, BodyType.DynamicBody, PhysicsFactory.createFixtureDef(1, 0.1f, 0.5f));
+		this.serverLogic.getPhysicsWorld().registerPhysicsConnector(new PhysicsConnector(ball,
+				ballBody, true, true));
+		
 		final PhysicsEditorLoader loader = new PhysicsEditorLoader();
 		try {
 			loader.load(this, this.serverLogic.getPhysicsWorld(),
@@ -264,7 +282,28 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements
 
 		return this.mScene;
 	}
+	
+	@Override
+	public synchronized void onResumeGame() {
+		super.onResumeGame();
 
+		this.enableAccelerationSensor(this);
+	}
+
+	@Override
+	public synchronized void onPauseGame() {
+		super.onPauseGame();
+
+		this.disableAccelerationSensor();
+	}
+
+	@Override
+	public void onAccelerationChanged(final AccelerationData pAccelerationData) {
+		final Vector2 gravity = Vector2Pool.obtain(pAccelerationData.getX() * 2, pAccelerationData.getY() * 2);
+		this.serverLogic.getPhysicsWorld().setGravity(gravity);
+		Vector2Pool.recycle(gravity);
+	}
+	
 	// ===========================================================
 	// Methods
 	// ===========================================================
@@ -464,5 +503,11 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements
 		texture.load();
 
 		return TextureRegionFactory.extractFromTexture(texture);
+	}
+
+	@Override
+	public void onAccelerationAccuracyChanged(AccelerationData pAccelerationData) {
+		// TODO Auto-generated method stub
+		
 	}
 }
