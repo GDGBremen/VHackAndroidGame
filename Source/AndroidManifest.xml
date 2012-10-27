@@ -2,23 +2,22 @@
     package="de.dsi8.vhackandroidgame"
     android:versionCode="1"
     android:versionName="1.0" >
-    
+
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.VIBRATE"/>
+    <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
-    
 
     <uses-sdk
-        android:minSdkVersion="8"
-        android:targetSdkVersion="15" />
+        android:minSdkVersion="11"
+        android:targetSdkVersion="16" />
 
     <application
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/AppTheme" >
         <activity
-            android:name=".RacerGameActivity" 
-            android:label="@string/title_activity_tv">
+            android:name=".RacerGameActivity"
+            android:label="@string/title_activity_tv" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -28,17 +27,25 @@
         <activity
             android:name=".RemoteActivity"
             android:label="@string/title_activity_remote" >
-			<intent-filter>
-			    <action android:name="android.intent.action.VIEW"></action>
-				<category android:name="android.intent.category.DEFAULT"></category>
-				<category android:name="android.intent.category.BROWSABLE"></category>
-				<data android:host="vhackandroidgame.dsi8.de" android:pathPrefix="/connect"  android:scheme="http"></data>
-			</intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" >
+                </action>
+
+                <category android:name="android.intent.category.DEFAULT" >
+                </category>
+                <category android:name="android.intent.category.BROWSABLE" >
+                </category>
+
+                <data
+                    android:host="vhackandroidgame.dsi8.de"
+                    android:pathPrefix="/connect"
+                    android:scheme="http" >
+                </data>
+            </intent-filter>
         </activity>
-        
         <activity
             android:name=".ServerGameActivity"
-            android:label="@string/title_activity_server">
+            android:label="@string/title_activity_server" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

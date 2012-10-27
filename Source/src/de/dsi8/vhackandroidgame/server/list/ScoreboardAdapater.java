@@ -2,7 +2,6 @@ package de.dsi8.vhackandroidgame.server.list;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
 import android.content.Context;
@@ -19,7 +18,11 @@ public class ScoreboardAdapater extends BaseAdapter {
 	private List<Player>	players;
 	private LayoutInflater	inflater;
 	private Context			context;
+	private Player			dirty;
 
+	/**
+	 * @param context
+	 */
 	public ScoreboardAdapater(Context context) {
 		this.players = new ArrayList<Player>();
 		this.context = context;
@@ -29,17 +32,28 @@ public class ScoreboardAdapater extends BaseAdapter {
 
 	@Override
 	public int getCount() {
-		return players.size();
+		return this.players.size();
 	}
 
 	@Override
 	public Player getItem(int position) {
-		return (players.size() > position) ? players.get(position) : null;
+		return (this.players.size() > position) ? this.players.get(position)
+				: null;
 	}
 
 	@Override
 	public long getItemId(int position) {
 		return position;
+	}
+
+	/**
+	 * Returns the {@link Player}'s position.
+	 * 
+	 * @param player
+	 * @return
+	 */
+	public int getPosition(Player player) {
+		return this.players.indexOf(player);
 	}
 
 	/**
@@ -72,6 +86,8 @@ public class ScoreboardAdapater extends BaseAdapter {
 		public TextView	id;
 		public TextView	checkpoints;
 		public TextView	rounds;
+		public View		container;
+		public View		border;
 	}
 
 	@Override
@@ -91,6 +107,9 @@ public class ScoreboardAdapater extends BaseAdapter {
 						.findViewById(R.id.adapter_player_checkpoints);
 				holder.rounds = (TextView) convertView
 						.findViewById(R.id.adapter_player_rounds);
+				holder.border = convertView.findViewById(R.id.adapter_border);
+				holder.container = convertView
+						.findViewById(R.id.adapter_container);
 				convertView.setTag(holder);
 			} else {
 				holder = (ViewHolder) convertView.getTag();
@@ -104,32 +123,50 @@ public class ScoreboardAdapater extends BaseAdapter {
 			holder.rounds.setText(this.context.getString(
 					R.string.scoreboard_player_rounds,
 					player.getRoundsFinished()));
-            convertView.setBackgroundColor(getColorForPlayer(player));
+			holder.container
+					.setBackgroundColor(getColorForPlayer(player, false));
+			holder.border.setBackgroundColor(getColorForPlayer(player, true));
 		}
 
 		return convertView;
 	}
 
-    private int getColorForPlayer(final Player player) {
-        switch(player.getId()){
-            case 0:
-            return Color.CYAN;
-            case 1:
-            return Color.RED;
-            case 2:
-            return Color.GREEN;
-            case 3:
-            return Color.YELLOW;
-        }
-        return Color.TRANSPARENT;
-    }
+	/**
+	 * @param player
+	 * @param border
+	 * @return returns a color for the background of the view
+	 */
+	private int getColorForPlayer(final Player player, boolean border) {
+		if (!border || (this.dirty != null && player != this.dirty)
+				|| this.dirty == null) {
+			switch (player.getId()) {
+				case 0:
+					return Color.CYAN;
+				case 1:
+					return Color.RED;
+				case 2:
+					return Color.GREEN;
+				case 3:
+					return Color.YELLOW;
+				default:
+					return Color.TRANSPARENT;
+			}
+		} else if (border && this.dirty != null && player == this.dirty) {
+			return Color.MAGENTA;
+		} else {
+			return Color.TRANSPARENT;
+		}
+	}
 
-    /**
+	/**
 	 * This method gets triggered whenever a player passes a checkpoint. It
 	 * makes sure that the list is always refreshed.
+	 * 
+	 * @param player
 	 */
-	public void sortPlayers() {
-		Collections.sort(players);
+	public void sortPlayers(Player player) {
+		this.dirty = player;
+		Collections.sort(this.players);
 		this.notifyDataSetChanged();
 	}
 }
