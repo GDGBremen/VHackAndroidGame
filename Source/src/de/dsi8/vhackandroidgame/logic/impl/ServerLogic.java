@@ -59,6 +59,7 @@ import de.dsi8.vhackandroidgame.communication.model.BorderMessage;
 import de.dsi8.vhackandroidgame.communication.model.CarMessage;
 import de.dsi8.vhackandroidgame.communication.model.CarMessage.ACTION;
 import de.dsi8.vhackandroidgame.communication.model.CollisionMessage;
+import de.dsi8.vhackandroidgame.communication.model.CollisionType;
 import de.dsi8.vhackandroidgame.communication.model.GameModeMessage;
 import de.dsi8.vhackandroidgame.communication.model.QRCodeMessage;
 import de.dsi8.vhackandroidgame.communication.model.QRCodeMessage.QRCodePosition;
@@ -258,10 +259,9 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener, 
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void collisionDetected(int carId) {
-		this.communication.sendMessage(carId, new CollisionMessage());
+	public void collisionDetected(int carId, CollisionType collidesWith) {
+		this.communication.sendMessage(carId, new CollisionMessage(collidesWith));
 	}
-
 	
 	/**
 	 * Return's the id of an remote partner.
@@ -309,14 +309,19 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener, 
 	@Override
 	public void beginContact(Contact contact) {
 		int firstCarId = getCarIdFromBody(contact.getFixtureA().getBody());
-		if (firstCarId > -1) {
-			collisionDetected(firstCarId);
-		}
-		
 		int secondCarId = getCarIdFromBody(contact.getFixtureB().getBody());
-		if (secondCarId > -1) {
-			collisionDetected(secondCarId);
+		
+		if (secondCarId > -1 && firstCarId > -1) {
+			collisionDetected(secondCarId, CollisionType.CAR);
+			collisionDetected(firstCarId, CollisionType.CAR);
 		}
+		if (firstCarId > -1) {
+			collisionDetected(firstCarId, CollisionType.WALL);
+		}
+		if (secondCarId > -1) {
+			collisionDetected(secondCarId, CollisionType.WALL);
+		}
+		// TODO: Add Bumper!
 	}
 		
 

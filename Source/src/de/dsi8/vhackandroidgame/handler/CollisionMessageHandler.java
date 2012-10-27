@@ -52,6 +52,6 @@ public class CollisionMessageHandler extends AbstractMessageHandler<CollisionMes
 	 */
 	@Override
 	public void handleMessage(CommunicationPartner partner, CollisionMessage message) throws InvalidMessageException {
-		this.remoteLogic.getRemoteView().collisionDetected();
+		this.remoteLogic.getRemoteView().collisionDetected(message.collidesWith);
 	}
 }

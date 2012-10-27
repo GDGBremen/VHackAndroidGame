@@ -25,6 +25,7 @@ import java.io.Closeable;
 import org.andengine.extension.physics.box2d.PhysicsWorld;
 
 import de.dsi8.vhackandroidgame.RacerGameActivity;
+import de.dsi8.vhackandroidgame.communication.model.CollisionType;
 import de.dsi8.vhackandroidgame.logic.impl.ServerLogic;
 
 /**
@@ -44,7 +45,7 @@ public interface IServerLogic extends Closeable {
 	 * A collision was detected on a car.
 	 * @param carId
 	 */
-	void collisionDetected(int carId);
+	void collisionDetected(int carId, CollisionType collidesWith);
 	
 	void test();
 	
