@@ -98,6 +98,7 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener, 
 	 */
 	private final IServerCommunication communication;
 	
+	private final VHackAndroidGameConfiguration gameConfig;
 	private final FixtureDef carFixtureDef = PhysicsFactory.createFixtureDef(1, 0.5f, 0.5f);
 
 
@@ -129,9 +130,10 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener, 
 	 * Creates the logic.
 	 * @param listener	Interface to the {@link RacerGameActivity}.	
 	 */
-	public ServerLogic(IServerLogicListener listener) {
+	public ServerLogic(VHackAndroidGameConfiguration gameConfig, IServerLogicListener listener) {
 		this.listener = listener;
-		IConnector connector = VHackAndroidGameConfiguration.getProtocol().createConnector();
+		this.gameConfig = gameConfig;
+		IConnector connector = gameConfig.getProtocol().createConnector();
 		this.communication = new ServerCommunication(this, connector, 20);
 		
 	}
@@ -290,11 +292,9 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener, 
 		
 		CommunicationPartner partner = this.presentationPartner.get(0).communicationPartner;
 		
-		partner.sendMessage(new QRCodeMessage(VHackAndroidGameConfiguration.getConnectionDetailsForRemote().toConnectionURL(), QRCodePosition.CENTER));
-		partner.sendMessage(new QRCodeMessage(VHackAndroidGameConfiguration.getConnectionDetailsForPresentation(0, 1).toConnectionURL(), QRCodePosition.TOP));
-		partner.sendMessage(new QRCodeMessage(VHackAndroidGameConfiguration.getConnectionDetailsForPresentation(1, 0).toConnectionURL(), QRCodePosition.RIGHT));
-		partner.sendMessage(new QRCodeMessage(VHackAndroidGameConfiguration.getConnectionDetailsForPresentation(0, -1).toConnectionURL(), QRCodePosition.BOTTOM));
-		partner.sendMessage(new QRCodeMessage(VHackAndroidGameConfiguration.getConnectionDetailsForPresentation(-1, 0).toConnectionURL(), QRCodePosition.LEFT));
+		ConnectionParameter connectionDetails = gameConfig.getConnectionDetails();
+		
+		partner.sendMessage(new QRCodeMessage(connectionDetails.toConnectionURL(), QRCodePosition.CENTER));
 		partner.sendMessage(new BorderMessage(true, true, true, true));
 	}
 	

@@ -49,6 +49,7 @@ import org.andengine.ui.activity.SimpleBaseGameActivity;
 
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.os.Bundle;
 import android.util.Log;
 
 import com.badlogic.gdx.physics.box2d.Body;
@@ -116,6 +117,8 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements
 
 	private BitmapTextureAtlas qrCodeAtlas;
 
+	private TextureRegion qrCodeAtlasRegion;
+	
 	private Rectangle borderTop;
 	private Rectangle borderRight;
 	private Rectangle borderBottom;
@@ -131,6 +134,16 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements
 	
 	private ConnectTask connectTask;
 	
+	private VHackAndroidGameConfiguration gameConfig;
+	
+	
+	@Override
+	protected void onCreate(Bundle pSavedInstanceState) {
+		super.onCreate(pSavedInstanceState);
+		
+		this.gameConfig = new VHackAndroidGameConfiguration(this);
+	}
+	
 	/**
 	 * {@inheritDoc}
 	 */
@@ -138,9 +151,9 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements
 	protected void onStart() {
 		super.onStart();
 
-		VHackAndroidGameConfiguration.registerProtocols();
 		
-		this.connectionParameter = VHackAndroidGameConfiguration.getConnectionDetailsForRemote();
+		
+		this.connectionParameter = this.gameConfig.getConnectionDetails();
 		this.connectionParameter.setParameter("host", "192.168.11.27");
 		
 		connectTask = new ConnectTask();
