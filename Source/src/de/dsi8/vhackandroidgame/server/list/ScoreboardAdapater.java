@@ -208,6 +208,7 @@ public class ScoreboardAdapater extends BaseAdapter {
 
 
         }
+
     }
 
     public void checkTextAnimations(final Player player,final  ViewHolder holder){

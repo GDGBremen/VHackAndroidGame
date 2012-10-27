@@ -20,22 +20,21 @@
  ******************************************************************************/
 package de.dsi8.vhackandroidgame.logic.impl;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import org.andengine.entity.primitive.Rectangle;
-import org.andengine.entity.shape.RectangularShape;
+import org.andengine.entity.shape.IAreaShape;
 import org.andengine.extension.physics.box2d.FixedStepPhysicsWorld;
 import org.andengine.extension.physics.box2d.PhysicsConnector;
 import org.andengine.extension.physics.box2d.PhysicsFactory;
 import org.andengine.extension.physics.box2d.PhysicsWorld;
-import org.andengine.opengl.vbo.IVertexBufferObject;
-import org.andengine.opengl.vbo.VertexBufferObjectManager;
+import org.andlabs.andengine.extension.physicsloader.PhysicsEditorLoader;
 
-import android.R.id;
-import android.hardware.SensorManager;
+import android.content.Context;
 import android.util.Log;
 
 import com.badlogic.gdx.math.Vector2;
@@ -53,10 +52,7 @@ import de.dsi8.dsi8acl.communication.contract.IServerCommunicationListener;
 import de.dsi8.dsi8acl.communication.handler.AbstractMessageHandler;
 import de.dsi8.dsi8acl.communication.impl.CommunicationPartner;
 import de.dsi8.dsi8acl.communication.impl.ServerCommunication;
-import de.dsi8.dsi8acl.connection.contract.IRemoteConnection;
 import de.dsi8.dsi8acl.connection.contract.IConnector;
-import de.dsi8.dsi8acl.connection.impl.SocketConnection;
-import de.dsi8.dsi8acl.connection.impl.TCPSocketConnector;
 import de.dsi8.dsi8acl.connection.model.ConnectionParameter;
 import de.dsi8.dsi8acl.connection.model.Message;
 import de.dsi8.dsi8acl.exception.ConnectionProblemException;
@@ -131,11 +127,19 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener, 
 	 * Creates the logic.
 	 * @param listener	Interface to the {@link RacerGameActivity}.	
 	 */
-	public ServerLogic(VHackAndroidGameConfiguration gameConfig, IServerLogicListener listener) {
+	public ServerLogic(Context context, VHackAndroidGameConfiguration gameConfig, IServerLogicListener listener) {
 		this.listener = listener;
 		this.gameConfig = gameConfig;
 		IConnector connector = gameConfig.getProtocol().createConnector();
 		this.communication = new ServerCommunication(this, connector, 20);
+		
+		
+		final PhysicsEditorLoader loader = new PhysicsEditorLoader();
+		try {
+			loader.load(context, this.mPhysicsWorld, "track.xml", (IAreaShape) null, false, false);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 		
 		new UpdateThread().start();
 		

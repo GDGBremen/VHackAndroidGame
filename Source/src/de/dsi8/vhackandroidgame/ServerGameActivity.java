@@ -60,7 +60,7 @@ public class ServerGameActivity extends ListActivity implements
 	protected void onStart() {
 		super.onStart();
 
-		this.serverLogic = new ServerLogic(this.gameConfig, this);
+		this.serverLogic = new ServerLogic(this, this.gameConfig, this);
 		this.serverLogic.start();
 	}
 
