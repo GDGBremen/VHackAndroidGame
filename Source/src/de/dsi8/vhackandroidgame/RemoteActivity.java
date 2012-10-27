@@ -21,7 +21,7 @@
 package de.dsi8.vhackandroidgame;
 
 import java.io.IOException;
-import java.net.Socket;
+import java.net.MalformedURLException;
 
 import org.andengine.engine.camera.Camera;
 import org.andengine.engine.camera.hud.controls.AnalogOnScreenControl;
@@ -45,12 +45,13 @@ import android.os.Bundle;
 import android.os.Vibrator;
 import android.util.Log;
 import de.dsi8.dsi8acl.common.utils.AsyncTaskResult;
+import de.dsi8.dsi8acl.connection.contract.IRemoteConnection;
+import de.dsi8.dsi8acl.connection.impl.SocketConnection;
 import de.dsi8.dsi8acl.connection.model.ConnectionParameter;
 import de.dsi8.dsi8acl.exception.ConnectionProblemException;
 import de.dsi8.vhackandroidgame.logic.contract.IRemoteLogic;
 import de.dsi8.vhackandroidgame.logic.contract.IRemoteView;
 import de.dsi8.vhackandroidgame.logic.impl.RemoteLogic;
-import de.dsi8.vhackandroidgame.logic.impl.VHackAndroidGameConfiguration;
 
 public class RemoteActivity extends SimpleBaseGameActivity implements IRemoteView {
 
@@ -83,9 +84,13 @@ public class RemoteActivity extends SimpleBaseGameActivity implements IRemoteVie
 	@Override
 	protected void onCreate(Bundle pSavedInstanceState) {
 		super.onCreate(pSavedInstanceState);
-		ConnectionParameter.setStaticCommunicationConfiguration(new VHackAndroidGameConfiguration());
 		
-		connectionParameter = new ConnectionParameter(getIntent().getData().toString());
+		try {
+			connectionParameter = new ConnectionParameter(getIntent().getData().toString());
+		} catch (MalformedURLException e) {
+			Log.e(LOG_TAG, "Invalid Connection Parameter", e);
+			finish();
+		}
 	}
 	
 	@Override
@@ -94,7 +99,7 @@ public class RemoteActivity extends SimpleBaseGameActivity implements IRemoteVie
 		Log.i(LOG_TAG, "onStart");
 		
 		connectTask = new ConnectTask();
-		connectTask.execute((Object)null);
+		connectTask.start();
 	}
 	
 	@Override
@@ -102,7 +107,7 @@ public class RemoteActivity extends SimpleBaseGameActivity implements IRemoteVie
 		super.onStop();
 		Log.i(LOG_TAG, "onStop");
 		
-		connectTask.cancel(true);
+		connectTask.interrupt();
 		if(clientLogic != null) {
 			try {
 				clientLogic.close();
@@ -115,13 +120,12 @@ public class RemoteActivity extends SimpleBaseGameActivity implements IRemoteVie
 	/**
 	 * The Task that should connect the client with the host.
 	 */
-	private class ConnectTask extends AsyncTask<Object, Object, AsyncTaskResult<Socket>>  {
+	private class ConnectTask extends Thread  {
 				/**
 				 * Connecting to the Host.
 				 */
 				@Override
-				protected AsyncTaskResult<Socket> doInBackground(
-						Object... params) {
+				public void run() {
 					try {
 						synchronized (this) {
 							// Workaround for multicall of onStart by the AndEngine
@@ -129,27 +133,14 @@ public class RemoteActivity extends SimpleBaseGameActivity implements IRemoteVie
 								this.wait(2000);
 							} catch(InterruptedException ex) {
 								Log.i(LOG_TAG, "Interrupted");
-								return null;
 							}
 						}
 						Log.i(LOG_TAG, "Not interrupted");
-						Socket socket = new Socket(connectionParameter.host, connectionParameter.port);
-						return new AsyncTaskResult<Socket>(socket);
+						
+						SocketConnection s = SocketConnection.connect(connectionParameter);
+						RemoteActivity.this.clientLogic = new RemoteLogic(RemoteActivity.this, s);
 					} catch (Exception e) {
-						return new AsyncTaskResult<Socket>(e);
-					}
-				}
-				
-				/**
-				 * Connection is open, initialize the logic.
-				 */
-				@Override
-				protected void onPostExecute(AsyncTaskResult<Socket> result) {
-					if(result.getError() == null) {
-						RemoteActivity.this.clientLogic = new RemoteLogic(RemoteActivity.this, result.getResult());
-					} else {
-						Log.e(LOG_TAG, "IOException", result.getError());
-						finish();
+						Log.i(LOG_TAG, "ConnectionTask", e);
 					}
 				}
 	}

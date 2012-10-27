@@ -20,18 +20,10 @@
  ******************************************************************************/
 package de.dsi8.vhackandroidgame.logic.impl;
 
-import java.net.Socket;
-
-import org.andengine.entity.scene.Scene;
-import org.andengine.extension.physics.box2d.FixedStepPhysicsWorld;
-import org.andengine.extension.physics.box2d.PhysicsWorld;
-
-import com.badlogic.gdx.math.Vector2;
-
 import de.dsi8.dsi8acl.communication.contract.ICommunicationPartner;
 import de.dsi8.dsi8acl.communication.contract.ICommunicationPartnerListener;
 import de.dsi8.dsi8acl.communication.impl.CommunicationPartner;
-import de.dsi8.dsi8acl.connection.impl.TCPConnection;
+import de.dsi8.dsi8acl.connection.contract.IRemoteConnection;
 import de.dsi8.dsi8acl.exception.ConnectionProblemException;
 import de.dsi8.vhackandroidgame.RemoteActivity;
 import de.dsi8.vhackandroidgame.communication.model.DriveMessage;
@@ -65,9 +57,9 @@ public class RemoteLogic implements IRemoteLogic, ICommunicationPartnerListener 
 	 * @param remoteView		Listenerlistener on the {@link RemoteActivity}.
 	 * @param socket		Socket to the Server.
 	 */
-	public RemoteLogic(IRemoteView remoteView, Socket socket) {
+	public RemoteLogic(IRemoteView remoteView, IRemoteConnection connection) {
 		this.remoteView = remoteView;
-		this.serverPartner = new CommunicationPartner(this, new TCPConnection(socket));
+		this.serverPartner = new CommunicationPartner(this, connection);
 		this.serverPartner.registerMessageHandler(new CollisionMessageHandler(this));
 		this.serverPartner.initialized();
 		this.serverPartner.sendMessage(new GameModeMessage(true));

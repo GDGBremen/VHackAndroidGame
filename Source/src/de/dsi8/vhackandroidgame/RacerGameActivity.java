@@ -33,6 +33,8 @@ import org.andengine.entity.scene.Scene;
 import org.andengine.entity.scene.background.Background;
 import org.andengine.entity.sprite.Sprite;
 import org.andengine.entity.sprite.TiledSprite;
+import org.andengine.extension.physics.box2d.PhysicsConnector;
+import org.andengine.extension.physics.box2d.PhysicsFactory;
 import org.andengine.opengl.texture.TextureOptions;
 import org.andengine.opengl.texture.atlas.bitmap.BitmapTextureAtlas;
 import org.andengine.opengl.texture.atlas.bitmap.BitmapTextureAtlasTextureRegionFactory;
@@ -49,12 +51,16 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.util.Log;
 
+import com.badlogic.gdx.physics.box2d.Body;
+import com.badlogic.gdx.physics.box2d.BodyDef.BodyType;
+import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.MultiFormatWriter;
 import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
 
-import de.dsi8.dsi8acl.connection.impl.InternalConnector;
+import de.dsi8.dsi8acl.connection.impl.InternalConnectionHolder;
+import de.dsi8.dsi8acl.connection.model.ConnectionParameter;
 import de.dsi8.vhackandroidgame.communication.model.QRCodeMessage.QRCodePosition;
 import de.dsi8.vhackandroidgame.logic.contract.IPresentationLogic;
 import de.dsi8.vhackandroidgame.logic.contract.IPresentationView;
@@ -62,6 +68,7 @@ import de.dsi8.vhackandroidgame.logic.contract.IServerLogic;
 import de.dsi8.vhackandroidgame.logic.contract.IServerLogicListener;
 import de.dsi8.vhackandroidgame.logic.impl.PresentationLogic;
 import de.dsi8.vhackandroidgame.logic.impl.ServerLogic;
+import de.dsi8.vhackandroidgame.logic.impl.VHackAndroidGameConfiguration;
 
 /**
  * (c) 2010 Nicolas Gramlich (c) 2011 Zynga
@@ -130,13 +137,13 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements
 	protected void onStart() {
 		super.onStart();
 
-		InternalConnector connector = new InternalConnector();
+		InternalConnectionHolder connectionHolder = new InternalConnectionHolder();
 
-		this.serverLogic = new ServerLogic(this, connector.getFirstConnection());
+		this.serverLogic = new ServerLogic(this, connectionHolder.getFirstConnection());
 		this.serverLogic.start();
 
 		this.presentationLogic = new PresentationLogic(RacerGameActivity.this,
-				connector.getSecondConnection());
+				connectionHolder.getSecondConnection());
 
 	}
 
@@ -222,13 +229,16 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements
 
 		return this.mScene;
 	}
-
+	
+	// ===========================================================
+	// Methods
+	// ===========================================================
+	
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
 	public void driveCar(int carId, float valueX, float valueY) {
-
 
 	}
 

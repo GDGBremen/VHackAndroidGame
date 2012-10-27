@@ -52,6 +52,8 @@ import de.dsi8.dsi8acl.communication.handler.AbstractMessageHandler;
 import de.dsi8.dsi8acl.communication.impl.CommunicationPartner;
 import de.dsi8.dsi8acl.communication.impl.ServerCommunication;
 import de.dsi8.dsi8acl.connection.contract.IRemoteConnection;
+import de.dsi8.dsi8acl.connection.contract.IConnector;
+import de.dsi8.dsi8acl.connection.impl.SocketConnection;
 import de.dsi8.dsi8acl.connection.impl.TCPSocketConnector;
 import de.dsi8.dsi8acl.connection.model.ConnectionParameter;
 import de.dsi8.dsi8acl.exception.ConnectionProblemException;
@@ -127,10 +129,8 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener, 
 	 */
 	public ServerLogic(IServerLogicListener listener, IRemoteConnection presentationConnection) {
 		this.listener = listener;
-		
-		ConnectionParameter.setStaticCommunicationConfiguration(new VHackAndroidGameConfiguration());
-		int port = ConnectionParameter.getDefaultConnectionDetails().port;
-		this.communication = new ServerCommunication(this, new TCPSocketConnector(port), 20);
+		IConnector connector = VHackAndroidGameConfiguration.getProtocol().createConnector();
+		this.communication = new ServerCommunication(this, connector, 20);
 		
 		// XXX Listener set to null
 		CommunicationPartner partner = new CommunicationPartner(null, presentationConnection);
@@ -282,7 +282,10 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener, 
 		newRemotePartner(null);
 		newRemotePartner(null);
 		CommunicationPartner partner = this.presentationPartner.get(0).communicationPartner;
-		partner.sendMessage(new QRCodeMessage("hallo CENTER", QRCodePosition.CENTER));
+		
+		ConnectionParameter connectionDetails = VHackAndroidGameConfiguration.getConnectionDetails();
+		
+		partner.sendMessage(new QRCodeMessage(connectionDetails.toConnectionURL(), QRCodePosition.CENTER));
 		partner.sendMessage(new QRCodeMessage("hallo TOP", QRCodePosition.TOP));
 		partner.sendMessage(new QRCodeMessage("hallo RIGHT", QRCodePosition.RIGHT));
 		partner.sendMessage(new QRCodeMessage("hallo BOTTOM", QRCodePosition.BOTTOM));
