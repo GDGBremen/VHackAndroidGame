@@ -73,6 +73,7 @@ import de.dsi8.dsi8acl.connection.model.ConnectionParameter;
 import de.dsi8.vhackandroidgame.logic.contract.IServerLogic;
 import de.dsi8.vhackandroidgame.logic.contract.IServerLogicListener;
 import de.dsi8.vhackandroidgame.logic.impl.ServerLogic;
+import de.dsi8.vhackandroidgame.logic.impl.VHackAndroidGameConfiguration;
 
 /**
  * (c) 2010 Nicolas Gramlich
@@ -246,7 +247,7 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements IServer
 
 
 	private void createBarcode() {
-		ConnectionParameter param = ConnectionParameter.getDefaultConnectionDetails();
+		ConnectionParameter param = VHackAndroidGameConfiguration.getConnectionDetails();
 		MultiFormatWriter writer = new MultiFormatWriter();
 		try {
 			final BitMatrix bitmatrix = writer.encode(param.toConnectionURL(), BarcodeFormat.QR_CODE, 150, 150);

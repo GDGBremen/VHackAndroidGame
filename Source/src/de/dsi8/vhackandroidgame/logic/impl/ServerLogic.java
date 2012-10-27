@@ -25,6 +25,8 @@ import de.dsi8.dsi8acl.communication.contract.ICommunicationPartner;
 import de.dsi8.dsi8acl.communication.contract.IServerCommunication;
 import de.dsi8.dsi8acl.communication.contract.IServerCommunicationListener;
 import de.dsi8.dsi8acl.communication.impl.ServerCommunication;
+import de.dsi8.dsi8acl.connection.contract.IConnector;
+import de.dsi8.dsi8acl.connection.impl.SocketConnection;
 import de.dsi8.dsi8acl.connection.impl.TCPSocketConnector;
 import de.dsi8.dsi8acl.connection.model.ConnectionParameter;
 import de.dsi8.dsi8acl.exception.ConnectionProblemException;
@@ -63,10 +65,8 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener {
 	 */
 	public ServerLogic(IServerLogicListener listener) {
 		this.listener = listener;
-		
-		ConnectionParameter.setStaticCommunicationConfiguration(new VHackAndroidGameConfiguration());
-		int port = ConnectionParameter.getDefaultConnectionDetails().port;
-		this.communication = new ServerCommunication(this, new TCPSocketConnector(port), 20);
+		IConnector connector = VHackAndroidGameConfiguration.getProtocol().createConnector();
+		this.communication = new ServerCommunication(this, connector, 20);
 	}
 	
 	/**

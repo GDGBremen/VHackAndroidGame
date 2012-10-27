@@ -20,12 +20,10 @@
  ******************************************************************************/
 package de.dsi8.vhackandroidgame.logic.impl;
 
-import java.net.Socket;
-
 import de.dsi8.dsi8acl.communication.contract.ICommunicationPartner;
 import de.dsi8.dsi8acl.communication.contract.ICommunicationPartnerListener;
 import de.dsi8.dsi8acl.communication.impl.CommunicationPartner;
-import de.dsi8.dsi8acl.connection.impl.TCPConnection;
+import de.dsi8.dsi8acl.connection.contract.IRemoteConnection;
 import de.dsi8.dsi8acl.exception.ConnectionProblemException;
 import de.dsi8.vhackandroidgame.RemoteActivity;
 import de.dsi8.vhackandroidgame.communication.model.DriveMessage;
@@ -54,11 +52,11 @@ public class ClientLogic implements IClientLogic, ICommunicationPartnerListener 
 	/**
 	 * Creates the client-logic.
 	 * @param listener		Listener on the {@link RemoteActivity}.
-	 * @param socket		Socket to the Server.
+	 * @param connection		Socket to the Server.
 	 */
-	public ClientLogic(IClientLogicListener listener, Socket socket) {
+	public ClientLogic(IClientLogicListener listener, IRemoteConnection connection) {
 		this.listener = listener;
-		this.serverPartner = new CommunicationPartner(this, new TCPConnection(socket));
+		this.serverPartner = new CommunicationPartner(this, connection);
 		this.serverPartner.registerMessageHandler(new CollisionMessageHandler(listener));
 		this.serverPartner.initialized();
 	}

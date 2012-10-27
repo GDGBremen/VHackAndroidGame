@@ -21,6 +21,7 @@
 package de.dsi8.vhackandroidgame;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.Socket;
 
 import org.andengine.engine.camera.Camera;
@@ -45,6 +46,10 @@ import android.os.Bundle;
 import android.os.Vibrator;
 import android.util.Log;
 import de.dsi8.dsi8acl.common.utils.AsyncTaskResult;
+import de.dsi8.dsi8acl.connection.contract.IConnector;
+import de.dsi8.dsi8acl.connection.contract.IRemoteConnection;
+import de.dsi8.dsi8acl.connection.contract.ISocket;
+import de.dsi8.dsi8acl.connection.impl.SocketConnection;
 import de.dsi8.dsi8acl.connection.model.ConnectionParameter;
 import de.dsi8.dsi8acl.exception.ConnectionProblemException;
 import de.dsi8.vhackandroidgame.logic.contract.IClientLogic;
@@ -83,9 +88,13 @@ public class RemoteActivity extends SimpleBaseGameActivity implements IClientLog
 	@Override
 	protected void onCreate(Bundle pSavedInstanceState) {
 		super.onCreate(pSavedInstanceState);
-		ConnectionParameter.setStaticCommunicationConfiguration(new VHackAndroidGameConfiguration());
 		
-		connectionParameter = new ConnectionParameter(getIntent().getData().toString());
+		try {
+			connectionParameter = new ConnectionParameter(getIntent().getData().toString());
+		} catch (MalformedURLException e) {
+			Log.e(LOG_TAG, "Invalid Connection Parameter", e);
+			finish();
+		}
 	}
 	
 	@Override
@@ -115,12 +124,12 @@ public class RemoteActivity extends SimpleBaseGameActivity implements IClientLog
 	/**
 	 * The Task that should connect the client with the host.
 	 */
-	private class ConnectTask extends AsyncTask<Object, Object, AsyncTaskResult<Socket>>  {
+	private class ConnectTask extends AsyncTask<Object, Object, AsyncTaskResult<IRemoteConnection>>  {
 				/**
 				 * Connecting to the Host.
 				 */
 				@Override
-				protected AsyncTaskResult<Socket> doInBackground(
+				protected AsyncTaskResult<IRemoteConnection> doInBackground(
 						Object... params) {
 					try {
 						synchronized (this) {
@@ -133,10 +142,10 @@ public class RemoteActivity extends SimpleBaseGameActivity implements IClientLog
 							}
 						}
 						Log.i(LOG_TAG, "Not interrupted");
-						Socket socket = new Socket(connectionParameter.host, connectionParameter.port);
-						return new AsyncTaskResult<Socket>(socket);
+						
+						return new AsyncTaskResult<IRemoteConnection>(SocketConnection.connect(connectionParameter));
 					} catch (Exception e) {
-						return new AsyncTaskResult<Socket>(e);
+						return new AsyncTaskResult<IRemoteConnection>(e);
 					}
 				}
 				
@@ -144,7 +153,7 @@ public class RemoteActivity extends SimpleBaseGameActivity implements IClientLog
 				 * Connection is open, initialize the logic.
 				 */
 				@Override
-				protected void onPostExecute(AsyncTaskResult<Socket> result) {
+				protected void onPostExecute(AsyncTaskResult<IRemoteConnection> result) {
 					if(result.getError() == null) {
 						clientLogic = new ClientLogic(RemoteActivity.this, result.getResult());
 					} else {
