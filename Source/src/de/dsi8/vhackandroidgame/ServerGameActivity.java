@@ -7,6 +7,7 @@ import android.app.ListActivity;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.view.View;
 import android.widget.ListView;
 import de.dsi8.vhackandroidgame.logic.contract.IServerLogic;
 import de.dsi8.vhackandroidgame.logic.contract.IServerLogicListener;
@@ -102,5 +103,9 @@ public class ServerGameActivity extends ListActivity implements
 	public void incrementCheckpointsPassed(int id) {
 		Player p = mPlayers.get(id);
 		p.incrementCheckpointsPassed();
+	}
+	
+	public void onListViewClicked(View v) {
+		serverLogic.showBardcode();
 	}
 }

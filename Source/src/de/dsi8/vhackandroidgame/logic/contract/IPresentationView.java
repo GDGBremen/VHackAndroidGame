@@ -27,4 +27,6 @@ public interface IPresentationView {
 	void showQRCode(String str, QRCodePosition position);
 
 	void updateBorders(boolean top, boolean right, boolean bottom, boolean left);
+
+	void disableQRCode(QRCodePosition position);
 }
