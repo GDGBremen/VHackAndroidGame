@@ -61,9 +61,7 @@ public class DriveMessageHandler extends AbstractMessageHandler<DriveMessage> {
 	public void handleMessage(CommunicationPartner partner, DriveMessage message) throws InvalidMessageException {
 		//TODO driveCar
 		Body body = this.serverLogic.getCarBody(partner);
-		
-		Log.d("DriveMessageHandler", "new DriveMessage " + message.valueX + "   "  + message.valueY);
-		
+				
 		final Vector2 velocity = Vector2Pool.obtain(message.valueX * 5, message.valueY * 5);
 		
 		body.setLinearVelocity(velocity);
