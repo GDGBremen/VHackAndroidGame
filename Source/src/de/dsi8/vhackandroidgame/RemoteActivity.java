@@ -44,6 +44,7 @@ import android.content.DialogInterface;
 import android.opengl.GLES20;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.Vibrator;
 import android.util.Log;
 import de.dsi8.dsi8acl.common.utils.AsyncTaskResult;
@@ -87,6 +88,8 @@ public class RemoteActivity extends SimpleBaseGameActivity implements IClientLog
 	
 	private AlertDialog sameNetworkDialog;
 	
+	private Handler handler;
+	
 	@Override
 	protected void onCreate(Bundle pSavedInstanceState) {
 		super.onCreate(pSavedInstanceState);
@@ -104,15 +107,24 @@ public class RemoteActivity extends SimpleBaseGameActivity implements IClientLog
 		super.onStart();
 		Log.i(LOG_TAG, "onStart");
 		
-		if(gameConfig.getWiFiChecker().inSameNetwork(connectionParameter)) {
-			connect();
-		} else {
-			if(sameNetworkDialog == null) {
-				sameNetworkDialog = buildSameNetworkAlertDialog();
-				sameNetworkDialog.show();
+		handler = new Handler();
+		handler.postDelayed(connectRunnable, 2000);
+	}
+	
+	private Runnable connectRunnable = new Runnable() {
+		@Override
+		public void run() {
+			// Connect
+			if(gameConfig.getWiFiChecker().inSameNetwork(connectionParameter)) {
+				connect();
+			} else {
+				if(sameNetworkDialog == null) {
+					sameNetworkDialog = buildSameNetworkAlertDialog();
+					sameNetworkDialog.show();
+				}
 			}
 		}
-	}
+	};
 	
 	private AlertDialog buildSameNetworkAlertDialog() {
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -163,7 +175,10 @@ public class RemoteActivity extends SimpleBaseGameActivity implements IClientLog
 		super.onStop();
 		Log.i(LOG_TAG, "onStop");
 		
-		connectTask.cancel(true);
+		handler.removeCallbacks(connectRunnable);
+		if(connectTask != null) {
+			connectTask.cancel(true);
+		}
 		if(clientLogic != null) {
 			try {
 				clientLogic.close();
@@ -177,42 +192,32 @@ public class RemoteActivity extends SimpleBaseGameActivity implements IClientLog
 	 * The Task that should connect the client with the host.
 	 */
 	private class ConnectTask extends AsyncTask<Object, Object, AsyncTaskResult<IRemoteConnection>>  {
-				/**
-				 * Connecting to the Host.
-				 */
-				@Override
-				protected AsyncTaskResult<IRemoteConnection> doInBackground(
-						Object... params) {
-					try {
-						synchronized (this) {
-							// Workaround for multicall of onStart by the AndEngine
-							try {
-								this.wait(2000);
-							} catch(InterruptedException ex) {
-								Log.i(LOG_TAG, "Interrupted");
-								return null;
-							}
-						}
-						Log.i(LOG_TAG, "Not interrupted");
-						
-						return new AsyncTaskResult<IRemoteConnection>(SocketConnection.connect(connectionParameter));
-					} catch (Exception e) {
-						return new AsyncTaskResult<IRemoteConnection>(e);
-					}
-				}
-				
-				/**
-				 * Connection is open, initialize the logic.
-				 */
-				@Override
-				protected void onPostExecute(AsyncTaskResult<IRemoteConnection> result) {
-					if(result.getError() == null) {
-						clientLogic = new ClientLogic(RemoteActivity.this, result.getResult());
-					} else {
-						Log.e(LOG_TAG, "IOException", result.getError());
-						finish();
-					}
-				}
+		/**
+		 * Connecting to the Host.
+		 */
+		@Override
+		protected AsyncTaskResult<IRemoteConnection> doInBackground(
+				Object... params) {
+			try {
+				Log.i(LOG_TAG, "Connecting...");
+				return new AsyncTaskResult<IRemoteConnection>(SocketConnection.connect(connectionParameter));
+			} catch (Exception e) {
+				return new AsyncTaskResult<IRemoteConnection>(e);
+			}
+		}
+		
+		/**
+		 * Connection is open, initialize the logic.
+		 */
+		@Override
+		protected void onPostExecute(AsyncTaskResult<IRemoteConnection> result) {
+			if(result.getError() == null) {
+				clientLogic = new ClientLogic(RemoteActivity.this, result.getResult());
+			} else {
+				Log.e(LOG_TAG, "IOException", result.getError());
+				finish();
+			}
+		}
 	}
 	
 	/**
@@ -285,14 +290,14 @@ public class RemoteActivity extends SimpleBaseGameActivity implements IClientLog
 	@Override
 	public void connectionLost(ConnectionProblemException ex) {
 		Log.e(LOG_TAG, "connectionLost", ex);
+		// TODO: Show Dialog!
+		finish();
 	}
 
 	@Override
 	public void collisionDetected() {
 		Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 		v.vibrate(300);
-
-
 	}
 
 	
