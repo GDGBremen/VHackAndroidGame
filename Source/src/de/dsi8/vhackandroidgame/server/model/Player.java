@@ -8,8 +8,9 @@ public class Player implements Comparable<Player> {
 	private int							id;
 	private int							checkpointsPassed	= 0;
 	private int							roundsFinished		= 0;
+    private boolean                     finishedNewRound=false;
 
-	/**
+    /**
 	 * @param id
 	 */
 	public Player(int id) {
@@ -34,14 +35,21 @@ public class Player implements Comparable<Player> {
 		return this.checkpointsPassed;
 	}
 
-	/**
+    public boolean hasFinishedNewRound() {
+        return finishedNewRound;
+    }
+
+    /**
 	 * increments the amount of passed checkoints
 	 */
 	public void incrementCheckpointsPassed() {
 		this.checkpointsPassed++;
 		if ((this.checkpointsPassed % 4) == 0) {
+
 			this.roundsFinished++;
+            this.finishedNewRound=true;
 		}
+        this.finishedNewRound=false;
 		adapter.sortPlayers(this);
 	}
 
