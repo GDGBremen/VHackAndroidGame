@@ -42,24 +42,21 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.opengl.GLES20;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Vibrator;
 import android.util.Log;
-import de.dsi8.dsi8acl.common.utils.AsyncTaskResult;
-import de.dsi8.dsi8acl.connection.contract.IRemoteConnection;
 import de.dsi8.dsi8acl.connection.impl.SocketConnection;
 import de.dsi8.dsi8acl.connection.model.ConnectionParameter;
 import de.dsi8.dsi8acl.exception.ConnectionProblemException;
-import de.dsi8.vhackandroidgame.logic.contract.IClientLogic;
-import de.dsi8.vhackandroidgame.logic.contract.IClientLogicListener;
-import de.dsi8.vhackandroidgame.logic.impl.ClientLogic;
+import de.dsi8.vhackandroidgame.logic.contract.IRemoteLogic;
+import de.dsi8.vhackandroidgame.logic.contract.IRemoteView;
+import de.dsi8.vhackandroidgame.logic.impl.RemoteLogic;
 import de.dsi8.vhackandroidgame.logic.impl.VHackAndroidGameConfiguration;
 
-public class RemoteActivity extends SimpleBaseGameActivity implements IClientLogicListener {
+public class RemoteActivity extends SimpleBaseGameActivity implements IRemoteView {
 
-	private IClientLogic clientLogic;
+	private IRemoteLogic clientLogic;
 	
 	private static final int CAMERA_WIDTH = 320;
 	
@@ -167,7 +164,7 @@ public class RemoteActivity extends SimpleBaseGameActivity implements IClientLog
 		
 	private void connect() {
 		connectTask = new ConnectTask();
-		connectTask.execute((Object)null);		
+		connectTask.start();
 	}
 	
 	@Override
@@ -176,9 +173,8 @@ public class RemoteActivity extends SimpleBaseGameActivity implements IClientLog
 		Log.i(LOG_TAG, "onStop");
 		
 		handler.removeCallbacks(connectRunnable);
-		if(connectTask != null) {
-			connectTask.cancel(true);
-		}
+		connectTask.interrupt();
+		
 		if(clientLogic != null) {
 			try {
 				clientLogic.close();
@@ -191,31 +187,25 @@ public class RemoteActivity extends SimpleBaseGameActivity implements IClientLog
 	/**
 	 * The Task that should connect the client with the host.
 	 */
-	private class ConnectTask extends AsyncTask<Object, Object, AsyncTaskResult<IRemoteConnection>>  {
+	private class ConnectTask extends Thread  {
 		/**
 		 * Connecting to the Host.
 		 */
 		@Override
-		protected AsyncTaskResult<IRemoteConnection> doInBackground(
-				Object... params) {
+		public void run() {
 			try {
-				Log.i(LOG_TAG, "Connecting...");
-				return new AsyncTaskResult<IRemoteConnection>(SocketConnection.connect(connectionParameter));
+				if (RemoteActivity.this.clientLogic == null) {
+					final SocketConnection s = SocketConnection.connect(connectionParameter);
+					handler.post(new Runnable() {
+						
+						@Override
+						public void run() {
+							RemoteActivity.this.clientLogic = new RemoteLogic(RemoteActivity.this, s);
+						}
+					});
+				}
 			} catch (Exception e) {
-				return new AsyncTaskResult<IRemoteConnection>(e);
-			}
-		}
-		
-		/**
-		 * Connection is open, initialize the logic.
-		 */
-		@Override
-		protected void onPostExecute(AsyncTaskResult<IRemoteConnection> result) {
-			if(result.getError() == null) {
-				clientLogic = new ClientLogic(RemoteActivity.this, result.getResult());
-			} else {
-				Log.e(LOG_TAG, "IOException", result.getError());
-				finish();
+				Log.i(LOG_TAG, "ConnectionTask", e);
 			}
 		}
 	}

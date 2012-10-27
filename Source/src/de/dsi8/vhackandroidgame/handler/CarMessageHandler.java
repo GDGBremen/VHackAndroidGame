@@ -23,35 +23,55 @@ package de.dsi8.vhackandroidgame.handler;
 import de.dsi8.dsi8acl.communication.handler.AbstractMessageHandler;
 import de.dsi8.dsi8acl.communication.impl.CommunicationPartner;
 import de.dsi8.dsi8acl.exception.InvalidMessageException;
-import de.dsi8.vhackandroidgame.communication.model.CollisionMessage;
-import de.dsi8.vhackandroidgame.logic.impl.RemoteLogic;
+import de.dsi8.vhackandroidgame.communication.model.CarMessage;
+import de.dsi8.vhackandroidgame.communication.model.DriveMessage;
+import de.dsi8.vhackandroidgame.logic.impl.PresentationLogic;
+import de.dsi8.vhackandroidgame.logic.impl.ServerLogic;
 
 /**
- * Handles the {@link CollisionMessage}.
+ * Handles the {@link DriveMessage}.
  *
  * @author Henrik Voß <hennevoss@gmail.com>
  *
  */
-public class CollisionMessageHandler extends AbstractMessageHandler<CollisionMessage> {
-	
-	/**
-	 * Interface to the {@link RemoteLogic}.
-	 */
-	private RemoteLogic remoteLogic;
+public class CarMessageHandler extends AbstractMessageHandler<CarMessage> {
 
 	/**
-	 * Creates the MessageHandler
-	 * @param remoteLogic		Interface to the {@link RemoteLogic}.
+	 * Interface to the {@link ServerLogic}.
 	 */
-	public CollisionMessageHandler(RemoteLogic remoteLogic) {
-		this.remoteLogic = remoteLogic;
+	private PresentationLogic presentationLogic;
+
+	/**
+	 * Creates the handler.
+	 * @param presentationLogic	Interface to the {@link ServerLogic}.	
+	 */
+	public CarMessageHandler(PresentationLogic presentationLogic) {
+		this.presentationLogic = presentationLogic;
 	}
 	
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void handleMessage(CommunicationPartner partner, CollisionMessage message) throws InvalidMessageException {
-		this.remoteLogic.getRemoteView().collisionDetected();
+	public void handleMessage(CommunicationPartner partner, CarMessage message) throws InvalidMessageException {
+		switch (message.action) {
+		case ADD:
+			this.presentationLogic.getPresentationView().addCar(message.id, message.positionX, message.positionY, message.rotation);
+			break;
+
+		case REMOVE:
+			this.presentationLogic.getPresentationView().removeCar(message.id);
+			break;
+			
+		case MOVE:
+			this.presentationLogic.getPresentationView().moveCar(message.id, message.positionX, message.positionY);
+			break;
+			
+		case ROTATE:
+			this.presentationLogic.getPresentationView().rotateCar(message.id, message.rotation);
+			break;
+		default:
+			break;
+		}
 	}
 }

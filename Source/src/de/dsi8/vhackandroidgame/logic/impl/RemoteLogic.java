@@ -27,9 +27,10 @@ import de.dsi8.dsi8acl.connection.contract.IRemoteConnection;
 import de.dsi8.dsi8acl.exception.ConnectionProblemException;
 import de.dsi8.vhackandroidgame.RemoteActivity;
 import de.dsi8.vhackandroidgame.communication.model.DriveMessage;
+import de.dsi8.vhackandroidgame.communication.model.GameModeMessage;
 import de.dsi8.vhackandroidgame.handler.CollisionMessageHandler;
-import de.dsi8.vhackandroidgame.logic.contract.IClientLogic;
-import de.dsi8.vhackandroidgame.logic.contract.IClientLogicListener;
+import de.dsi8.vhackandroidgame.logic.contract.IRemoteLogic;
+import de.dsi8.vhackandroidgame.logic.contract.IRemoteView;
 
 /**
  * Logic of the remote smartphone.
@@ -37,28 +38,32 @@ import de.dsi8.vhackandroidgame.logic.contract.IClientLogicListener;
  * @author Henrik Voß <hennevoss@gmail.com>
  *
  */
-public class ClientLogic implements IClientLogic, ICommunicationPartnerListener {
+public class RemoteLogic implements IRemoteLogic, ICommunicationPartnerListener {
 
 	/**
 	 * Connection to the server.
 	 */
 	private final ICommunicationPartner serverPartner;
+
 	
 	/**
 	 * Listener to the {@link RemoteActivity}.
 	 */
-	private final IClientLogicListener listener;
+	private final IRemoteView remoteView;
+	
 	
 	/**
 	 * Creates the client-logic.
-	 * @param listener		Listener on the {@link RemoteActivity}.
-	 * @param connection		Socket to the Server.
+	 * @param remoteView		Listenerlistener on the {@link RemoteActivity}.
+	 * @param socket		Socket to the Server.
 	 */
-	public ClientLogic(IClientLogicListener listener, IRemoteConnection connection) {
-		this.listener = listener;
+	public RemoteLogic(IRemoteView remoteView, IRemoteConnection connection) {
+		this.remoteView = remoteView;
 		this.serverPartner = new CommunicationPartner(this, connection);
-		this.serverPartner.registerMessageHandler(new CollisionMessageHandler(listener));
+		this.serverPartner.registerMessageHandler(new CollisionMessageHandler(this));
 		this.serverPartner.initialized();
+		this.serverPartner.sendMessage(new GameModeMessage(true));
+		
 	}
 	
 	/**
@@ -66,7 +71,7 @@ public class ClientLogic implements IClientLogic, ICommunicationPartnerListener 
 	 */
 	@Override
 	public void connectionLost(CommunicationPartner partner, ConnectionProblemException ex) {
-		this.listener.connectionLost(ex);
+		this.remoteView.connectionLost(ex);
 	}
 
 	/**
@@ -84,5 +89,10 @@ public class ClientLogic implements IClientLogic, ICommunicationPartnerListener 
 	public void close() {
 		this.serverPartner.close();
 	}
+
+	public IRemoteView getRemoteView() {
+		return this.remoteView;
+	}
+
 	
 }

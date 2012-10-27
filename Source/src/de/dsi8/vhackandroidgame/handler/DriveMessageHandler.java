@@ -20,11 +20,19 @@
  ******************************************************************************/
 package de.dsi8.vhackandroidgame.handler;
 
+import org.andengine.extension.physics.box2d.util.Vector2Pool;
+import org.andengine.util.math.MathUtils;
+
+import android.util.Log;
+
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.physics.box2d.Body;
+
 import de.dsi8.dsi8acl.communication.handler.AbstractMessageHandler;
 import de.dsi8.dsi8acl.communication.impl.CommunicationPartner;
 import de.dsi8.dsi8acl.exception.InvalidMessageException;
+import de.dsi8.vhackandroidgame.RacerGameActivity.CarView;
 import de.dsi8.vhackandroidgame.communication.model.DriveMessage;
-import de.dsi8.vhackandroidgame.logic.contract.IServerLogicListener;
 import de.dsi8.vhackandroidgame.logic.impl.ServerLogic;
 
 /**
@@ -38,14 +46,14 @@ public class DriveMessageHandler extends AbstractMessageHandler<DriveMessage> {
 	/**
 	 * Interface to the {@link ServerLogic}.
 	 */
-	private IServerLogicListener listener;
+	private ServerLogic serverLogic;
 
 	/**
 	 * Creates the handler.
-	 * @param listener	Interface to the {@link ServerLogic}.	
+	 * @param serverLogic	Interface to the {@link ServerLogic}.	
 	 */
-	public DriveMessageHandler(IServerLogicListener listener) {
-		this.listener = listener;
+	public DriveMessageHandler(ServerLogic serverLogic) {
+		this.serverLogic = serverLogic;
 	}
 	
 	/**
@@ -53,6 +61,19 @@ public class DriveMessageHandler extends AbstractMessageHandler<DriveMessage> {
 	 */
 	@Override
 	public void handleMessage(CommunicationPartner partner, DriveMessage message) throws InvalidMessageException {
-		this.listener.driveCar(partner.getId(), message.valueX, message.valueY);
+		//TODO driveCar
+		Body body = this.serverLogic.getCarBody(partner);
+		
+		Log.d("DriveMessageHandler", "new DriveMessage " + message.valueX + "   "  + message.valueY);
+		
+		final Vector2 velocity = Vector2Pool.obtain(message.valueX * 5, message.valueY * 5);
+		
+		body.setLinearVelocity(velocity);
+		Vector2Pool.recycle(velocity);
+
+		final float rotationInRad = (float)Math.atan2(-message.valueX, message.valueY);
+		body.setTransform(body.getWorldCenter(), rotationInRad);
+
+//		carView.car.setRotation(MathUtils.radToDeg(rotationInRad)); // TODO Move to Presentation Handler
 	}
 }

@@ -22,6 +22,8 @@ package de.dsi8.vhackandroidgame.logic.contract;
 
 import java.io.Closeable;
 
+import org.andengine.extension.physics.box2d.PhysicsWorld;
+
 import de.dsi8.vhackandroidgame.RacerGameActivity;
 import de.dsi8.vhackandroidgame.logic.impl.ServerLogic;
 
@@ -43,4 +45,12 @@ public interface IServerLogic extends Closeable {
 	 * @param carId
 	 */
 	void collisionDetected(int carId);
+	
+	void test();
+	
+
+	
+	public void onCreateScene();
+	
+	public PhysicsWorld getPhysicsWorld();
 }

@@ -20,26 +20,28 @@
  ******************************************************************************/
 package de.dsi8.vhackandroidgame.logic.contract;
 
-import java.io.Closeable;
-
+import de.dsi8.dsi8acl.exception.ConnectionProblemException;
 import de.dsi8.vhackandroidgame.RemoteActivity;
-import de.dsi8.vhackandroidgame.logic.impl.ClientLogic;
-
+import de.dsi8.vhackandroidgame.logic.impl.RemoteLogic;
 
 /**
- * Interface from the {@link RemoteActivity} to the {@link ClientLogic}.
+ * Interface from the {@link RemoteLogic} to the {@link RemoteActivity}.
  * 
  * @author Henrik Voß <hennevoss@gmail.com>
  *
  */
-public interface IClientLogic extends Closeable {
+public interface IRemoteView {
 	
 	/**
-	 * Move the car to a new position.
-	 * valueX and valueY define a unit vector of the direction and speed. 
-	 * 
-	 * @param valueX 	x-value of the unit vector.	
-	 * @param valueY 	Y-value of the unit vector.	
+	 * The connection to the Server lost.
+	 * @param ex	
 	 */
-	void driveCar(float valueX, float valueY);
+	void connectionLost(ConnectionProblemException ex);
+	
+	
+
+	/**
+	 * A collision was detected.
+	 */
+	void collisionDetected();
 }
