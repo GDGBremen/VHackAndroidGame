@@ -54,4 +54,6 @@ public interface IServerLogic extends Closeable {
 	public void onCreateScene();
 	
 	public PhysicsWorld getPhysicsWorld();
+
+	void showBardcode();
 }

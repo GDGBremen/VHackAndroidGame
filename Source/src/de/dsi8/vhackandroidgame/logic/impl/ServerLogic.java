@@ -100,7 +100,6 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener, 
 	private final VHackAndroidGameConfiguration gameConfig;
 	private final FixtureDef carFixtureDef = PhysicsFactory.createFixtureDef(1, 0.5f, 0.5f);
 
-
 	private PhysicsWorld mPhysicsWorld = new PhysicsWorld(new Vector2(0, 0), false);
 	
 	/**
@@ -123,7 +122,7 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener, 
 	 */
 	private int numPresentationPartner = 0;
 	
-	
+	private boolean qrCodeVisible = true;
 	
 	/**
 	 * Creates the logic.
@@ -408,5 +407,18 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener, 
 	
 	public void checkpointsPassed(RemotePartner remotePartner) {
 		listener.incrementCheckpointsPassed(remotePartner.id);
+	}
+
+	@Override
+	public void showBardcode() {
+		CommunicationPartner partner = this.presentationPartner.get(0).communicationPartner;
+		if(qrCodeVisible) {
+			partner.sendMessage(new QRCodeMessage(null, QRCodePosition.CENTER));
+		} else {
+			ConnectionParameter connectionDetails = gameConfig.getConnectionDetails();
+			partner.sendMessage(new QRCodeMessage(connectionDetails.toConnectionURL(), QRCodePosition.CENTER));
+		}
+		qrCodeVisible = !qrCodeVisible;
+		
 	}
 }
