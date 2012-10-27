@@ -37,7 +37,7 @@
         </activity>
         
         <activity
-            android:name=".ServerActivity" 
+            android:name=".ServerGameActivity" 
             android:label="@string/title_activity_server">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
