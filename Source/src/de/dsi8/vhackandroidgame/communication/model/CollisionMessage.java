@@ -20,6 +20,8 @@
  ******************************************************************************/
 package de.dsi8.vhackandroidgame.communication.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import de.dsi8.dsi8acl.connection.model.Message;
 
 /**
@@ -29,5 +31,10 @@ import de.dsi8.dsi8acl.connection.model.Message;
  *
  */
 public class CollisionMessage extends Message {
-	// No attributes or functions requried.
+	public CollisionMessage(
+			@JsonProperty("collidesWith") CollisionType collidesWith) {
+		this.collidesWith = collidesWith;
+	}
+	
+	public final CollisionType collidesWith;
 }

@@ -1,7 +1,10 @@
 package de.dsi8.vhackandroidgame.server.list;
 
+import android.animation.ObjectAnimator;
 import android.content.Context;
 import android.graphics.Color;
+import android.os.Handler;
+import android.os.Message;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -26,6 +29,19 @@ public class ScoreboardAdapater extends BaseAdapter {
 	private Context			context;
 	private Player			dirty;
     private static final long ROTATE_DURATION =400 ; //in milliseconds
+    private static final long TEXT_ANIM_DURATION=200; //in milliseconds
+
+    private Handler handler=new Handler(new Handler.Callback(){
+        @Override
+        public boolean handleMessage(Message message) {
+           ((View)message.obj)
+                 .animate()
+                .scaleX(1).scaleY(1)
+                .setDuration(TEXT_ANIM_DURATION/2)
+                .start();
+           return true;
+        }
+    });
 
     /**
 	 * @param context
@@ -169,28 +185,30 @@ public class ScoreboardAdapater extends BaseAdapter {
 	}
 
     public void rotateAnimation(final Player player,final View view){
+
+        view.setRotationY(0);
         if(player==this.dirty){
-//            view.animate().rotationY(360f).setDuration(ROTATE_DURATION)
-//                    .withEndAction(new Runnable() {
-//                        @Override
-//                        public void run() {
-//                            view.setRotationY(0);
-//                        }
-//                    });
+            view.animate().rotationY(360f).setDuration(ROTATE_DURATION);
         }
     }
 
     public void setTextSizeAnimation(final Player player, final TextView textView,final long delay) {
-//        if(player==this.dirty){
-//            final float size=textView.getTextSize();
-//           textView.animate().scaleX(2).scaleY(2).withEndAction(new Runnable() {
-//               @Override
-//               public void run() {
-//                   textView.setScaleX(1);
-//                   textView.setScaleY(1);
-//               }
-//           }).setStartDelay(delay);
-//        }
+        if(player==this.dirty){
+            final float size=textView.getTextSize();
+
+
+
+           textView.animate()
+                   .scaleX(2).scaleY(2)
+                   .setDuration(TEXT_ANIM_DURATION)
+                   .setStartDelay(delay);
+            Message msg=handler.obtainMessage(1);
+            msg.obj=textView;
+            handler.sendMessageDelayed(msg,TEXT_ANIM_DURATION+delay);
+
+
+        }
+
     }
 
     public void checkTextAnimations(final Player player,final  ViewHolder holder){

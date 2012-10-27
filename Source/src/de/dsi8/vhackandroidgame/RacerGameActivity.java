@@ -373,6 +373,30 @@ public class RacerGameActivity extends AbstractConnectionActivity implements
 	}
 
 	@Override
+	public void disableQRCode(QRCodePosition position) {
+		switch (position) {
+		case CENTER:
+			this.mScene.detachChild(this.barcodeCenter);
+			break;
+		case TOP:
+			this.mScene.detachChild(this.barcodeTop);
+			break;
+		case RIGHT:
+			this.mScene.detachChild(this.barcodeRight);
+			break;
+		case BOTTOM:
+			this.mScene.detachChild(this.barcodeBottom);
+			break;
+		case LEFT:
+			this.mScene.detachChild(this.barcodeLeft);
+			break;
+		default:
+			// impossible
+			break;
+		}
+	}
+	
+	@Override
 	public void updateBorders(boolean top, boolean right, boolean bottom,
 			boolean left) {
 		if (top) {
@@ -430,4 +454,5 @@ public class RacerGameActivity extends AbstractConnectionActivity implements
 
 		return TextureRegionFactory.extractFromTexture(texture);
 	}
+
 }

@@ -43,6 +43,7 @@ import com.badlogic.gdx.physics.box2d.BodyDef.BodyType;
 import com.badlogic.gdx.physics.box2d.Contact;
 import com.badlogic.gdx.physics.box2d.ContactImpulse;
 import com.badlogic.gdx.physics.box2d.ContactListener;
+import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.Manifold;
 
@@ -63,6 +64,7 @@ import de.dsi8.vhackandroidgame.communication.model.BorderMessage;
 import de.dsi8.vhackandroidgame.communication.model.CarMessage;
 import de.dsi8.vhackandroidgame.communication.model.CarMessage.ACTION;
 import de.dsi8.vhackandroidgame.communication.model.CollisionMessage;
+import de.dsi8.vhackandroidgame.communication.model.CollisionType;
 import de.dsi8.vhackandroidgame.communication.model.GameModeMessage;
 import de.dsi8.vhackandroidgame.communication.model.QRCodeMessage;
 import de.dsi8.vhackandroidgame.communication.model.QRCodeMessage.QRCodePosition;
@@ -98,7 +100,6 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener, 
 	private final VHackAndroidGameConfiguration gameConfig;
 	private final FixtureDef carFixtureDef = PhysicsFactory.createFixtureDef(1, 0.5f, 0.5f);
 
-
 	private PhysicsWorld mPhysicsWorld = new PhysicsWorld(new Vector2(0, 0), false);
 	
 	/**
@@ -121,7 +122,7 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener, 
 	 */
 	private int numPresentationPartner = 0;
 	
-	
+	private boolean qrCodeVisible = true;
 	
 	/**
 	 * Creates the logic.
@@ -142,7 +143,6 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener, 
 		}
 		
 		new UpdateThread().start();
-		
 	}
 	
 	/**
@@ -270,10 +270,9 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener, 
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void collisionDetected(int carId) {
-		this.communication.sendMessage(carId, new CollisionMessage());
+	public void collisionDetected(int carId, CollisionType collidesWith) {
+		this.communication.sendMessage(carId, new CollisionMessage(collidesWith));
 	}
-
 	
 	/**
 	 * Return's the id of an remote partner.
@@ -321,13 +320,24 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener, 
 	@Override
 	public void beginContact(Contact contact) {
 		int firstCarId = getCarIdFromBody(contact.getFixtureA().getBody());
-		if (firstCarId > -1) {
-			collisionDetected(firstCarId);
-		}
-		
 		int secondCarId = getCarIdFromBody(contact.getFixtureB().getBody());
+		
+		if (firstCarId > -1) {
+			collisionDetected(firstCarId, getCollisionType(contact.getFixtureB()));
+		}
 		if (secondCarId > -1) {
-			collisionDetected(secondCarId);
+			collisionDetected(secondCarId, getCollisionType(contact.getFixtureA()));
+		}
+	}
+	
+	public CollisionType getCollisionType(Fixture fixture) {
+		int carId = getCarIdFromBody(fixture.getBody());
+		if(carId > -1) {
+			return CollisionType.CAR;
+		} else if(fixture.getRestitution() > 0) {
+			return CollisionType.BUMPER;
+		} else {
+			return CollisionType.WALL;
 		}
 	}
 		
@@ -397,5 +407,18 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener, 
 	
 	public void checkpointsPassed(RemotePartner remotePartner) {
 		listener.incrementCheckpointsPassed(remotePartner.id);
+	}
+
+	@Override
+	public void showBardcode() {
+		CommunicationPartner partner = this.presentationPartner.get(0).communicationPartner;
+		if(qrCodeVisible) {
+			partner.sendMessage(new QRCodeMessage(null, QRCodePosition.CENTER));
+		} else {
+			ConnectionParameter connectionDetails = gameConfig.getConnectionDetails();
+			partner.sendMessage(new QRCodeMessage(connectionDetails.toConnectionURL(), QRCodePosition.CENTER));
+		}
+		qrCodeVisible = !qrCodeVisible;
+		
 	}
 }

@@ -22,6 +22,7 @@ package de.dsi8.vhackandroidgame.logic.contract;
 
 import de.dsi8.dsi8acl.exception.ConnectionProblemException;
 import de.dsi8.vhackandroidgame.RemoteActivity;
+import de.dsi8.vhackandroidgame.communication.model.CollisionType;
 import de.dsi8.vhackandroidgame.logic.impl.RemoteLogic;
 
 /**
@@ -42,6 +43,7 @@ public interface IRemoteView {
 
 	/**
 	 * A collision was detected.
+	 * @param collidesWith 
 	 */
-	void collisionDetected();
+	void collisionDetected(CollisionType collidesWith);
 }

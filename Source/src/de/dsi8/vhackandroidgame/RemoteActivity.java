@@ -38,6 +38,8 @@ import org.andengine.opengl.texture.atlas.bitmap.BitmapTextureAtlasTextureRegion
 import org.andengine.opengl.texture.region.ITextureRegion;
 import org.andengine.ui.activity.SimpleBaseGameActivity;
 
+import com.immersion.uhl.Launcher;
+
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -49,6 +51,7 @@ import android.util.Log;
 import de.dsi8.dsi8acl.connection.impl.SocketConnection;
 import de.dsi8.dsi8acl.connection.model.ConnectionParameter;
 import de.dsi8.dsi8acl.exception.ConnectionProblemException;
+import de.dsi8.vhackandroidgame.communication.model.CollisionType;
 import de.dsi8.vhackandroidgame.logic.contract.IRemoteLogic;
 import de.dsi8.vhackandroidgame.logic.contract.IRemoteView;
 import de.dsi8.vhackandroidgame.logic.impl.RemoteLogic;
@@ -63,6 +66,8 @@ public class RemoteActivity extends AbstractConnectionActivity implements IRemot
 	private static final int CAMERA_HEIGHT = 192;
 	
 	private BitmapTextureAtlas mOnScreenControlTexture;
+	
+	private Launcher mHapticLauncher;
 
 	
 	private static final String LOG_TAG = RemoteActivity.class.getSimpleName();
@@ -78,6 +83,32 @@ public class RemoteActivity extends AbstractConnectionActivity implements IRemot
 	private ITextureRegion mOnScreenControlKnobTextureRegion;
 	
 	private Scene mScene;
+	private Vibrator mVibrator;
+	
+	@Override
+	protected void onCreate(Bundle pSavedInstanceState) {
+		super.onCreate(pSavedInstanceState);
+		
+		try {
+			mHapticLauncher = new Launcher(this);
+		} catch(RuntimeException ex) {
+			Log.v(LOG_TAG, "No Haptic supported", ex);
+		}
+		mVibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+	}
+	
+	@Override
+	protected void onPause() {
+		super.onPause();
+		
+		try {
+			if(mHapticLauncher != null) {
+				mHapticLauncher.stop();
+			}
+		} catch(RuntimeException ex) {
+			Log.v(LOG_TAG, "No Haptic supported", ex);
+		}
+	}
 	
 	@Override
 	protected void onStop() {
@@ -134,6 +165,8 @@ public class RemoteActivity extends AbstractConnectionActivity implements IRemot
 		return this.mScene;
 	}
 	
+	
+	
 	/**
 	 * Initialize the On-Screen-Controls.
 	 */
@@ -173,9 +206,29 @@ public class RemoteActivity extends AbstractConnectionActivity implements IRemot
 	}
 
 	@Override
-	public void collisionDetected() {
-		Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
-		v.vibrate(300);
+	public void collisionDetected(CollisionType collidesWith) {
+		try {
+			if(mHapticLauncher != null) {
+				switch(collidesWith) {
+					case CAR:
+						mHapticLauncher.play(Launcher.IMPACT_METAL_100);
+						break;
+					case BUMPER:
+						mHapticLauncher.play(Launcher.IMPACT_RUBBER_100);
+						break;
+					case WALL:
+						mHapticLauncher.play(Launcher.EXPLOSION4);
+						break;
+				}
+			} else {
+				mVibrator.vibrate(200);
+			}
+		} catch(RuntimeException ex) {
+			Log.v(LOG_TAG, "No Haptic supported", ex);
+			mVibrator.vibrate(200);
+		}
+		
+
 	}
 	
 }
