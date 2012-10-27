@@ -49,6 +49,7 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
@@ -75,7 +76,7 @@ import de.dsi8.vhackandroidgame.logic.impl.VHackAndroidGameConfiguration;
  * @since 22:43:20 - 15.07.2010
  */
 public class RacerGameActivity extends AbstractConnectionActivity implements
-		IServerLogicListener, IPresentationView {
+		IPresentationView {
 	// ===========================================================
 	// Constants
 	// ===========================================================
@@ -125,10 +126,8 @@ public class RacerGameActivity extends AbstractConnectionActivity implements
 	
 	@Override
 	protected void onCreate(Bundle pSavedInstanceState) {
+		getIntent().setData(Uri.parse("http://vhackandroidgame.dsi8.de/connect/?port=4254&protocol=tcp&host=192.168.11.27&password=&wifiap=smex4"));
 		super.onCreate(pSavedInstanceState);
-		
-		// TODO: rm
-		this.connectionParameter.setParameter("host", "192.168.11.27");
 	}
 	
 	@Override

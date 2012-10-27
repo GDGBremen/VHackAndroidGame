@@ -7,6 +7,10 @@
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
 
+    <uses-feature
+    	android:name="android.hardware.touchscreen"
+    	android:required="false" />
+    
     <uses-sdk
         android:minSdkVersion="11"
         android:targetSdkVersion="16" />
@@ -45,7 +49,10 @@
         </activity>
         <activity
             android:name=".ServerGameActivity"
-            android:label="@string/title_activity_server" >
+            android:configChanges="orientation|keyboard|keyboardHidden"
+            android:label="@string/title_activity_server"
+            android:screenOrientation="landscape"
+            android:theme="@android:style/Theme.Holo.Light.NoActionBar.Fullscreen" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

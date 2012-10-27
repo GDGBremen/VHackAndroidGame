@@ -35,6 +35,7 @@ import org.andengine.opengl.vbo.IVertexBufferObject;
 import org.andengine.opengl.vbo.VertexBufferObjectManager;
 
 import android.R.id;
+import android.hardware.SensorManager;
 import android.util.Log;
 
 import com.badlogic.gdx.math.Vector2;
@@ -102,7 +103,7 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener, 
 	private final FixtureDef carFixtureDef = PhysicsFactory.createFixtureDef(1, 0.5f, 0.5f);
 
 
-	private PhysicsWorld mPhysicsWorld;
+	private PhysicsWorld mPhysicsWorld = new PhysicsWorld(new Vector2(0, 0), false);
 	
 	/**
 	 * All connected remote partner.
@@ -136,6 +137,8 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener, 
 		IConnector connector = gameConfig.getProtocol().createConnector();
 		this.communication = new ServerCommunication(this, connector, 20);
 		
+		new UpdateThread().start();
+		
 	}
 	
 	/**
@@ -160,7 +163,6 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener, 
 	@Override
 	public void newPartner(ICommunicationPartner partner) {
 		Log.i(LOG_TAG, "newPartner");
-		partner.registerMessageHandler(new DriveMessageHandler(this));
 		partner.registerMessageHandler(new AbstractMessageHandler<GameModeMessage>() {
 			@Override
 			public void handleMessage(CommunicationPartner partner, GameModeMessage message) throws InvalidMessageException {
@@ -182,6 +184,7 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener, 
 	 */
 	private void newRemotePartner(CommunicationPartner partner) {
 		RemotePartner rPartner = new RemotePartner();
+		partner.registerMessageHandler(new DriveMessageHandler(this));
 		rPartner.communicationPartner = partner;
 		rPartner.id = this.numRemotePartner++;
 		
@@ -199,13 +202,15 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener, 
 		
 		this.remotePartner.put(rPartner.id, rPartner);
 		
-			CarMessage message = new CarMessage();
-			message.positionX = PX;
-			message.positionY = PY;
-			message.rotation = ROTATION;
-			message.action = ACTION.ADD;
-			message.id = rPartner.id;
-			sendMessageToAllPresentationPartner(message);
+		CarMessage message = new CarMessage();
+		message.positionX = PX;
+		message.positionY = PY;
+		message.rotation = ROTATION;
+		message.action = ACTION.ADD;
+		message.id = rPartner.id;
+		sendMessageToAllPresentationPartner(message);
+		
+		this.listener.registerPlayer(rPartner.id);
 	}
 	
 	/**
@@ -233,17 +238,20 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener, 
 		int idOfRemotePartner = getIdOfRemotePartner(partner);
 		RemotePartner rPartner = this.remotePartner.get(idOfRemotePartner);
 		
-		this.mPhysicsWorld.unregisterPhysicsConnector(rPartner.physicsConnector);
-		CarMessage carMessage = new CarMessage();
-		carMessage.action = ACTION.REMOVE;
-		carMessage.id = rPartner.id;
-		sendMessageToAllPresentationPartner(carMessage);
-		
-		rPartner.body = null;
-		rPartner.physicsConnector = null;
-		rPartner.communicationPartner.close();
-		rPartner.communicationPartner = null;
-		this.remotePartner.remove(rPartner);
+		if (rPartner != null) {
+			this.mPhysicsWorld.unregisterPhysicsConnector(rPartner.physicsConnector);
+			CarMessage carMessage = new CarMessage();
+			carMessage.action = ACTION.REMOVE;
+			carMessage.id = rPartner.id;
+			sendMessageToAllPresentationPartner(carMessage);
+			
+			rPartner.body = null;
+			rPartner.physicsConnector = null;
+			rPartner.communicationPartner.close();
+			rPartner.communicationPartner = null;
+			this.remotePartner.remove(rPartner);
+			this.listener.removePlayer(rPartner.id);
+		}
 	}
 
 	/**
@@ -361,5 +369,29 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener, 
 		for (PresentationPartner p : this.presentationPartner.values()) {
 			p.communicationPartner.sendMessage(message);
 		}
+	}
+	
+	public class UpdateThread extends Thread {
+		 @Override
+		public void run() {
+			 long lastUpdate = System.currentTimeMillis();
+			while (true) {
+				final long now = System.currentTimeMillis();
+				final float timeElapsed = (now - lastUpdate) / 1000f;
+				ServerLogic.this.mPhysicsWorld.onUpdate(timeElapsed);
+				lastUpdate = now;
+				try {
+					sleep(20);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+					break;
+				}
+			}
+		}
+	}
+	
+	public void checkpointsPassed(RemotePartner remotePartner) {
+		listener.incrementCheckpointsPassed(remotePartner.id);
 	}
 }
