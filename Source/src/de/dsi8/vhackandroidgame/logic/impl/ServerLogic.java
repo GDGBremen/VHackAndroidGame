@@ -129,20 +129,11 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener, 
 	 * Creates the logic.
 	 * @param listener	Interface to the {@link RacerGameActivity}.	
 	 */
-	public ServerLogic(IServerLogicListener listener, IRemoteConnection presentationConnection) {
+	public ServerLogic(IServerLogicListener listener) {
 		this.listener = listener;
 		IConnector connector = VHackAndroidGameConfiguration.getProtocol().createConnector();
 		this.communication = new ServerCommunication(this, connector, 20);
 		
-		// XXX Listener set to null
-		CommunicationPartner partner = new CommunicationPartner(null, presentationConnection);
-		partner.registerMessageHandler(new AbstractMessageHandler<GameModeMessage>() {
-			@Override
-			public void handleMessage(CommunicationPartner partner, GameModeMessage message) throws InvalidMessageException {
-
-			}
-		});
-		newPresentationPartner(partner);
 	}
 	
 	/**
@@ -227,6 +218,8 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener, 
 		this.presentationPartner.put(pPartner.id, pPartner);
 		
 		this.numPresentationPartner++;
+		
+		test();
 	}
 
 	/**
@@ -297,13 +290,11 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener, 
 		
 		CommunicationPartner partner = this.presentationPartner.get(0).communicationPartner;
 		
-		ConnectionParameter connectionDetails = VHackAndroidGameConfiguration.getConnectionDetails();
-		
-		partner.sendMessage(new QRCodeMessage(connectionDetails.toConnectionURL(), QRCodePosition.CENTER));
-		partner.sendMessage(new QRCodeMessage("hallo TOP", QRCodePosition.TOP));
-		partner.sendMessage(new QRCodeMessage("hallo RIGHT", QRCodePosition.RIGHT));
-		partner.sendMessage(new QRCodeMessage("hallo BOTTOM", QRCodePosition.BOTTOM));
-		partner.sendMessage(new QRCodeMessage("hallo LEFT", QRCodePosition.LEFT));
+		partner.sendMessage(new QRCodeMessage(VHackAndroidGameConfiguration.getConnectionDetailsForRemote().toConnectionURL(), QRCodePosition.CENTER));
+		partner.sendMessage(new QRCodeMessage(VHackAndroidGameConfiguration.getConnectionDetailsForPresentation(0, 1).toConnectionURL(), QRCodePosition.TOP));
+		partner.sendMessage(new QRCodeMessage(VHackAndroidGameConfiguration.getConnectionDetailsForPresentation(1, 0).toConnectionURL(), QRCodePosition.RIGHT));
+		partner.sendMessage(new QRCodeMessage(VHackAndroidGameConfiguration.getConnectionDetailsForPresentation(0, -1).toConnectionURL(), QRCodePosition.BOTTOM));
+		partner.sendMessage(new QRCodeMessage(VHackAndroidGameConfiguration.getConnectionDetailsForPresentation(-1, 0).toConnectionURL(), QRCodePosition.LEFT));
 		partner.sendMessage(new BorderMessage(true, true, true, true));
 	}
 	

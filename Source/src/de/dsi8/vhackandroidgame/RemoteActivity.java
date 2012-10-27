@@ -39,6 +39,7 @@ import org.andengine.opengl.texture.region.ITextureRegion;
 import org.andengine.ui.activity.SimpleBaseGameActivity;
 
 import android.content.Context;
+import android.content.Intent;
 import android.opengl.GLES20;
 import android.os.Bundle;
 import android.os.Vibrator;
@@ -86,7 +87,11 @@ public class RemoteActivity extends SimpleBaseGameActivity implements IRemoteVie
 		VHackAndroidGameConfiguration.registerProtocols();
 		
 		try {
-			connectionParameter = new ConnectionParameter(getIntent().getData().toString());
+			this.connectionParameter = new ConnectionParameter(getIntent().getData().toString());
+			
+			String parameter = this.connectionParameter.getParameter(VHackAndroidGameConfiguration.KEY_X_COORDINATE);
+			if (parameter != null) {
+			}
 		} catch (MalformedURLException e) {
 			Log.e(LOG_TAG, "Invalid Connection Parameter", e);
 			finish();

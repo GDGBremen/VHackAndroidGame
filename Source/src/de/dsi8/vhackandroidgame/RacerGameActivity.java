@@ -60,6 +60,7 @@ import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
 
 import de.dsi8.dsi8acl.connection.impl.InternalConnectionHolder;
+import de.dsi8.dsi8acl.connection.impl.SocketConnection;
 import de.dsi8.dsi8acl.connection.model.ConnectionParameter;
 import de.dsi8.vhackandroidgame.communication.model.QRCodeMessage.QRCodePosition;
 import de.dsi8.vhackandroidgame.logic.contract.IPresentationLogic;
@@ -67,6 +68,7 @@ import de.dsi8.vhackandroidgame.logic.contract.IPresentationView;
 import de.dsi8.vhackandroidgame.logic.contract.IServerLogic;
 import de.dsi8.vhackandroidgame.logic.contract.IServerLogicListener;
 import de.dsi8.vhackandroidgame.logic.impl.PresentationLogic;
+import de.dsi8.vhackandroidgame.logic.impl.RemoteLogic;
 import de.dsi8.vhackandroidgame.logic.impl.ServerLogic;
 import de.dsi8.vhackandroidgame.logic.impl.VHackAndroidGameConfiguration;
 
@@ -105,11 +107,6 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements
 	private ITextureRegion mBoxTextureRegion;
 
 	private Scene mScene;
-
-
-
-
-	private IServerLogic serverLogic;
 	
 	
 	
@@ -130,6 +127,10 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements
 	private Sprite barcodeBottom;
 	private Sprite barcodeLeft;
 
+	private ConnectionParameter connectionParameter;
+	
+	private ConnectTask connectTask;
+	
 	/**
 	 * {@inheritDoc}
 	 */
@@ -137,14 +138,42 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements
 	protected void onStart() {
 		super.onStart();
 
-		InternalConnectionHolder connectionHolder = new InternalConnectionHolder();
-
-		this.serverLogic = new ServerLogic(this, connectionHolder.getFirstConnection());
-		this.serverLogic.start();
-
-		this.presentationLogic = new PresentationLogic(RacerGameActivity.this,
-				connectionHolder.getSecondConnection());
-
+		VHackAndroidGameConfiguration.registerProtocols();
+		
+		this.connectionParameter = VHackAndroidGameConfiguration.getConnectionDetailsForRemote();
+		this.connectionParameter.setParameter("host", "192.168.11.27");
+		
+		connectTask = new ConnectTask();
+		connectTask.start();
+	}
+	
+	/**
+	 * The Task that should connect the client with the host.
+	 */
+	private class ConnectTask extends Thread  {
+		/**
+		 * Connecting to the Host.
+		 */
+		@Override
+		public void run() {
+			try {
+				synchronized (this) {
+					// Workaround for multicall of onStart by the AndEngine
+					try {
+						this.wait(2000);
+						Log.i(LOG_TAG, "Not interrupted");
+						if (RacerGameActivity.this.presentationLogic == null) {
+							SocketConnection s = SocketConnection.connect(connectionParameter);
+							RacerGameActivity.this.presentationLogic = new PresentationLogic(RacerGameActivity.this, s);
+						}
+					} catch(InterruptedException ex) {
+						Log.i(LOG_TAG, "Interrupted");
+					}
+				}
+			} catch (Exception e) {
+				Log.i(LOG_TAG, "ConnectionTask", e);
+			}
+		}
 	}
 
 	/**
@@ -154,12 +183,8 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements
 	protected void onStop() {
 		super.onStop();
 
-		try {
-			this.serverLogic.close();
-		} catch (IOException e) {
-			Log.w(LOG_TAG, "Can not close the server", e);
-		}
-
+		this.connectTask.interrupt();
+		
 		if (presentationLogic != null) {
 			try {
 				presentationLogic.close();
@@ -222,10 +247,6 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements
 				vertexBufferObjectManager);
 		this.borderRight = new Rectangle(CAMERA_WIDTH - 2, 0, 2, CAMERA_HEIGHT,
 				vertexBufferObjectManager);
-		this.serverLogic.onCreateScene();
-		this.mScene.registerUpdateHandler(this.serverLogic.getPhysicsWorld()); // TODO Move this to the ServerLogic
-		
-		this.serverLogic.test();
 
 		return this.mScene;
 	}
@@ -234,14 +255,7 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements
 	// Methods
 	// ===========================================================
 	
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public void driveCar(int carId, float valueX, float valueY) {
-
-	}
-
+	
 	/**
 	 * {@inheritDoc}
 	 */

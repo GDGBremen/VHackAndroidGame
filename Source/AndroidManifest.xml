@@ -17,7 +17,7 @@
         android:theme="@style/AppTheme" >
         <activity
             android:name=".RacerGameActivity" 
-            android:label="@string/title_activity_server">
+            android:label="@string/title_activity_tv">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -33,6 +33,16 @@
 				<category android:name="android.intent.category.BROWSABLE"></category>
 				<data android:host="vhackandroidgame.dsi8.de" android:pathPrefix="/connect"  android:scheme="http"></data>
 			</intent-filter>
+        </activity>
+        
+        <activity
+            android:name=".ServerActivity" 
+            android:label="@string/title_activity_server">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
         </activity>
     </application>
 
