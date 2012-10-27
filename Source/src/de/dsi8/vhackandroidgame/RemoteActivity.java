@@ -119,13 +119,13 @@ public class RemoteActivity extends SimpleBaseGameActivity implements IClientLog
 		builder.setTitle(R.string.same_network_dialog_title);
 		builder.setMessage(R.string.same_network_dialog_msg);
 		// Add the buttons
-		builder.setPositiveButton(android.R.string.yes, dialogClickListener);
-		builder.setNegativeButton(android.R.string.no, dialogClickListener);
+		builder.setPositiveButton(android.R.string.yes, reconnectDialogClickListener);
+		builder.setNegativeButton(android.R.string.no, reconnectDialogClickListener);
 		
 		return builder.create();
 	}
 	
-	DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
+	DialogInterface.OnClickListener reconnectDialogClickListener = new DialogInterface.OnClickListener() {
 	    @Override
 	    public void onClick(DialogInterface dialog, int which) {
 	    	sameNetworkDialog = null;
@@ -141,6 +141,17 @@ public class RemoteActivity extends SimpleBaseGameActivity implements IClientLog
 	        }
 	    }
 	};
+
+	private AlertDialog showConnectionFailedDialog() {
+		AlertDialog.Builder builder = new AlertDialog.Builder(this);
+		builder.setTitle(R.string.connection_falied_dialog_title);
+		builder.setMessage(R.string.connection_falied_dialog_msg);
+		// Add the buttons
+		builder.setPositiveButton(R.string.retry, reconnectDialogClickListener);
+		builder.setNegativeButton(android.R.string.cancel, reconnectDialogClickListener);
+		
+		return builder.create();
+	}
 		
 	private void connect() {
 		connectTask = new ConnectTask();

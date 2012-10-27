@@ -6,5 +6,7 @@
     <string name="title_activity_server">VHackAndroidGame - Server</string>
     <string name="same_network_dialog_title">Different Networks</string>
     <string name="same_network_dialog_msg">It\'s seems that you\'re not in the same WiFi-Network as the other client. The connection may fail. Try to connect anyway?</string>
-
+    <string name="connection_falied_dialog_title">Connecting to the server failed</string>
+    <string name="connection_falied_dialog_msg">Please check that you\'re in the same network.</string>
+    <string name="retry">Retry</string>
 </resources>
