@@ -21,12 +21,14 @@
 package de.dsi8.vhackandroidgame;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.andengine.engine.camera.Camera;
 import org.andengine.engine.options.EngineOptions;
 import org.andengine.engine.options.ScreenOrientation;
+import org.andengine.engine.options.resolutionpolicy.FillResolutionPolicy;
 import org.andengine.engine.options.resolutionpolicy.RatioResolutionPolicy;
 import org.andengine.entity.primitive.Rectangle;
 import org.andengine.entity.scene.Scene;
@@ -35,18 +37,26 @@ import org.andengine.entity.sprite.Sprite;
 import org.andengine.entity.sprite.TiledSprite;
 import org.andengine.extension.physics.box2d.PhysicsConnector;
 import org.andengine.extension.physics.box2d.PhysicsFactory;
+import org.andengine.opengl.texture.PixelFormat;
+import org.andengine.opengl.texture.TextureManager;
 import org.andengine.opengl.texture.TextureOptions;
 import org.andengine.opengl.texture.atlas.bitmap.BitmapTextureAtlas;
 import org.andengine.opengl.texture.atlas.bitmap.BitmapTextureAtlasTextureRegionFactory;
 import org.andengine.opengl.texture.atlas.bitmap.source.EmptyBitmapTextureAtlasSource;
 import org.andengine.opengl.texture.atlas.bitmap.source.IBitmapTextureAtlasSource;
 import org.andengine.opengl.texture.atlas.bitmap.source.decorator.BaseBitmapTextureAtlasSourceDecorator;
+import org.andengine.opengl.texture.bitmap.BitmapTexture;
+import org.andengine.opengl.texture.bitmap.BitmapTextureFormat;
 import org.andengine.opengl.texture.region.ITextureRegion;
 import org.andengine.opengl.texture.region.TextureRegion;
+import org.andengine.opengl.texture.region.TextureRegionFactory;
 import org.andengine.opengl.texture.region.TiledTextureRegion;
 import org.andengine.opengl.vbo.VertexBufferObjectManager;
 import org.andengine.ui.activity.SimpleBaseGameActivity;
+import org.andengine.util.adt.io.in.IInputStreamOpener;
+import org.andlabs.andengine.extension.physicsloader.PhysicsEditorLoader;
 
+import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.util.Log;
@@ -82,7 +92,8 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements
 	// Constants
 	// ===========================================================
 
-	private static final String LOG_TAG = RacerGameActivity.class.getSimpleName();
+	private static final String LOG_TAG = RacerGameActivity.class
+			.getSimpleName();
 
 	private static final int RACETRACK_WIDTH = 64;
 
@@ -106,13 +117,8 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements
 
 	private Scene mScene;
 
-
-
-
 	private IServerLogic serverLogic;
-	
-	
-	
+
 	private Map<Integer, CarView> cars = new HashMap<Integer, RacerGameActivity.CarView>();
 
 	private IPresentationLogic presentationLogic;
@@ -120,8 +126,9 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements
 	private BitmapTextureAtlas qrCodeAtlas;
 
 	private TextureRegion qrCodeAtlasRegion;
-	
-	private VHackAndroidGameConfiguration gameConfig = new VHackAndroidGameConfiguration(this); 
+
+	private VHackAndroidGameConfiguration gameConfig = new VHackAndroidGameConfiguration(
+			this);
 	private Rectangle borderTop;
 	private Rectangle borderRight;
 	private Rectangle borderBottom;
@@ -133,6 +140,8 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements
 	private Sprite barcodeBottom;
 	private Sprite barcodeLeft;
 
+	private ITextureRegion mTrackTextureRegion;
+
 	/**
 	 * {@inheritDoc}
 	 */
@@ -142,7 +151,8 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements
 
 		InternalConnectionHolder connectionHolder = new InternalConnectionHolder();
 
-		this.serverLogic = new ServerLogic(gameConfig, this, connectionHolder.getFirstConnection());
+		this.serverLogic = new ServerLogic(gameConfig, this,
+				connectionHolder.getFirstConnection());
 		this.serverLogic.start();
 
 		this.presentationLogic = new PresentationLogic(RacerGameActivity.this,
@@ -180,7 +190,7 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements
 		this.mCamera = new Camera(0, 0, CAMERA_WIDTH, CAMERA_HEIGHT);
 
 		return new EngineOptions(true, ScreenOrientation.LANDSCAPE_FIXED,
-				new RatioResolutionPolicy(CAMERA_WIDTH, CAMERA_HEIGHT), this.mCamera);
+				new FillResolutionPolicy(), this.mCamera);
 	}
 
 	/**
@@ -190,18 +200,24 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements
 	public void onCreateResources() {
 		BitmapTextureAtlasTextureRegionFactory.setAssetBasePath("gfx/");
 
-		this.mVehiclesTexture = new BitmapTextureAtlas(this.getTextureManager(),
-				128, 16, TextureOptions.BILINEAR);
+		this.mVehiclesTexture = new BitmapTextureAtlas(
+				this.getTextureManager(), 128, 16, TextureOptions.BILINEAR);
 		this.mVehiclesTextureRegion = BitmapTextureAtlasTextureRegionFactory
-				.createTiledFromAsset(this.mVehiclesTexture, this, "vehicles.png", 0,
-						0, 6, 1);
+				.createTiledFromAsset(this.mVehiclesTexture, this,
+						"vehicles.png", 0, 0, 6, 1);
 		this.mVehiclesTexture.load();
 
-		this.mBoxTexture = new BitmapTextureAtlas(this.getTextureManager(), 32, 32,
-				TextureOptions.BILINEAR);
+		this.mBoxTexture = new BitmapTextureAtlas(this.getTextureManager(), 32,
+				32, TextureOptions.BILINEAR);
 		this.mBoxTextureRegion = BitmapTextureAtlasTextureRegionFactory
 				.createFromAsset(this.mBoxTexture, this, "box.png", 0, 0);
 		this.mBoxTexture.load();
+		
+		try {
+			this.mTrackTextureRegion = loadResource(this, getTextureManager(), PixelFormat.RGBA_8888, TextureOptions.BILINEAR, "track.png");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	/**
@@ -212,13 +228,13 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements
 		this.mScene = new Scene();
 		this.mScene.setBackground(new Background(0, 0, 0));
 
-		this.qrCodeAtlas = new BitmapTextureAtlas(this.getTextureManager(), 150,
-				750, TextureOptions.DEFAULT);
+		this.qrCodeAtlas = new BitmapTextureAtlas(this.getTextureManager(),
+				150, 750, TextureOptions.DEFAULT);
 
 		final VertexBufferObjectManager vertexBufferObjectManager = this
 				.getVertexBufferObjectManager();
-		this.borderBottom = new Rectangle(0, CAMERA_HEIGHT - 2, CAMERA_WIDTH, 2,
-				vertexBufferObjectManager);
+		this.borderBottom = new Rectangle(0, CAMERA_HEIGHT - 2, CAMERA_WIDTH,
+				2, vertexBufferObjectManager);
 		this.borderTop = new Rectangle(0, 0, CAMERA_WIDTH, 2,
 				vertexBufferObjectManager);
 		this.borderLeft = new Rectangle(0, 0, 2, CAMERA_HEIGHT,
@@ -226,17 +242,33 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements
 		this.borderRight = new Rectangle(CAMERA_WIDTH - 2, 0, 2, CAMERA_HEIGHT,
 				vertexBufferObjectManager);
 		this.serverLogic.onCreateScene();
-		this.mScene.registerUpdateHandler(this.serverLogic.getPhysicsWorld()); // TODO Move this to the ServerLogic
-		
+		this.mScene.registerUpdateHandler(this.serverLogic.getPhysicsWorld()); // TODO
+																				// Move
+																				// this
+																				// to
+																				// the
+																				// ServerLogic
+
 		this.serverLogic.test();
+		
+		Sprite track = new Sprite(0, 0, this.mTrackTextureRegion, getVertexBufferObjectManager());
+		track.setSize(CAMERA_WIDTH, CAMERA_HEIGHT);
+
+		final PhysicsEditorLoader loader = new PhysicsEditorLoader();
+		try {
+			loader.load(this, this.serverLogic.getPhysicsWorld(),
+					"track.xml", track, false, false);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 
 		return this.mScene;
 	}
-	
+
 	// ===========================================================
 	// Methods
 	// ===========================================================
-	
+
 	/**
 	 * {@inheritDoc}
 	 */
@@ -254,10 +286,10 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements
 		carView.id = carId;
 
 		carView.car = new TiledSprite(pX, pY, CAR_SIZE, CAR_SIZE,
-				this.mVehiclesTextureRegion, this.getVertexBufferObjectManager());
+				this.mVehiclesTextureRegion,
+				this.getVertexBufferObjectManager());
 		carView.car.setCurrentTileIndex(carId % 6);
 		carView.car.setRotation(rotation);
-
 
 		this.mScene.attachChild(carView.car);
 
@@ -283,15 +315,16 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements
 		// TODO: use the given position information.
 		MultiFormatWriter writer = new MultiFormatWriter();
 		try {
-			final BitMatrix bitmatrix = writer.encode(text, BarcodeFormat.QR_CODE,
-					150, 150);
+			final BitMatrix bitmatrix = writer.encode(text,
+					BarcodeFormat.QR_CODE, 150, 150);
 
 			final IBitmapTextureAtlasSource baseTextureSource = new EmptyBitmapTextureAtlasSource(
 					150, 150);
 			final BaseBitmapTextureAtlasSourceDecorator decoratedTextureAtlasSource = new BaseBitmapTextureAtlasSourceDecorator(
 					baseTextureSource) {
 				@Override
-				protected void onDecorateBitmap(Canvas pCanvas) throws Exception {
+				protected void onDecorateBitmap(Canvas pCanvas)
+						throws Exception {
 					pCanvas.drawRGB(0, 0, 0);
 					this.mPaint.setColor(Color.WHITE);
 					for (int y = 0; y < bitmatrix.getHeight(); y++) {
@@ -313,59 +346,60 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements
 			final TextureRegion qrCodeAtlasRegion;
 
 			switch (position) {
-				case CENTER:
-					qrCodeAtlasRegion = BitmapTextureAtlasTextureRegionFactory
-							.createFromSource(this.qrCodeAtlas, decoratedTextureAtlasSource,
-									0, 0);
-					this.qrCodeAtlas.load();
-					this.barcodeCenter = new Sprite(CAMERA_WIDTH / 2 - bardcodeSize / 2,
-							RACETRACK_WIDTH, bardcodeSize, bardcodeSize, qrCodeAtlasRegion,
-							this.getVertexBufferObjectManager());
-					this.mScene.attachChild(this.barcodeCenter);
-					break;
-				case TOP:
-					qrCodeAtlasRegion = BitmapTextureAtlasTextureRegionFactory
-							.createFromSource(this.qrCodeAtlas, decoratedTextureAtlasSource,
-									0, 150);
-					this.qrCodeAtlas.load();
-					this.barcodeTop = new Sprite(CAMERA_WIDTH / 2 - bardcodeSize / 2, 2,
-							bardcodeSize, bardcodeSize, qrCodeAtlasRegion,
-							this.getVertexBufferObjectManager());
-					this.mScene.attachChild(this.barcodeTop);
-					break;
-				case RIGHT:
-					qrCodeAtlasRegion = BitmapTextureAtlasTextureRegionFactory
-							.createFromSource(this.qrCodeAtlas, decoratedTextureAtlasSource,
-									0, 300);
-					this.qrCodeAtlas.load();
-					this.barcodeRight = new Sprite(CAMERA_WIDTH - 2 - bardcodeSize,
-							RACETRACK_WIDTH, bardcodeSize, bardcodeSize, qrCodeAtlasRegion,
-							this.getVertexBufferObjectManager());
-					this.mScene.attachChild(this.barcodeRight);
-					break;
-				case BOTTOM:
-					qrCodeAtlasRegion = BitmapTextureAtlasTextureRegionFactory
-							.createFromSource(this.qrCodeAtlas, decoratedTextureAtlasSource,
-									0, 450);
-					this.qrCodeAtlas.load();
-					this.barcodeBottom = new Sprite(CAMERA_WIDTH / 2 - bardcodeSize / 2,
-							CAMERA_HEIGHT - 2 - bardcodeSize, bardcodeSize, bardcodeSize,
-							qrCodeAtlasRegion, this.getVertexBufferObjectManager());
-					this.mScene.attachChild(this.barcodeBottom);
-					break;
-				case LEFT:
-					qrCodeAtlasRegion = BitmapTextureAtlasTextureRegionFactory
-							.createFromSource(this.qrCodeAtlas, decoratedTextureAtlasSource,
-									0, 600);
-					this.qrCodeAtlas.load();
-					this.barcodeLeft = new Sprite(2, RACETRACK_WIDTH, bardcodeSize,
-							bardcodeSize, qrCodeAtlasRegion,
-							this.getVertexBufferObjectManager());
-					this.mScene.attachChild(this.barcodeLeft);
-					break;
-				default:
-					// impossible
-					break;
+			case CENTER:
+				qrCodeAtlasRegion = BitmapTextureAtlasTextureRegionFactory
+						.createFromSource(this.qrCodeAtlas,
+								decoratedTextureAtlasSource, 0, 0);
+				this.qrCodeAtlas.load();
+				this.barcodeCenter = new Sprite(CAMERA_WIDTH / 2 - bardcodeSize
+						/ 2, RACETRACK_WIDTH, bardcodeSize, bardcodeSize,
+						qrCodeAtlasRegion, this.getVertexBufferObjectManager());
+				this.mScene.attachChild(this.barcodeCenter);
+				break;
+			case TOP:
+				qrCodeAtlasRegion = BitmapTextureAtlasTextureRegionFactory
+						.createFromSource(this.qrCodeAtlas,
+								decoratedTextureAtlasSource, 0, 150);
+				this.qrCodeAtlas.load();
+				this.barcodeTop = new Sprite(CAMERA_WIDTH / 2 - bardcodeSize
+						/ 2, 2, bardcodeSize, bardcodeSize, qrCodeAtlasRegion,
+						this.getVertexBufferObjectManager());
+				this.mScene.attachChild(this.barcodeTop);
+				break;
+			case RIGHT:
+				qrCodeAtlasRegion = BitmapTextureAtlasTextureRegionFactory
+						.createFromSource(this.qrCodeAtlas,
+								decoratedTextureAtlasSource, 0, 300);
+				this.qrCodeAtlas.load();
+				this.barcodeRight = new Sprite(CAMERA_WIDTH - 2 - bardcodeSize,
+						RACETRACK_WIDTH, bardcodeSize, bardcodeSize,
+						qrCodeAtlasRegion, this.getVertexBufferObjectManager());
+				this.mScene.attachChild(this.barcodeRight);
+				break;
+			case BOTTOM:
+				qrCodeAtlasRegion = BitmapTextureAtlasTextureRegionFactory
+						.createFromSource(this.qrCodeAtlas,
+								decoratedTextureAtlasSource, 0, 450);
+				this.qrCodeAtlas.load();
+				this.barcodeBottom = new Sprite(CAMERA_WIDTH / 2 - bardcodeSize
+						/ 2, CAMERA_HEIGHT - 2 - bardcodeSize, bardcodeSize,
+						bardcodeSize, qrCodeAtlasRegion,
+						this.getVertexBufferObjectManager());
+				this.mScene.attachChild(this.barcodeBottom);
+				break;
+			case LEFT:
+				qrCodeAtlasRegion = BitmapTextureAtlasTextureRegionFactory
+						.createFromSource(this.qrCodeAtlas,
+								decoratedTextureAtlasSource, 0, 600);
+				this.qrCodeAtlas.load();
+				this.barcodeLeft = new Sprite(2, RACETRACK_WIDTH, bardcodeSize,
+						bardcodeSize, qrCodeAtlasRegion,
+						this.getVertexBufferObjectManager());
+				this.mScene.attachChild(this.barcodeLeft);
+				break;
+			default:
+				// impossible
+				break;
 
 			}
 		} catch (WriterException e) {
@@ -399,7 +433,6 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements
 		}
 	}
 
-
 	@Override
 	public void moveCar(int carId, float pX, float pY) {
 		CarView carView = this.cars.get(carId);
@@ -414,5 +447,22 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements
 		if (carView != null && carView.car != null) {
 			carView.car.setRotation(rotation);
 		}
+	}
+
+	private TextureRegion loadResource(final Context pContext,
+			final TextureManager pTextureManager, final PixelFormat pFormat,
+			final TextureOptions pOptions, final String pPath)
+			throws IOException {
+		final BitmapTexture texture = new BitmapTexture(pTextureManager,
+				new IInputStreamOpener() {
+					@Override
+					public InputStream open() throws IOException {
+						return pContext.getAssets().open(pPath);
+					}
+				}, BitmapTextureFormat.fromPixelFormat(pFormat), pOptions);
+
+		texture.load();
+
+		return TextureRegionFactory.extractFromTexture(texture);
 	}
 }
