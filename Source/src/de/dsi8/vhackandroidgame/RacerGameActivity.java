@@ -128,6 +128,8 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements IServer
 	private BitmapTextureAtlas qrCodeAtlas;
 
 	private TextureRegion qrCodeAtlasRegion;
+	
+	private VHackAndroidGameConfiguration gameConfig = new VHackAndroidGameConfiguration(this); 
 
 	// ===========================================================
 	// Constructors
@@ -149,7 +151,7 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements IServer
 	protected void onStart() {
 		super.onStart();
 		
-		this.serverLogic = new ServerLogic(this);
+		this.serverLogic = new ServerLogic(gameConfig,this);
 		this.serverLogic.start();
 	}
 	
@@ -247,7 +249,7 @@ public class RacerGameActivity extends SimpleBaseGameActivity implements IServer
 
 
 	private void createBarcode() {
-		ConnectionParameter param = VHackAndroidGameConfiguration.getConnectionDetails();
+		ConnectionParameter param = gameConfig.getConnectionDetails();
 		MultiFormatWriter writer = new MultiFormatWriter();
 		try {
 			final BitMatrix bitmatrix = writer.encode(param.toConnectionURL(), BarcodeFormat.QR_CODE, 150, 150);

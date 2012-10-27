@@ -22,7 +22,6 @@ package de.dsi8.vhackandroidgame;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.net.Socket;
 
 import org.andengine.engine.camera.Camera;
 import org.andengine.engine.camera.hud.controls.AnalogOnScreenControl;
@@ -39,16 +38,16 @@ import org.andengine.opengl.texture.atlas.bitmap.BitmapTextureAtlasTextureRegion
 import org.andengine.opengl.texture.region.ITextureRegion;
 import org.andengine.ui.activity.SimpleBaseGameActivity;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.opengl.GLES20;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Vibrator;
 import android.util.Log;
 import de.dsi8.dsi8acl.common.utils.AsyncTaskResult;
-import de.dsi8.dsi8acl.connection.contract.IConnector;
 import de.dsi8.dsi8acl.connection.contract.IRemoteConnection;
-import de.dsi8.dsi8acl.connection.contract.ISocket;
 import de.dsi8.dsi8acl.connection.impl.SocketConnection;
 import de.dsi8.dsi8acl.connection.model.ConnectionParameter;
 import de.dsi8.dsi8acl.exception.ConnectionProblemException;
@@ -84,12 +83,13 @@ public class RemoteActivity extends SimpleBaseGameActivity implements IClientLog
 	
 	private ConnectionParameter connectionParameter;
 	private ConnectTask connectTask;
+	private VHackAndroidGameConfiguration gameConfig = new VHackAndroidGameConfiguration(this);
+	
+	private AlertDialog sameNetworkDialog;
 	
 	@Override
 	protected void onCreate(Bundle pSavedInstanceState) {
 		super.onCreate(pSavedInstanceState);
-		
-		VHackAndroidGameConfiguration.registerProtocols();
 		
 		try {
 			connectionParameter = new ConnectionParameter(getIntent().getData().toString());
@@ -104,8 +104,47 @@ public class RemoteActivity extends SimpleBaseGameActivity implements IClientLog
 		super.onStart();
 		Log.i(LOG_TAG, "onStart");
 		
+		if(gameConfig.getWiFiChecker().inSameNetwork(connectionParameter)) {
+			connect();
+		} else {
+			if(sameNetworkDialog == null) {
+				sameNetworkDialog = buildSameNetworkAlertDialog();
+				sameNetworkDialog.show();
+			}
+		}
+	}
+	
+	private AlertDialog buildSameNetworkAlertDialog() {
+		AlertDialog.Builder builder = new AlertDialog.Builder(this);
+		builder.setTitle(R.string.same_network_dialog_title);
+		builder.setMessage(R.string.same_network_dialog_msg);
+		// Add the buttons
+		builder.setPositiveButton(android.R.string.yes, dialogClickListener);
+		builder.setNegativeButton(android.R.string.no, dialogClickListener);
+		
+		return builder.create();
+	}
+	
+	DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
+	    @Override
+	    public void onClick(DialogInterface dialog, int which) {
+	    	sameNetworkDialog = null;
+	    	
+	        switch (which){
+	        case DialogInterface.BUTTON_POSITIVE:
+	            connect();
+	            break;
+
+	        case DialogInterface.BUTTON_NEGATIVE:
+	            finish();
+	            break;
+	        }
+	    }
+	};
+		
+	private void connect() {
 		connectTask = new ConnectTask();
-		connectTask.execute((Object)null);
+		connectTask.execute((Object)null);		
 	}
 	
 	@Override

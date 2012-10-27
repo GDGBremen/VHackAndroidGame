@@ -59,13 +59,16 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener {
 	 */
 	private final IServerCommunication communication;
 	
+	private final VHackAndroidGameConfiguration gameConfig;
+	
 	/**
 	 * Creates the logic.
 	 * @param listener	Interface to the {@link RacerGameActivity}.	
 	 */
-	public ServerLogic(IServerLogicListener listener) {
+	public ServerLogic(VHackAndroidGameConfiguration gameConfig, IServerLogicListener listener) {
 		this.listener = listener;
-		IConnector connector = VHackAndroidGameConfiguration.getProtocol().createConnector();
+		this.gameConfig = gameConfig;
+		IConnector connector = gameConfig.getProtocol().createConnector();
 		this.communication = new ServerCommunication(this, connector, 20);
 	}
 	
