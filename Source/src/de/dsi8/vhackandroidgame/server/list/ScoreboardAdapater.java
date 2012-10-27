@@ -1,9 +1,5 @@
 package de.dsi8.vhackandroidgame.server.list;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
 import android.content.Context;
 import android.graphics.Color;
 import android.view.LayoutInflater;
@@ -14,13 +10,18 @@ import android.widget.TextView;
 import de.dsi8.vhackandroidgame.R;
 import de.dsi8.vhackandroidgame.server.model.Player;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 public class ScoreboardAdapater extends BaseAdapter {
 	private List<Player>	players;
 	private LayoutInflater	inflater;
 	private Context			context;
 	private Player			dirty;
+    private static final long ROTATE_DURATION =400 ; //in milliseconds
 
-	/**
+    /**
 	 * @param context
 	 */
 	public ScoreboardAdapater(Context context) {
@@ -126,6 +127,9 @@ public class ScoreboardAdapater extends BaseAdapter {
 			holder.container
 					.setBackgroundColor(getColorForPlayer(player, false));
 			holder.border.setBackgroundColor(getColorForPlayer(player, true));
+            rotateAnimation(player,holder.container);
+            checkTextAnimations(player,holder);
+
 		}
 
 		return convertView;
@@ -157,6 +161,42 @@ public class ScoreboardAdapater extends BaseAdapter {
 			return Color.TRANSPARENT;
 		}
 	}
+
+    public void rotateAnimation(final Player player,final View view){
+        if(player==this.dirty){
+            view.animate().rotationY(360f).setDuration(ROTATE_DURATION)
+                    .withEndAction(new Runnable() {
+                        @Override
+                        public void run() {
+                            view.setRotationY(0);
+                        }
+                    });
+        }
+    }
+
+    public void setTextSizeAnimation(final Player player, final TextView textView,final long delay) {
+        if(player==this.dirty){
+            final float size=textView.getTextSize();
+           textView.animate().scaleX(2).scaleY(2).withEndAction(new Runnable() {
+               @Override
+               public void run() {
+                   textView.setScaleX(1);
+                   textView.setScaleY(1);
+               }
+           }).setStartDelay(delay);
+        }
+    }
+
+    public void checkTextAnimations(final Player player,final  ViewHolder holder){
+        if(player!=this.dirty){
+            return;
+        }
+        setTextSizeAnimation(player,holder.checkpoints,ROTATE_DURATION+20);
+
+        if(player.hasFinishedNewRound()){
+            setTextSizeAnimation(player,holder.rounds,ROTATE_DURATION+40);
+        }
+    }
 
 	/**
 	 * This method gets triggered whenever a player passes a checkpoint. It
