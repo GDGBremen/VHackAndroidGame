@@ -16,6 +16,10 @@ import de.dsi8.vhackandroidgame.logic.impl.VHackAndroidGameConfiguration;
 import de.dsi8.vhackandroidgame.server.list.ScoreboardAdapater;
 import de.dsi8.vhackandroidgame.server.model.Player;
 
+/**
+ * @author tmesserschmidt
+ * 
+ */
 public class ServerGameActivity extends ListActivity implements
 		IServerLogicListener {
 	private ListView						listView;
@@ -40,7 +44,6 @@ public class ServerGameActivity extends ListActivity implements
 																});
 
 	private IServerLogic					serverLogic;
-
 	private VHackAndroidGameConfiguration	gameConfig;
 
 	@Override
@@ -53,7 +56,7 @@ public class ServerGameActivity extends ListActivity implements
 		this.gameConfig = new VHackAndroidGameConfiguration(this);
 
 		if (BuildConfig.DEBUG) {
-			createFakePlayers();
+			// createFakePlayers();
 		}
 	}
 
