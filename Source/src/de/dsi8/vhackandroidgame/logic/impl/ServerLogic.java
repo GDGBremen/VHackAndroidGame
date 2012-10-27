@@ -34,6 +34,7 @@ import org.andengine.extension.physics.box2d.PhysicsWorld;
 import org.andengine.opengl.vbo.IVertexBufferObject;
 import org.andengine.opengl.vbo.VertexBufferObjectManager;
 
+import android.R.id;
 import android.util.Log;
 
 import com.badlogic.gdx.math.Vector2;
@@ -56,6 +57,7 @@ import de.dsi8.dsi8acl.connection.contract.IConnector;
 import de.dsi8.dsi8acl.connection.impl.SocketConnection;
 import de.dsi8.dsi8acl.connection.impl.TCPSocketConnector;
 import de.dsi8.dsi8acl.connection.model.ConnectionParameter;
+import de.dsi8.dsi8acl.connection.model.Message;
 import de.dsi8.dsi8acl.exception.ConnectionProblemException;
 import de.dsi8.dsi8acl.exception.InvalidMessageException;
 import de.dsi8.vhackandroidgame.RacerGameActivity;
@@ -96,6 +98,7 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener, 
 	 */
 	private final IServerCommunication communication;
 	
+	private final VHackAndroidGameConfiguration gameConfig;
 	private final FixtureDef carFixtureDef = PhysicsFactory.createFixtureDef(1, 0.5f, 0.5f);
 
 
@@ -127,20 +130,12 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener, 
 	 * Creates the logic.
 	 * @param listener	Interface to the {@link RacerGameActivity}.	
 	 */
-	public ServerLogic(IServerLogicListener listener, IRemoteConnection presentationConnection) {
+	public ServerLogic(VHackAndroidGameConfiguration gameConfig, IServerLogicListener listener) {
 		this.listener = listener;
-		IConnector connector = VHackAndroidGameConfiguration.getProtocol().createConnector();
+		this.gameConfig = gameConfig;
+		IConnector connector = gameConfig.getProtocol().createConnector();
 		this.communication = new ServerCommunication(this, connector, 20);
 		
-		// XXX Listener set to null
-		CommunicationPartner partner = new CommunicationPartner(null, presentationConnection);
-		partner.registerMessageHandler(new AbstractMessageHandler<GameModeMessage>() {
-			@Override
-			public void handleMessage(CommunicationPartner partner, GameModeMessage message) throws InvalidMessageException {
-
-			}
-		});
-		newPresentationPartner(partner);
 	}
 	
 	/**
@@ -195,7 +190,7 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener, 
 		final float ROTATION = 0;
 		
 		// TODO make network-magic to the rectangle
-		Rectangle rectangle = new NetworkRectangle(rPartner.id, this.presentationPartner.values(), PX, PY, RacerGameActivity.CAR_SIZE, RacerGameActivity.CAR_SIZE);
+		Rectangle rectangle = new NetworkRectangle(rPartner.id, this, PX, PY, RacerGameActivity.CAR_SIZE, RacerGameActivity.CAR_SIZE);
 		
 		rPartner.body = PhysicsFactory.createBoxBody(this.mPhysicsWorld, rectangle, BodyType.DynamicBody, carFixtureDef);
 		
@@ -204,15 +199,13 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener, 
 		
 		this.remotePartner.put(rPartner.id, rPartner);
 		
-		for (PresentationPartner p : this.presentationPartner.values()) {
 			CarMessage message = new CarMessage();
 			message.positionX = PX;
 			message.positionY = PY;
 			message.rotation = ROTATION;
 			message.action = ACTION.ADD;
 			message.id = rPartner.id;
-			p.communicationPartner.sendMessage(message);
-		}
+			sendMessageToAllPresentationPartner(message);
 	}
 	
 	/**
@@ -227,17 +220,30 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener, 
 		this.presentationPartner.put(pPartner.id, pPartner);
 		
 		this.numPresentationPartner++;
+		
+		test();
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void connectionLost(ICommunicationPartner partner,
-			ConnectionProblemException ex) {
+	public void connectionLost(ICommunicationPartner partner, ConnectionProblemException ex) {
 		Log.i(LOG_TAG, "connectionLost", ex);
-		//this.listener.removeCar(partner.getId());
-		// TODO send removeCar to the GamePresentationLogic 
+		int idOfRemotePartner = getIdOfRemotePartner(partner);
+		RemotePartner rPartner = this.remotePartner.get(idOfRemotePartner);
+		
+		this.mPhysicsWorld.unregisterPhysicsConnector(rPartner.physicsConnector);
+		CarMessage carMessage = new CarMessage();
+		carMessage.action = ACTION.REMOVE;
+		carMessage.id = rPartner.id;
+		sendMessageToAllPresentationPartner(carMessage);
+		
+		rPartner.body = null;
+		rPartner.physicsConnector = null;
+		rPartner.communicationPartner.close();
+		rPartner.communicationPartner = null;
+		this.remotePartner.remove(rPartner);
 	}
 
 	/**
@@ -262,7 +268,7 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener, 
 	 * @param partner	the remote partner is to be returned to the id
 	 * @return			id of the remote partner
 	 */
-	private int getIdOfRemotePartner(CommunicationPartner partner) {
+	private int getIdOfRemotePartner(ICommunicationPartner partner) {
 		Iterator<Entry<Integer, RemotePartner>> iterator = this.remotePartner.entrySet().iterator();
 		while (iterator.hasNext()) {
 			Entry<Integer, RemotePartner> next = iterator.next();
@@ -286,13 +292,9 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener, 
 		
 		CommunicationPartner partner = this.presentationPartner.get(0).communicationPartner;
 		
-		ConnectionParameter connectionDetails = VHackAndroidGameConfiguration.getConnectionDetails();
+		ConnectionParameter connectionDetails = gameConfig.getConnectionDetails();
 		
 		partner.sendMessage(new QRCodeMessage(connectionDetails.toConnectionURL(), QRCodePosition.CENTER));
-		partner.sendMessage(new QRCodeMessage("hallo TOP", QRCodePosition.TOP));
-		partner.sendMessage(new QRCodeMessage("hallo RIGHT", QRCodePosition.RIGHT));
-		partner.sendMessage(new QRCodeMessage("hallo BOTTOM", QRCodePosition.BOTTOM));
-		partner.sendMessage(new QRCodeMessage("hallo LEFT", QRCodePosition.LEFT));
 		partner.sendMessage(new BorderMessage(true, true, true, true));
 	}
 	
@@ -353,5 +355,11 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener, 
 	@Override
 	public PhysicsWorld getPhysicsWorld() {
 		return this.mPhysicsWorld;
+	}
+	
+	public void sendMessageToAllPresentationPartner(Message message) {
+		for (PresentationPartner p : this.presentationPartner.values()) {
+			p.communicationPartner.sendMessage(message);
+		}
 	}
 }

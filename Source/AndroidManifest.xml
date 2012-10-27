@@ -4,7 +4,8 @@
     android:versionName="1.0" >
     
     <uses-permission android:name="android.permission.INTERNET" />
-     <uses-permission android:name="android.permission.VIBRATE"/>
+    <uses-permission android:name="android.permission.VIBRATE"/>
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     
 
     <uses-sdk
@@ -17,7 +18,7 @@
         android:theme="@style/AppTheme" >
         <activity
             android:name=".RacerGameActivity" 
-            android:label="@string/title_activity_server">
+            android:label="@string/title_activity_tv">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -34,9 +35,14 @@
 				<data android:host="vhackandroidgame.dsi8.de" android:pathPrefix="/connect"  android:scheme="http"></data>
 			</intent-filter>
         </activity>
-        <activity android:name=".ServerGameActivity">
+        
+        <activity
+            android:name=".ServerGameActivity"
+            android:label="@string/title_activity_server">
             <intent-filter>
-            <action android:name="android.intent.action.MAIN" />
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
     </application>

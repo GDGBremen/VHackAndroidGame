@@ -7,6 +7,10 @@ import android.os.Handler;
 import android.os.Message;
 import android.view.ContextThemeWrapper;
 import android.widget.ListView;
+import de.dsi8.vhackandroidgame.logic.contract.IServerLogic;
+import de.dsi8.vhackandroidgame.logic.contract.IServerLogicListener;
+import de.dsi8.vhackandroidgame.logic.impl.ServerLogic;
+import de.dsi8.vhackandroidgame.logic.impl.VHackAndroidGameConfiguration;
 import de.dsi8.vhackandroidgame.server.list.ScoreboardAdapater;
 import de.dsi8.vhackandroidgame.server.model.Player;
 
@@ -14,10 +18,11 @@ import java.util.ArrayList;
 import java.util.Random;
 
 
-public class ServerGameActivity extends ListActivity {
+public class ServerGameActivity extends ListActivity implements IServerLogicListener {
 	private ListView			listView;
 	private ScoreboardAdapater	adapter;
     private ArrayList<Player> mPlayers;
+
 
     Handler mHandler=new Handler(new Handler.Callback() {
         @Override
@@ -29,7 +34,11 @@ public class ServerGameActivity extends ListActivity {
         }
     });
 
-    @Override
+	private IServerLogic serverLogic;
+	
+	private VHackAndroidGameConfiguration gameConfig;
+	
+	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_scoreboard);
@@ -44,6 +53,18 @@ public class ServerGameActivity extends ListActivity {
         if(BuildConfig.DEBUG){
             createFakePlayers();
         }
+		
+		this.gameConfig = new VHackAndroidGameConfiguration(this);
+	}
+	
+	
+	@Override
+	protected void onStart() {
+		super.onStart();
+		
+		
+		this.serverLogic = new ServerLogic(this.gameConfig, this);
+		this.serverLogic.start();
 	}
 
     private void createFakePlayers() {
