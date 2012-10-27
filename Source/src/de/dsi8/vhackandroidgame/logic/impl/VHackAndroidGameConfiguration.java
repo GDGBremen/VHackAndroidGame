@@ -15,7 +15,7 @@ public class VHackAndroidGameConfiguration {
 	private final static TCPProtocol protocol;
 	
 	private final static String DEFAULT_PASSWORD = "";
-	private final static String URL_BASE = "http://androidrccar.sven.to/connect/";
+	private final static String URL_BASE = "http://vhackandroidgame.dsi8.de/connect/";
 	private final static int PORT = 4254;
 	
 	static {
