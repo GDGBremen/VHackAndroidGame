@@ -43,6 +43,7 @@ import com.badlogic.gdx.physics.box2d.BodyDef.BodyType;
 import com.badlogic.gdx.physics.box2d.Contact;
 import com.badlogic.gdx.physics.box2d.ContactImpulse;
 import com.badlogic.gdx.physics.box2d.ContactListener;
+import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.Manifold;
 
@@ -143,7 +144,6 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener, 
 		}
 		
 		new UpdateThread().start();
-		
 	}
 	
 	/**
@@ -323,17 +323,23 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener, 
 		int firstCarId = getCarIdFromBody(contact.getFixtureA().getBody());
 		int secondCarId = getCarIdFromBody(contact.getFixtureB().getBody());
 		
-		if (secondCarId > -1 && firstCarId > -1) {
-			collisionDetected(secondCarId, CollisionType.CAR);
-			collisionDetected(firstCarId, CollisionType.CAR);
-		}
 		if (firstCarId > -1) {
-			collisionDetected(firstCarId, CollisionType.WALL);
+			collisionDetected(firstCarId, getCollisionType(contact.getFixtureB()));
 		}
 		if (secondCarId > -1) {
-			collisionDetected(secondCarId, CollisionType.WALL);
+			collisionDetected(secondCarId, getCollisionType(contact.getFixtureA()));
 		}
-		// TODO: Add Bumper!
+	}
+	
+	public CollisionType getCollisionType(Fixture fixture) {
+		int carId = getCarIdFromBody(fixture.getBody());
+		if(carId > -1) {
+			return CollisionType.CAR;
+		} else if(fixture.getRestitution() > 0) {
+			return CollisionType.BUMPER;
+		} else {
+			return CollisionType.WALL;
+		}
 	}
 		
 
