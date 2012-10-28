@@ -241,6 +241,7 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener, 
 		int idOfRemotePartner = getIdOfRemotePartner(partner);
 		RemotePartner rPartner = this.remotePartner.get(idOfRemotePartner);
 		
+		
 		if (rPartner != null) {
 			this.mPhysicsWorld.unregisterPhysicsConnector(rPartner.physicsConnector);
 			CarMessage carMessage = new CarMessage();
@@ -252,8 +253,16 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener, 
 			rPartner.physicsConnector = null;
 			rPartner.communicationPartner.close();
 			rPartner.communicationPartner = null;
-			this.remotePartner.remove(rPartner);
+			this.remotePartner.remove(rPartner.id);
 			this.listener.removePlayer(rPartner.id);
+		}
+		
+		int idOfPresentationPartner = getIdOfPresentationPartner(partner);
+		PresentationPartner pPartner = this.presentationPartner.get(idOfPresentationPartner);
+		if (pPartner != null) {
+			pPartner.communicationPartner.close();
+			pPartner.communicationPartner = null;
+			this.presentationPartner.remove(pPartner.id);
 		}
 	}
 
@@ -282,6 +291,22 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener, 
 		Iterator<Entry<Integer, RemotePartner>> iterator = this.remotePartner.entrySet().iterator();
 		while (iterator.hasNext()) {
 			Entry<Integer, RemotePartner> next = iterator.next();
+			if (partner == next.getValue().communicationPartner) {
+				return next.getKey().intValue();
+			}
+		}
+		return -1;
+	}
+	
+	/**
+	 * Return's the id of an remote partner.
+	 * @param partner	the remote partner is to be returned to the id
+	 * @return			id of the remote partner
+	 */
+	private int getIdOfPresentationPartner(ICommunicationPartner partner) {
+		Iterator<Entry<Integer, PresentationPartner>> iterator = this.presentationPartner.entrySet().iterator();
+		while (iterator.hasNext()) {
+			Entry<Integer, PresentationPartner> next = iterator.next();
 			if (partner == next.getValue().communicationPartner) {
 				return next.getKey().intValue();
 			}
