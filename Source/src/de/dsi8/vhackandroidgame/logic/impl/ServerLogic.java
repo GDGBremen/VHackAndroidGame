@@ -130,7 +130,7 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener,
 	 */
 	private int numPresentationPartner = 0;
 
-	private boolean qrCodeVisible = false;
+	private boolean qrCodeVisible = true;
 
 	private UDPServer udpServer = new UDPServer();
 
@@ -175,6 +175,8 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener,
 				PhysicsFactory.createFixtureDef(0, 0, 0, true));
 		secondCheckpointBody.setUserData("second");
 
+		mPhysicsWorld.setContactListener(this);
+		
 		new UpdateThread().start();
 	}
 
@@ -263,8 +265,8 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener,
 		rPartner.communicationPartner = partner;
 		rPartner.id = this.numRemotePartner++;
 
-		final float PX = 20;
-		final float PY = 20;
+		final float PX = 230;
+		final float PY = 280;
 		final float ROTATION = 0;
 
 		// TODO make network-magic to the rectangle
@@ -358,7 +360,9 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener,
 	 */
 	@Override
 	public void collisionDetected(int carId, CollisionType collidesWith) {
-		this.communication.sendMessage(carId, new CollisionMessage(collidesWith));
+		this.remotePartner.get(carId)
+						  .communicationPartner
+						  .sendMessage(new CollisionMessage(collidesWith));
 	}
 
 	/**
