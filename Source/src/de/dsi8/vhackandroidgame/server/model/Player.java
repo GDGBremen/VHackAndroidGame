@@ -44,7 +44,7 @@ public class Player implements Comparable<Player> {
 	 */
 	public void incrementCheckpointsPassed() {
 		this.checkpointsPassed++;
-		if ((this.checkpointsPassed % 4) == 0) {
+		if ((this.checkpointsPassed % 3) == 0) {
 
 			this.roundsFinished++;
             this.finishedNewRound=true;
