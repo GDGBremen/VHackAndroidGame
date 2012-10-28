@@ -21,12 +21,8 @@
 package de.dsi8.vhackandroidgame;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
 
 import org.andengine.engine.camera.Camera;
-import org.andengine.engine.camera.hud.controls.AnalogOnScreenControl;
-import org.andengine.engine.camera.hud.controls.AnalogOnScreenControl.IAnalogOnScreenControlListener;
-import org.andengine.engine.camera.hud.controls.BaseOnScreenControl;
 import org.andengine.engine.options.EngineOptions;
 import org.andengine.engine.options.ScreenOrientation;
 import org.andengine.engine.options.resolutionpolicy.RatioResolutionPolicy;
@@ -41,106 +37,101 @@ import org.andengine.opengl.texture.atlas.bitmap.BitmapTextureAtlas;
 import org.andengine.opengl.texture.atlas.bitmap.BitmapTextureAtlasTextureRegionFactory;
 import org.andengine.opengl.texture.region.ITextureRegion;
 import org.andengine.opengl.vbo.VertexBufferObjectManager;
-import org.andengine.ui.activity.SimpleBaseGameActivity;
 import org.andengine.util.HorizontalAlign;
 import org.andengine.util.color.Color;
 
-import com.immersion.uhl.Launcher;
-
-import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.graphics.Typeface;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.opengl.GLES20;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.Vibrator;
 import android.util.Log;
+
+import com.immersion.uhl.Launcher;
+
 import de.dsi8.dsi8acl.connection.impl.SocketConnection;
-import de.dsi8.dsi8acl.connection.model.ConnectionParameter;
 import de.dsi8.dsi8acl.exception.ConnectionProblemException;
 import de.dsi8.vhackandroidgame.communication.model.CollisionType;
 import de.dsi8.vhackandroidgame.logic.contract.IRemoteLogic;
 import de.dsi8.vhackandroidgame.logic.contract.IRemoteView;
 import de.dsi8.vhackandroidgame.logic.impl.RemoteLogic;
-import de.dsi8.vhackandroidgame.logic.impl.VHackAndroidGameConfiguration;
 
-public class RemoteActivity extends AbstractConnectionActivity implements IRemoteView, SensorEventListener {
+public class RemoteActivity extends AbstractConnectionActivity implements
+		IRemoteView, SensorEventListener {
 
-	private IRemoteLogic clientLogic;
-	
-	private static final int CAMERA_WIDTH = 320;
-	
-	private static final int CAMERA_HEIGHT = 192;
-	
-	private BitmapTextureAtlas mOnScreenControlTexture;
-	
-	private Launcher mHapticLauncher;
+	private IRemoteLogic		clientLogic;
 
-	
-	private static final String LOG_TAG = RemoteActivity.class.getSimpleName();
-	
+	private static final int	CAMERA_WIDTH	= 320;
+
+	private static final int	CAMERA_HEIGHT	= 192;
+
+	private BitmapTextureAtlas	mOnScreenControlTexture;
+
+	private Launcher			mHapticLauncher;
+
+	private static final String	LOG_TAG			= RemoteActivity.class
+														.getSimpleName();
+
 	/*
-	  Wait until this before sending the next
+	 * Wait until this before sending the next
 	 */
-	private long nextSendl;
+	private long				nextSendl;
 
-	private Camera mCamera;
-	private ITextureRegion mOnScreenControlBaseTextureRegion;
-	
-	private ITextureRegion mOnScreenControlKnobTextureRegion;
-	
-	private Scene mScene;
-	private Vibrator mVibrator;
+	private Camera				mCamera;
+	private ITextureRegion		mOnScreenControlBaseTextureRegion;
 
-	private SensorManager sensorManager;
+	private ITextureRegion		mOnScreenControlKnobTextureRegion;
 
-	private BitmapTextureAtlas mFontTexture;
+	private Scene				mScene;
+	private Vibrator			mVibrator;
 
-	private Font mFont;
+	private SensorManager		sensorManager;
 
-	private boolean enableControls;
-	
+	private BitmapTextureAtlas	mFontTexture;
+
+	private Font				mFont;
+
+	private boolean				enableControls;
+
 	@Override
 	protected void onCreate(Bundle pSavedInstanceState) {
 		super.onCreate(pSavedInstanceState);
-		
-        sensorManager = (SensorManager) this
-                .getSystemService(this.SENSOR_SERVICE);
-        sensorManager.registerListener(this, sensorManager
-                .getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
-                sensorManager.SENSOR_DELAY_GAME);
-		
+
+		sensorManager = (SensorManager) this
+				.getSystemService(this.SENSOR_SERVICE);
+		sensorManager.registerListener(this,
+				sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
+				sensorManager.SENSOR_DELAY_GAME);
+
 		try {
 			mHapticLauncher = new Launcher(this);
-		} catch(RuntimeException ex) {
+		} catch (RuntimeException ex) {
 			Log.v(LOG_TAG, "No Haptic supported", ex);
 		}
 		mVibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 	}
-	
+
 	@Override
 	protected void onPause() {
 		super.onPause();
-		
+
 		try {
-			if(mHapticLauncher != null) {
+			if (mHapticLauncher != null) {
 				mHapticLauncher.stop();
 			}
-		} catch(RuntimeException ex) {
+		} catch (RuntimeException ex) {
 			Log.v(LOG_TAG, "No Haptic supported", ex);
 		}
 	}
-	
+
 	@Override
 	protected void onStop() {
 		super.onStop();
-		
-		if(clientLogic != null) {
+
+		if (clientLogic != null) {
 			try {
 				clientLogic.close();
 			} catch (IOException e) {
@@ -153,31 +144,39 @@ public class RemoteActivity extends AbstractConnectionActivity implements IRemot
 	protected void onConnected(SocketConnection connection) {
 		this.clientLogic = new RemoteLogic(RemoteActivity.this, connection);
 	}
-	
-	
+
 	/**
 	 * {@inheritDoc}
 	 */
-    @Override
+	@Override
 	public EngineOptions onCreateEngineOptions() {
 		this.mCamera = new Camera(0, 0, CAMERA_WIDTH, CAMERA_HEIGHT);
 
-		return new EngineOptions(true, ScreenOrientation.LANDSCAPE_FIXED, new RatioResolutionPolicy(CAMERA_WIDTH, CAMERA_HEIGHT), this.mCamera);
+		return new EngineOptions(true, ScreenOrientation.LANDSCAPE_FIXED,
+				new RatioResolutionPolicy(CAMERA_WIDTH, CAMERA_HEIGHT),
+				this.mCamera);
 	}
-    
-    /**
-     * {@inheritDoc}
-     */
+
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	protected void onCreateResources() {
 		BitmapTextureAtlasTextureRegionFactory.setAssetBasePath("gfx/");
-		
-		this.mFont = FontFactory.create(this.getFontManager(), this.getTextureManager(), 256, 256, Typeface.create(Typeface.DEFAULT, Typeface.BOLD), 32);
+
+		this.mFont = FontFactory.create(this.getFontManager(),
+				this.getTextureManager(), 256, 256,
+				Typeface.create(Typeface.DEFAULT, Typeface.BOLD), 32);
 		this.mFont.load();
-		
-		this.mOnScreenControlTexture = new BitmapTextureAtlas(this.getTextureManager(), 256, 128, TextureOptions.BILINEAR);
-		this.mOnScreenControlBaseTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mOnScreenControlTexture, this, "onscreen_control_base.png", 0, 0);
-		this.mOnScreenControlKnobTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mOnScreenControlTexture, this, "onscreen_control_knob.png", 128, 0);
+
+		this.mOnScreenControlTexture = new BitmapTextureAtlas(
+				this.getTextureManager(), 256, 128, TextureOptions.BILINEAR);
+		this.mOnScreenControlBaseTextureRegion = BitmapTextureAtlasTextureRegionFactory
+				.createFromAsset(this.mOnScreenControlTexture, this,
+						"onscreen_control_base.png", 0, 0);
+		this.mOnScreenControlKnobTextureRegion = BitmapTextureAtlasTextureRegionFactory
+				.createFromAsset(this.mOnScreenControlTexture, this,
+						"onscreen_control_knob.png", 128, 0);
 		this.mOnScreenControlTexture.load();
 	}
 
@@ -202,8 +201,8 @@ public class RemoteActivity extends AbstractConnectionActivity implements IRemot
 	@Override
 	public void collisionDetected(CollisionType collidesWith) {
 		try {
-			if(mHapticLauncher != null) {
-				switch(collidesWith) {
+			if (mHapticLauncher != null) {
+				switch (collidesWith) {
 					case CAR:
 						mHapticLauncher.play(Launcher.IMPACT_METAL_100);
 						break;
@@ -217,11 +216,10 @@ public class RemoteActivity extends AbstractConnectionActivity implements IRemot
 			} else {
 				mVibrator.vibrate(200);
 			}
-		} catch(RuntimeException ex) {
+		} catch (RuntimeException ex) {
 			Log.v(LOG_TAG, "No Haptic supported", ex);
 			mVibrator.vibrate(200);
 		}
-		
 
 	}
 
@@ -232,17 +230,70 @@ public class RemoteActivity extends AbstractConnectionActivity implements IRemot
 
 	@Override
 	public void onSensorChanged(SensorEvent event) {
-        synchronized (this) {
-            switch (event.sensor.getType()) {
-            case Sensor.TYPE_ACCELEROMETER:
-                    int accellerometerSpeedX = (int) event.values[1];
-                    int accellerometerSpeedY = (int) event.values[0];
-                    if(enableControls) {
-                    	this.clientLogic.driveCar(accellerometerSpeedX, accellerometerSpeedY);
-                    }
-                    break;
-            }
-        }
+		synchronized (this) {
+			switch (event.sensor.getType()) {
+				case Sensor.TYPE_ACCELEROMETER:
+					int accellerometerSpeedX = (int) event.values[1];
+					int accellerometerSpeedY = (int) event.values[0];
+					onAccelerometerChanged(accellerometerSpeedX,
+							accellerometerSpeedY);
+					/*
+					 * if (enableControls) {
+					 * this.clientLogic.driveCar(accellerometerSpeedX,
+					 * accellerometerSpeedY); }
+					 */
+					break;
+			}
+		}
+	}
+
+	private static final boolean	ADAPTIVE_ACCEL_FILTER	= true;
+	float							lastAccel[]				= new float[2];
+	float							accelFilter[]			= new float[2];
+
+	public void onAccelerometerChanged(float accelX, float accelY) {
+		// high pass filter
+		float updateFreq = 30; // match this to your update speed
+		float cutOffFreq = 0.9f;
+		float RC = 1.0f / cutOffFreq;
+		float dt = 1.0f / updateFreq;
+		float filterConstant = RC / (dt + RC);
+		float alpha = filterConstant;
+		float kAccelerometerMinStep = 0.033f;
+		float kAccelerometerNoiseAttenuation = 3.0f;
+
+		if (ADAPTIVE_ACCEL_FILTER) {
+			float d = (float) clamp(
+					Math.abs(norm(accelFilter[0], accelFilter[1])
+							- norm(accelX, accelY))
+							/ kAccelerometerMinStep - 1.0f, 0.0f, 1.0f);
+			alpha = d * filterConstant / kAccelerometerNoiseAttenuation
+					+ (1.0f - d) * filterConstant;
+		}
+
+		accelFilter[0] = (float) (alpha * (accelFilter[0] + accelX - lastAccel[0]));
+		accelFilter[1] = (float) (alpha * (accelFilter[1] + accelY - lastAccel[1]));
+
+		lastAccel[0] = accelX;
+		lastAccel[1] = accelY;
+
+		if (enableControls) {
+			this.clientLogic.driveCar(accelFilter[0], accelFilter[1]);
+		}
+	}
+
+	private double norm(float x, float y) {
+		return Math.sqrt(x * x + y * y);
+	}
+
+	private double clamp(double v, double min, double max) {
+		if (v > max) {
+			return max;
+		} else if (v < min) {
+			return min;
+		} else {
+			return v;
+		}
 	}
 
 	@Override
@@ -250,10 +301,13 @@ public class RemoteActivity extends AbstractConnectionActivity implements IRemot
 		enableControls = true;
 		mScene.setColor(color);
 		mScene.setBackground(new Background(color));
-		final VertexBufferObjectManager vertexBufferObjectManager = this.getVertexBufferObjectManager();
-		final Text centerText = new Text(0, 0, this.mFont, name, new TextOptions(HorizontalAlign.CENTER), vertexBufferObjectManager);
+		final VertexBufferObjectManager vertexBufferObjectManager = this
+				.getVertexBufferObjectManager();
+		final Text centerText = new Text(0, 0, this.mFont, name,
+				new TextOptions(HorizontalAlign.CENTER),
+				vertexBufferObjectManager);
 
 		mScene.attachChild(centerText);
 	}
-	
+
 }
