@@ -167,7 +167,7 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener,
 		float height = 120;
 
 		Body goalCheckpointBody = createBoxBody(
-				this.serverLogic.getPhysicsWorld(), x, y, width, height, 0,
+				this.mPhysicsWorld, x, y, width, height, 0,
 				BodyType.StaticBody,
 				PhysicsFactory.createFixtureDef(0, 0, 0, true));
 		goalCheckpointBody.setUserData("goal");
@@ -178,7 +178,7 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener,
 		height = 55;
 
 		Body firstCheckpointBody = createBoxBody(
-				this.serverLogic.getPhysicsWorld(), x, y, width, height, 0,
+				this.mPhysicsWorld, x, y, width, height, 0,
 				BodyType.StaticBody,
 				PhysicsFactory.createFixtureDef(0, 0, 0, true));
 		firstCheckpointBody.setUserData("first");
@@ -189,7 +189,7 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener,
 		height = 150;
 
 		Body secondCheckpointBody = createBoxBody(
-				this.serverLogic.getPhysicsWorld(), x, y, width, height, 0,
+				this.mPhysicsWorld, x, y, width, height, 0,
 				BodyType.StaticBody,
 				PhysicsFactory.createFixtureDef(0, 0, 0, true));
 		secondCheckpointBody.setUserData("second");
