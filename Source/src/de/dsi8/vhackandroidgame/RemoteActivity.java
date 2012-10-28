@@ -189,42 +189,7 @@ public class RemoteActivity extends AbstractConnectionActivity implements IRemot
 		this.mScene = new Scene();
 		this.mScene.setBackground(new Background(0, 0, 0));
 
-		this.initOnScreenControls();
-
 		return this.mScene;
-	}
-	
-	
-	
-	/**
-	 * Initialize the On-Screen-Controls.
-	 */
-	private void initOnScreenControls() {
-		final AnalogOnScreenControl analogOnScreenControl = new AnalogOnScreenControl(CAMERA_WIDTH - this.mOnScreenControlBaseTextureRegion.getWidth(), CAMERA_HEIGHT - this.mOnScreenControlBaseTextureRegion.getHeight(), this.mCamera, this.mOnScreenControlBaseTextureRegion, this.mOnScreenControlKnobTextureRegion, 0.1f, this.getVertexBufferObjectManager(), new IAnalogOnScreenControlListener() {
-			@Override
-			public void onControlChange(final BaseOnScreenControl pBaseOnScreenControl, final float pValueX, final float pValueY) {
-				// TODO Zum Server funken
-				
-				long now = System.currentTimeMillis();
-				// TODO: Not here & this better?
-				if(now > nextSendl) {
-					if(clientLogic != null) {
-						RemoteActivity.this.clientLogic.driveCar(pValueX, pValueY);
-					}
-					nextSendl = now+50;
-				}
-				
-				
-			}
-
-			@Override
-			public void onControlClick(final AnalogOnScreenControl pAnalogOnScreenControl) {/* Nothing. */}
-		});
-		analogOnScreenControl.getControlBase().setBlendFunction(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
-		analogOnScreenControl.getControlBase().setAlpha(0.5f);
-		analogOnScreenControl.refreshControlKnobPosition();
-
-		this.mScene.setChildScene(analogOnScreenControl);
 	}
 
 	@Override
@@ -284,6 +249,7 @@ public class RemoteActivity extends AbstractConnectionActivity implements IRemot
 	public void setPlayerInfo(String name, Color color) {
 		enableControls = true;
 		mScene.setColor(color);
+		mScene.setBackground(new Background(color));
 		final VertexBufferObjectManager vertexBufferObjectManager = this.getVertexBufferObjectManager();
 		final Text centerText = new Text(0, 0, this.mFont, name, new TextOptions(HorizontalAlign.CENTER), vertexBufferObjectManager);
 
