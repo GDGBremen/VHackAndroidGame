@@ -233,66 +233,16 @@ public class RemoteActivity extends AbstractConnectionActivity implements
 		synchronized (this) {
 			switch (event.sensor.getType()) {
 				case Sensor.TYPE_ACCELEROMETER:
-					int accellerometerSpeedX = (int) event.values[1];
-					int accellerometerSpeedY = (int) event.values[0];
-					onAccelerometerChanged(accellerometerSpeedX,
-							accellerometerSpeedY);
-					/*
-					 * if (enableControls) {
-					 * this.clientLogic.driveCar(accellerometerSpeedX,
-					 * accellerometerSpeedY); }
-					 */
+					int accellerometerSpeedX = (int) event.values[1] / 2;
+					int accellerometerSpeedY = (int) event.values[0] / 2;
+
+					if (enableControls) {
+						this.clientLogic.driveCar(accellerometerSpeedX,
+								accellerometerSpeedY);
+					}
+
 					break;
 			}
-		}
-	}
-
-	private static final boolean	ADAPTIVE_ACCEL_FILTER	= true;
-	float							lastAccel[]				= new float[2];
-	float							accelFilter[]			= new float[2];
-
-	public void onAccelerometerChanged(float accelX, float accelY) {
-		// high pass filter
-		float updateFreq = 30; // match this to your update speed
-		float cutOffFreq = 0.9f;
-		float RC = 1.0f / cutOffFreq;
-		float dt = 1.0f / updateFreq;
-		float filterConstant = RC / (dt + RC);
-		float alpha = filterConstant;
-		float kAccelerometerMinStep = 0.033f;
-		float kAccelerometerNoiseAttenuation = 3.0f;
-
-		if (ADAPTIVE_ACCEL_FILTER) {
-			float d = (float) clamp(
-					Math.abs(norm(accelFilter[0], accelFilter[1])
-							- norm(accelX, accelY))
-							/ kAccelerometerMinStep - 1.0f, 0.0f, 1.0f);
-			alpha = d * filterConstant / kAccelerometerNoiseAttenuation
-					+ (1.0f - d) * filterConstant;
-		}
-
-		accelFilter[0] = (float) (alpha * (accelFilter[0] + accelX - lastAccel[0]));
-		accelFilter[1] = (float) (alpha * (accelFilter[1] + accelY - lastAccel[1]));
-
-		lastAccel[0] = accelX;
-		lastAccel[1] = accelY;
-
-		if (enableControls) {
-			this.clientLogic.driveCar(accelFilter[0], accelFilter[1]);
-		}
-	}
-
-	private double norm(float x, float y) {
-		return Math.sqrt(x * x + y * y);
-	}
-
-	private double clamp(double v, double min, double max) {
-		if (v > max) {
-			return max;
-		} else if (v < min) {
-			return min;
-		} else {
-			return v;
 		}
 	}
 
