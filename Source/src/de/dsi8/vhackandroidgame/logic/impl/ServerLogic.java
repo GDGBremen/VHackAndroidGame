@@ -308,8 +308,6 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener,
 		pPartner.id = this.numPresentationPartner++;
 
 		this.presentationPartner.put(pPartner.id, pPartner);
-
-		this.numPresentationPartner++;
 		
 		for (RemotePartner rPartner : this.remotePartner.values()) {
 			CarMessage carMessage = new CarMessage();
