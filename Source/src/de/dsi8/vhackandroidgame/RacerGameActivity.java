@@ -64,6 +64,7 @@ import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
 
 import de.dsi8.dsi8acl.connection.impl.SocketConnection;
+import de.dsi8.vhackandroidgame.communication.model.CarMessage.COLOR;
 import de.dsi8.vhackandroidgame.communication.model.QRCodeMessage.QRCodePosition;
 import de.dsi8.vhackandroidgame.logic.contract.IPresentationLogic;
 import de.dsi8.vhackandroidgame.logic.contract.IPresentationView;
@@ -77,6 +78,8 @@ import de.dsi8.vhackandroidgame.logic.impl.PresentationLogic;
  */
 public class RacerGameActivity extends AbstractConnectionActivity implements
 		IPresentationView {
+	private static final int BALL_SIZE = 40;
+
 	// ===========================================================
 	// Constants
 	// ===========================================================
@@ -86,7 +89,7 @@ public class RacerGameActivity extends AbstractConnectionActivity implements
 	private static final int RACETRACK_WIDTH = 64;
 
 	private static final int OBSTACLE_SIZE = 16;
-	public static final int CAR_SIZE = 16;
+	public static final int CAR_SIZE = BALL_SIZE;
 
 	private static final int CAMERA_WIDTH = 1920;
 	private static final int CAMERA_HEIGHT = 1080;
@@ -221,16 +224,11 @@ public class RacerGameActivity extends AbstractConnectionActivity implements
 		track.setSize(CAMERA_WIDTH, CAMERA_HEIGHT);
 		this.mScene.attachChild(track);
 
-		Sprite ball = new Sprite(200, 300, this.mBallTextureRegion, vertexBufferObjectManager);
-		ball.setScale(0.7f);
-		ball.setColor(org.andengine.util.color.Color.BLUE);
-		this.mScene.attachChild(ball);
 		
-//		Body ballBody = PhysicsFactory.createCircleBody(this.serverLogic.getPhysicsWorld(), ball, BodyType.DynamicBody, PhysicsFactory.createFixtureDef(1, 0.1f, 0.5f));
+		
+//		Body ballBody = PhysicsFactory.createCircleBody(this.serverLogic.getPhysicsWorld(), ball, BodyType.DynamicBody, );
 		//this.serverLogic.getPhysicsWorld().registerPhysicsConnector(new PhysicsConnector(ball, ballBody, true, true));
 		
-
-
 		return this.mScene;
 	}
 	
@@ -247,13 +245,28 @@ public class RacerGameActivity extends AbstractConnectionActivity implements
 		CarView carView = new CarView();
 		carView.id = carId;
 
-		carView.car = new TiledSprite(pX, pY, CAR_SIZE, CAR_SIZE,
-				this.mVehiclesTextureRegion,
-				this.getVertexBufferObjectManager());
-		carView.car.setCurrentTileIndex(carId % 6);
-		carView.car.setRotation(rotation);
-
-
+		org.andengine.util.color.Color color;
+		switch (carId) {
+			case 0:
+				color = org.andengine.util.color.Color.CYAN;
+				break;
+			case 1:
+				color =  org.andengine.util.color.Color.RED;
+				break;
+			case 2:
+				color =  org.andengine.util.color.Color.GREEN;
+				break;
+			case 3:
+				color =  org.andengine.util.color.Color.YELLOW;
+				break;
+			default:
+				color =  org.andengine.util.color.Color.TRANSPARENT;
+				break;
+		}
+		
+		carView.car = new Sprite(pX, pY, this.mBallTextureRegion, getVertexBufferObjectManager());
+		carView.car.setSize(40, BALL_SIZE);
+		carView.car.setColor(color); 
 		this.mScene.attachChild(carView.car);
 
 		this.cars.put(carId, carView);
@@ -270,7 +283,7 @@ public class RacerGameActivity extends AbstractConnectionActivity implements
 
 	public class CarView {
 		public int id;
-		public TiledSprite car;
+		public Sprite car;
 	}
 
 	@Override

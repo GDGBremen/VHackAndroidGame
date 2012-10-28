@@ -17,7 +17,7 @@ public class QRCodeMessageHandler extends AbstractMessageHandler<QRCodeMessage> 
 	@Override
 	public void handleMessage(CommunicationPartner partner, QRCodeMessage message)
 			throws InvalidMessageException {
-		if(message.QRCodeVisible()) {
+		if(message.QRCodeProvided()) {
 			presentationLogic.getPresentationView().showQRCode(message.text,
 					message.position);			
 		} else {

@@ -32,10 +32,7 @@ public class NetworkRectangle extends Rectangle {
 		message.action = ACTION.ROTATE;
 		message.id = this.id;
 		
-		this.serverLogic.sendMessageToAllPresentationPartner(message);
-		
-		Log.d("NetworkRectangle", "setRotation(" + pRotation + ")");
-			
+		this.serverLogic.sendMessageToAllPresentationPartner(message);			
 	}
 	
 	@Override
@@ -45,8 +42,6 @@ public class NetworkRectangle extends Rectangle {
 		message.positionY = pY;
 		message.id = this.id;
 		message.action = ACTION.MOVE;
-		
-		Log.d("NetworkRectangle", "setPosition(" + pX + ", " + pY + ")");
 			
 		this.serverLogic.sendMessageToAllPresentationPartner(message);
 	}

@@ -47,9 +47,6 @@ public interface IServerLogic extends Closeable {
 	 */
 	void collisionDetected(int carId, CollisionType collidesWith);
 	
-	void test();
-	
-
 	
 	public void onCreateScene();
 	

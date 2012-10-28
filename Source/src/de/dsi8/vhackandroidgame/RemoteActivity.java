@@ -43,6 +43,10 @@ import com.immersion.uhl.Launcher;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.opengl.GLES20;
 import android.os.Bundle;
 import android.os.Handler;
@@ -57,7 +61,7 @@ import de.dsi8.vhackandroidgame.logic.contract.IRemoteView;
 import de.dsi8.vhackandroidgame.logic.impl.RemoteLogic;
 import de.dsi8.vhackandroidgame.logic.impl.VHackAndroidGameConfiguration;
 
-public class RemoteActivity extends AbstractConnectionActivity implements IRemoteView {
+public class RemoteActivity extends AbstractConnectionActivity implements IRemoteView, SensorEventListener {
 
 	private IRemoteLogic clientLogic;
 	
@@ -84,10 +88,18 @@ public class RemoteActivity extends AbstractConnectionActivity implements IRemot
 	
 	private Scene mScene;
 	private Vibrator mVibrator;
+
+	private SensorManager sensorManager;
 	
 	@Override
 	protected void onCreate(Bundle pSavedInstanceState) {
 		super.onCreate(pSavedInstanceState);
+		
+        sensorManager = (SensorManager) this
+                .getSystemService(this.SENSOR_SERVICE);
+        sensorManager.registerListener(this, sensorManager
+                .getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
+                sensorManager.SENSOR_DELAY_GAME);
 		
 		try {
 			mHapticLauncher = new Launcher(this);
@@ -229,6 +241,26 @@ public class RemoteActivity extends AbstractConnectionActivity implements IRemot
 		}
 		
 
+	}
+
+	@Override
+	public void onAccuracyChanged(Sensor sensor, int accuracy) {
+
+	}
+
+	@Override
+	public void onSensorChanged(SensorEvent event) {
+        synchronized (this) {
+            switch (event.sensor.getType()) {
+            case Sensor.TYPE_ACCELEROMETER:
+                    int accellerometerSpeedX = (int) event.values[1];
+                    int accellerometerSpeedY = (int) event.values[0];
+                    if(this.clientLogic != null) {
+                    	this.clientLogic.driveCar(accellerometerSpeedX, accellerometerSpeedY);
+                    }
+                    break;
+            }
+        }
 	}
 	
 }
