@@ -46,6 +46,7 @@ import com.badlogic.gdx.physics.box2d.BodyDef.BodyType;
 import com.badlogic.gdx.physics.box2d.Contact;
 import com.badlogic.gdx.physics.box2d.ContactImpulse;
 import com.badlogic.gdx.physics.box2d.ContactListener;
+import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.Manifold;
 import com.badlogic.gdx.physics.box2d.PolygonShape;
@@ -408,19 +409,30 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener,
 		int firstCarId = getCarIdFromBody(contact.getFixtureA().getBody());
 
 		if (firstCarId > -1) {
-			// collisionDetected(firstCarId);
+			collisionDetected(firstCarId, getCollisionType(contact.getFixtureA()));
 			checkCheckpointCollision(contact, firstCarId);
 		}
 
 		int secondCarId = getCarIdFromBody(contact.getFixtureB().getBody());
 		if (secondCarId > -1) {
-			// collisionDetected(secondCarId);
+			collisionDetected(secondCarId, getCollisionType(contact.getFixtureB()));
 			checkCheckpointCollision(contact, secondCarId);
 		}
 	}
+	
+	public CollisionType getCollisionType(Fixture fixture) {
+		int carId = getCarIdFromBody(fixture.getBody());
+		if(carId > -1) {
+			return CollisionType.CAR;
+		} else if(fixture.getRestitution() > 0) {
+			return CollisionType.BUMPER;
+		} else {
+			return CollisionType.WALL;
+		}
+	}
+	
 	private void checkCheckpointCollision(Contact contact, int carId) {
-		final RemotePartner partner = new RemotePartner();
-		partner.id = carId;
+		final RemotePartner partner = this.remotePartner.get(carId);
 		if ("goal".equals(contact.getFixtureA().getBody().getUserData())
 				|| "goal".equals(contact.getFixtureA().getBody().getUserData())) {
 			checkpointsPassed(partner);
