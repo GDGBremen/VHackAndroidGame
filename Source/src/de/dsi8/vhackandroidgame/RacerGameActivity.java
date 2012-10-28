@@ -131,7 +131,6 @@ public class RacerGameActivity extends AbstractConnectionActivity implements
 	
 	@Override
 	protected void onCreate(Bundle pSavedInstanceState) {
-		getIntent().setData(Uri.parse("http://vhackandroidgame.dsi8.de/connect/?port=4254&protocol=tcp&host=192.168.178.20&password=&wifiap=Jans%20WLAN"));
 		super.onCreate(pSavedInstanceState);
 	}
 	

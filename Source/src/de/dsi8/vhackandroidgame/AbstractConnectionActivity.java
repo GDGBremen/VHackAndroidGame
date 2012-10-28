@@ -51,14 +51,14 @@ public abstract class AbstractConnectionActivity extends SimpleBaseGameActivity 
 		@Override
 		public void run() {
 			// Connect
-			if(gameConfig.getWiFiChecker().inSameNetwork(connectionParameter)) {
+//			if(gameConfig.getWiFiChecker().inSameNetwork(connectionParameter)) {
 				connect();
-			} else {
-				if(sameNetworkDialog == null) {
-					sameNetworkDialog = buildSameNetworkAlertDialog();
-					sameNetworkDialog.show();
-				}
-			}
+//			} else {
+//				if(sameNetworkDialog == null) {
+//					sameNetworkDialog = buildSameNetworkAlertDialog();
+//					sameNetworkDialog.show();
+//				}
+//			}
 		}
 	};
 	

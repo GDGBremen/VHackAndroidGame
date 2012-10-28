@@ -22,29 +22,22 @@ import de.dsi8.vhackandroidgame.server.model.Player;
  */
 public class ServerGameActivity extends ListActivity implements
 		IServerLogicListener {
-	private ListView						listView;
-	private ScoreboardAdapater				adapter;
-	private ArrayList<Player>				mPlayers;
+	private ListView listView;
+	private ScoreboardAdapater adapter;
+	private ArrayList<Player> mPlayers;
 
-	Handler									mHandler	= new Handler(
-																new Handler.Callback() {
-																	@Override
-																	public boolean handleMessage(
-																			Message message) {
-																		int i = new Random()
-																				.nextInt(4);
-																		mPlayers.get(
-																				i)
-																				.incrementCheckpointsPassed();
-																		mHandler.sendEmptyMessageDelayed(
-																				1,
-																				3000);
-																		return true;
-																	}
-																});
+	Handler mHandler = new Handler(new Handler.Callback() {
+		@Override
+		public boolean handleMessage(Message message) {
+			int i = new Random().nextInt(4);
+			mPlayers.get(i).incrementCheckpointsPassed();
+			mHandler.sendEmptyMessageDelayed(1, 3000);
+			return true;
+		}
+	});
 
-	private IServerLogic					serverLogic;
-	private VHackAndroidGameConfiguration	gameConfig;
+	private IServerLogic serverLogic;
+	private VHackAndroidGameConfiguration gameConfig;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -104,7 +97,7 @@ public class ServerGameActivity extends ListActivity implements
 		Player p = mPlayers.get(id);
 		p.incrementCheckpointsPassed();
 	}
-	
+
 	public void onListViewClicked(View v) {
 		serverLogic.showBardcode();
 	}
