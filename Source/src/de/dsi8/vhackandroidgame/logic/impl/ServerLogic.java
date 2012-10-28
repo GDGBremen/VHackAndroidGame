@@ -240,7 +240,6 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener,
 						if (message.remote) {
 							newRemotePartner(partner);
 						} else {
-							udpServer.interrupt();
 							newPresentationPartner(partner);
 						}
 					}
@@ -509,13 +508,12 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener,
 
 	@Override
 	public void showBardcode() {
-		CommunicationPartner partner = this.presentationPartner.get(0).communicationPartner;
 		if (qrCodeVisible) {
-			partner.sendMessage(new QRCodeMessage(null, QRCodePosition.CENTER));
+			sendMessageToAllPresentationPartner(new QRCodeMessage(null, QRCodePosition.CENTER));
 		} else {
 			ConnectionParameter connectionDetails = gameConfig
 					.getConnectionDetails();
-			partner.sendMessage(new QRCodeMessage(connectionDetails
+			sendMessageToAllPresentationPartner(new QRCodeMessage(connectionDetails
 					.toConnectionURL(), QRCodePosition.CENTER));
 		}
 		qrCodeVisible = !qrCodeVisible;
