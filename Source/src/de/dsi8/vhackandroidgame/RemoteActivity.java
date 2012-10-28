@@ -102,6 +102,8 @@ public class RemoteActivity extends AbstractConnectionActivity implements IRemot
 	private BitmapTextureAtlas mFontTexture;
 
 	private Font mFont;
+
+	private boolean enableControls;
 	
 	@Override
 	protected void onCreate(Bundle pSavedInstanceState) {
@@ -270,7 +272,7 @@ public class RemoteActivity extends AbstractConnectionActivity implements IRemot
             case Sensor.TYPE_ACCELEROMETER:
                     int accellerometerSpeedX = (int) event.values[1];
                     int accellerometerSpeedY = (int) event.values[0];
-                    if(this.clientLogic != null) {
+                    if(enableControls) {
                     	this.clientLogic.driveCar(accellerometerSpeedX, accellerometerSpeedY);
                     }
                     break;
@@ -280,9 +282,10 @@ public class RemoteActivity extends AbstractConnectionActivity implements IRemot
 
 	@Override
 	public void setPlayerInfo(String name, Color color) {
+		enableControls = true;
 		mScene.setColor(color);
 		final VertexBufferObjectManager vertexBufferObjectManager = this.getVertexBufferObjectManager();
-		final Text centerText = new Text(100, 40, this.mFont, "Hello AndEngine!\nYou can even have multilined text!", new TextOptions(HorizontalAlign.CENTER), vertexBufferObjectManager);
+		final Text centerText = new Text(0, 0, this.mFont, name, new TextOptions(HorizontalAlign.CENTER), vertexBufferObjectManager);
 
 		mScene.attachChild(centerText);
 	}

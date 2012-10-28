@@ -65,7 +65,6 @@ public class RemoteLogic implements IRemoteLogic, ICommunicationPartnerListener 
 		this.serverPartner.registerMessageHandler(new PlayerInfoMessageHandler(remoteView));
 		this.serverPartner.initialized();
 		this.serverPartner.sendMessage(new GameModeMessage(true));
-		
 	}
 	
 	/**
