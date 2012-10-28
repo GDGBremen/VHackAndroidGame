@@ -63,7 +63,6 @@ import de.dsi8.dsi8acl.exception.ConnectionProblemException;
 import de.dsi8.dsi8acl.exception.InvalidMessageException;
 import de.dsi8.vhackandroidgame.RacerGameActivity;
 import de.dsi8.vhackandroidgame.communication.NetworkRectangle;
-import de.dsi8.vhackandroidgame.communication.model.BorderMessage;
 import de.dsi8.vhackandroidgame.communication.model.CarMessage;
 import de.dsi8.vhackandroidgame.communication.model.CarMessage.ACTION;
 import de.dsi8.vhackandroidgame.communication.model.CollisionMessage;
@@ -127,9 +126,9 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener,
 	 * Number of presentation partner.
 	 */
 	private int numPresentationPartner = 0;
-
-	private boolean qrCodeVisible = true;
-
+	
+	private boolean qrCodeVisible = false;
+	
 	/**
 	 * Creates the logic.
 	 * 
@@ -257,14 +256,11 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener,
 		final float ROTATION = 0;
 
 		// TODO make network-magic to the rectangle
-		Rectangle rectangle = new NetworkRectangle(rPartner.id, this, PX, PY,
-				RacerGameActivity.CAR_SIZE, RacerGameActivity.CAR_SIZE);
-
-		rPartner.body = PhysicsFactory.createBoxBody(this.mPhysicsWorld,
-				rectangle, BodyType.DynamicBody, carFixtureDef);
-
-		rPartner.physicsConnector = new PhysicsConnector(rectangle,
-				rPartner.body, true, false);
+		Rectangle rectangle = new NetworkRectangle(rPartner.id, this, PX, PY, RacerGameActivity.CAR_SIZE, RacerGameActivity.CAR_SIZE);
+		
+		rPartner.body = PhysicsFactory.createBoxBody(this.mPhysicsWorld, rectangle, BodyType.DynamicBody, PhysicsFactory.createFixtureDef(1, 0.1f, 0.5f));
+		
+		rPartner.physicsConnector = new PhysicsConnector(rectangle, rPartner.body, true, true);
 		this.mPhysicsWorld.registerPhysicsConnector(rPartner.physicsConnector);
 
 		this.remotePartner.put(rPartner.id, rPartner);
@@ -294,8 +290,8 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener,
 		this.presentationPartner.put(pPartner.id, pPartner);
 
 		this.numPresentationPartner++;
-
-		test();
+		
+		showBardcode();
 	}
 
 	/**
@@ -307,7 +303,6 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener,
 		Log.i(LOG_TAG, "connectionLost", ex);
 		int idOfRemotePartner = getIdOfRemotePartner(partner);
 		RemotePartner rPartner = this.remotePartner.get(idOfRemotePartner);
-
 		if (rPartner != null) {
 			this.mPhysicsWorld
 					.unregisterPhysicsConnector(rPartner.physicsConnector);
@@ -320,8 +315,16 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener,
 			rPartner.physicsConnector = null;
 			rPartner.communicationPartner.close();
 			rPartner.communicationPartner = null;
-			this.remotePartner.remove(rPartner);
+			this.remotePartner.remove(rPartner.id);
 			this.listener.removePlayer(rPartner.id);
+		}
+		
+		int idOfPresentationPartner = getIdOfPresentationPartner(partner);
+		PresentationPartner pPartner = this.presentationPartner.get(idOfPresentationPartner);
+		if (pPartner != null) {
+			pPartner.communicationPartner.close();
+			pPartner.communicationPartner = null;
+			this.presentationPartner.remove(pPartner.id);
 		}
 	}
 
@@ -360,26 +363,21 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener,
 		}
 		return -1;
 	}
-
-	@Override
-	public void test() {
-		// CommunicationPartner partner =
-		// this.presentationPartner.get(0).communicationPartner;
-		// partner.sendMessage(new CarMessage(1, true));
-		// partner.sendMessage(new QRCodeMessage("hallo",
-		// QRCodePosition.CENTER));
-		//
-		// newRemotePartner(null);
-		// newRemotePartner(null);
-
-		CommunicationPartner partner = this.presentationPartner.get(0).communicationPartner;
-
-		ConnectionParameter connectionDetails = gameConfig
-				.getConnectionDetails();
-
-		partner.sendMessage(new QRCodeMessage(connectionDetails
-				.toConnectionURL(), QRCodePosition.CENTER));
-		partner.sendMessage(new BorderMessage(true, true, true, true));
+	
+	/**
+	 * Return's the id of an remote partner.
+	 * @param partner	the remote partner is to be returned to the id
+	 * @return			id of the remote partner
+	 */
+	private int getIdOfPresentationPartner(ICommunicationPartner partner) {
+		Iterator<Entry<Integer, PresentationPartner>> iterator = this.presentationPartner.entrySet().iterator();
+		while (iterator.hasNext()) {
+			Entry<Integer, PresentationPartner> next = iterator.next();
+			if (partner == next.getValue().communicationPartner) {
+				return next.getKey().intValue();
+			}
+		}
+		return -1;
 	}
 
 	@Override
