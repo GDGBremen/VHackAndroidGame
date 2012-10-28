@@ -29,11 +29,12 @@ import org.andengine.engine.camera.Camera;
 import org.andengine.engine.options.EngineOptions;
 import org.andengine.engine.options.ScreenOrientation;
 import org.andengine.engine.options.resolutionpolicy.FillResolutionPolicy;
+import org.andengine.entity.modifier.LoopEntityModifier;
+import org.andengine.entity.modifier.RotationModifier;
 import org.andengine.entity.primitive.Rectangle;
 import org.andengine.entity.scene.Scene;
 import org.andengine.entity.scene.background.Background;
 import org.andengine.entity.sprite.Sprite;
-import org.andengine.entity.sprite.TiledSprite;
 import org.andengine.opengl.texture.PixelFormat;
 import org.andengine.opengl.texture.TextureManager;
 import org.andengine.opengl.texture.TextureOptions;
@@ -64,7 +65,6 @@ import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
 
 import de.dsi8.dsi8acl.connection.impl.SocketConnection;
-import de.dsi8.vhackandroidgame.communication.model.CarMessage.COLOR;
 import de.dsi8.vhackandroidgame.communication.model.QRCodeMessage.QRCodePosition;
 import de.dsi8.vhackandroidgame.logic.contract.IPresentationLogic;
 import de.dsi8.vhackandroidgame.logic.contract.IPresentationView;
@@ -131,6 +131,8 @@ public class RacerGameActivity extends AbstractConnectionActivity implements
 	private ITextureRegion mTrackTextureRegion;
 
 	private TextureRegion mBallTextureRegion;
+
+	private ITextureRegion mEffectSunTextureRegion;
 	
 	@Override
 	protected void onCreate(Bundle pSavedInstanceState) {
@@ -192,7 +194,7 @@ public class RacerGameActivity extends AbstractConnectionActivity implements
 		try {
 			this.mTrackTextureRegion = loadResource(this, getTextureManager(), PixelFormat.RGBA_8888, TextureOptions.BILINEAR, "gfx/track.png");
 			this.mBallTextureRegion = loadResource(this, getTextureManager(), PixelFormat.RGBA_8888, TextureOptions.BILINEAR, "gfx/ball.png");
-
+			this.mEffectSunTextureRegion = loadResource(this, getTextureManager(), PixelFormat.RGBA_8888, TextureOptions.BILINEAR, "gfx/suneffect.png");
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -224,7 +226,12 @@ public class RacerGameActivity extends AbstractConnectionActivity implements
 		track.setSize(CAMERA_WIDTH, CAMERA_HEIGHT);
 		this.mScene.attachChild(track);
 
+		Sprite effectSun = new Sprite(1920/2, 0, this.mEffectSunTextureRegion, vertexBufferObjectManager);
+		effectSun.setScale(2.5f);
+		this.mScene.attachChild(effectSun);
 		
+		LoopEntityModifier loop = new LoopEntityModifier(new RotationModifier(60 , 0, 360));
+		effectSun.registerEntityModifier(loop);
 		
 //		Body ballBody = PhysicsFactory.createCircleBody(this.serverLogic.getPhysicsWorld(), ball, BodyType.DynamicBody, );
 		//this.serverLogic.getPhysicsWorld().registerPhysicsConnector(new PhysicsConnector(ball, ballBody, true, true));

@@ -32,6 +32,8 @@ import org.andengine.extension.physics.box2d.FixedStepPhysicsWorld;
 import org.andengine.extension.physics.box2d.PhysicsConnector;
 import org.andengine.extension.physics.box2d.PhysicsFactory;
 import org.andengine.extension.physics.box2d.PhysicsWorld;
+import org.andengine.extension.physics.box2d.util.constants.PhysicsConstants;
+import org.andengine.util.math.MathUtils;
 import org.andlabs.andengine.extension.physicsloader.PhysicsEditorLoader;
 
 import android.content.Context;
@@ -39,13 +41,14 @@ import android.util.Log;
 
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
+import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.BodyDef.BodyType;
 import com.badlogic.gdx.physics.box2d.Contact;
 import com.badlogic.gdx.physics.box2d.ContactImpulse;
 import com.badlogic.gdx.physics.box2d.ContactListener;
-import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.Manifold;
+import com.badlogic.gdx.physics.box2d.PolygonShape;
 
 import de.dsi8.dsi8acl.communication.contract.ICommunicationPartner;
 import de.dsi8.dsi8acl.communication.contract.IServerCommunication;
@@ -134,8 +137,12 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener,
 	 * 
 	 * @param listener
 	 *          Interface to the {@link RacerGameActivity}.
+	 * 
+	 * @param listener
+	 *            Interface to the {@link RacerGameActivity}.
 	 */
-	public ServerLogic(Context context, VHackAndroidGameConfiguration gameConfig,
+	public ServerLogic(Context context,
+			VHackAndroidGameConfiguration gameConfig,
 			IServerLogicListener listener) {
 		this.listener = listener;
 		this.gameConfig = gameConfig;
@@ -144,13 +151,62 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener,
 
 		final PhysicsEditorLoader loader = new PhysicsEditorLoader();
 		try {
-			loader.load(context, this.mPhysicsWorld, "track.xml", (IAreaShape) null,
-					false, false);
+			loader.load(context, this.mPhysicsWorld, "track.xml",
+					(IAreaShape) null, false, false);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 
+
+		Body goalBody = createBoxBody(this.mPhysicsWorld, 1095, 810, 80, 120,
+				0, BodyType.StaticBody,
+				PhysicsFactory.createFixtureDef(0, 0, 0, true));
+		goalBody.setUserData("goal");
+
+		Body firstCheckpointBody = createBoxBody(this.mPhysicsWorld, 1085, 535,
+				160, 55, 0, BodyType.StaticBody,
+				PhysicsFactory.createFixtureDef(0, 0, 0, true));
+		firstCheckpointBody.setUserData("first");
+
+		Body secondCheckpointBody = createBoxBody(this.mPhysicsWorld, 915, 100,
+				55, 150, 0, BodyType.StaticBody,
+				PhysicsFactory.createFixtureDef(0, 0, 0, true));
+		secondCheckpointBody.setUserData("second");
+
 		new UpdateThread().start();
+	}
+
+
+	public static Body createBoxBody(final PhysicsWorld pPhysicsWorld,
+			final float pX, final float pY, final float pWidth,
+			final float pHeight, final float pRotation,
+			final BodyType pBodyType, final FixtureDef pFixtureDef) {
+		final BodyDef boxBodyDef = new BodyDef();
+		boxBodyDef.type = pBodyType;
+
+		boxBodyDef.position.x = pX - 1920 / 2 - pWidth * 0.5f;
+		boxBodyDef.position.y = pY - 1080 / 2 - pHeight * 0.5f;
+
+		final Body boxBody = pPhysicsWorld.createBody(boxBodyDef);
+
+		final PolygonShape boxPoly = new PolygonShape();
+
+		final float halfWidth = pWidth * 0.5f
+				/ PhysicsConstants.PIXEL_TO_METER_RATIO_DEFAULT;
+		final float halfHeight = pHeight * 0.5f
+				/ PhysicsConstants.PIXEL_TO_METER_RATIO_DEFAULT;
+
+		boxPoly.setAsBox(halfWidth, halfHeight);
+		pFixtureDef.shape = boxPoly;
+
+		boxBody.createFixture(pFixtureDef);
+
+		boxPoly.dispose();
+
+		boxBody.setTransform(boxBody.getWorldCenter(),
+				MathUtils.degToRad(pRotation));
+
+		return boxBody;
 	}
 
 	/**
@@ -351,24 +407,36 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener,
 	@Override
 	public void beginContact(Contact contact) {
 		int firstCarId = getCarIdFromBody(contact.getFixtureA().getBody());
-		int secondCarId = getCarIdFromBody(contact.getFixtureB().getBody());
 
 		if (firstCarId > -1) {
-			collisionDetected(firstCarId, getCollisionType(contact.getFixtureB()));
+			// collisionDetected(firstCarId);
+			checkCheckpointCollision(contact, firstCarId);
 		}
+
+		int secondCarId = getCarIdFromBody(contact.getFixtureB().getBody());
 		if (secondCarId > -1) {
-			collisionDetected(secondCarId, getCollisionType(contact.getFixtureA()));
+			// collisionDetected(secondCarId);
+			checkCheckpointCollision(contact, secondCarId);
 		}
 	}
+	private void checkCheckpointCollision(Contact contact, int carId) {
+		final RemotePartner partner = new RemotePartner();
+		partner.id = carId;
+		if ("goal".equals(contact.getFixtureA().getBody().getUserData())
+				|| "goal".equals(contact.getFixtureA().getBody().getUserData())) {
+			checkpointsPassed(partner);
+		} else if ("first"
+				.equals(contact.getFixtureA().getBody().getUserData())
+				|| "first"
+						.equals(contact.getFixtureA().getBody().getUserData())) {
+			checkpointsPassed(partner);
 
-	public CollisionType getCollisionType(Fixture fixture) {
-		int carId = getCarIdFromBody(fixture.getBody());
-		if (carId > -1) {
-			return CollisionType.CAR;
-		} else if (fixture.getRestitution() > 0) {
-			return CollisionType.BUMPER;
-		} else {
-			return CollisionType.WALL;
+		} else if ("second".equals(contact.getFixtureA().getBody()
+				.getUserData())
+				|| "second".equals(contact.getFixtureA().getBody()
+						.getUserData())) {
+			checkpointsPassed(partner);
+
 		}
 	}
 
@@ -436,7 +504,7 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener,
 	}
 
 	public void checkpointsPassed(RemotePartner remotePartner) {
-		listener.incrementCheckpointsPassed(remotePartner.id);
+		this.listener.incrementCheckpointsPassed(remotePartner.id);
 	}
 
 	@Override
@@ -445,9 +513,10 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener,
 		if (qrCodeVisible) {
 			partner.sendMessage(new QRCodeMessage(null, QRCodePosition.CENTER));
 		} else {
-			ConnectionParameter connectionDetails = gameConfig.getConnectionDetails();
-			partner.sendMessage(new QRCodeMessage(
-					connectionDetails.toConnectionURL(), QRCodePosition.CENTER));
+			ConnectionParameter connectionDetails = gameConfig
+					.getConnectionDetails();
+			partner.sendMessage(new QRCodeMessage(connectionDetails
+					.toConnectionURL(), QRCodePosition.CENTER));
 		}
 		qrCodeVisible = !qrCodeVisible;
 
