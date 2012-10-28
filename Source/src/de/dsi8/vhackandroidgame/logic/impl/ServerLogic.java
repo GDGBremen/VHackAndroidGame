@@ -160,20 +160,40 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener,
 		}
 
 
-		Body goalBody = createBoxBody(this.mPhysicsWorld, 1095, 810, 80, 120,
-				0, BodyType.StaticBody,
-				PhysicsFactory.createFixtureDef(0, 0, 0, true));
-		goalBody.setUserData("goal");
 
-		Body firstCheckpointBody = createBoxBody(this.mPhysicsWorld, 1085, 535,
-				160, 55, 0, BodyType.StaticBody,
+		float x = 35f;
+		float y = 27.5f;
+		float width = 80;
+		float height = 120;
+
+		Body goalCheckpointBody = createBoxBody(
+				this.serverLogic.getPhysicsWorld(), x, y, width, height, 0,
+				BodyType.StaticBody,
+				PhysicsFactory.createFixtureDef(0, 0, 0, true));
+		goalCheckpointBody.setUserData("goal");
+
+		x = 36f;
+		y = 17.5f;
+		width = 160;
+		height = 55;
+
+		Body firstCheckpointBody = createBoxBody(
+				this.serverLogic.getPhysicsWorld(), x, y, width, height, 0,
+				BodyType.StaticBody,
 				PhysicsFactory.createFixtureDef(0, 0, 0, true));
 		firstCheckpointBody.setUserData("first");
 
-		Body secondCheckpointBody = createBoxBody(this.mPhysicsWorld, 915, 100,
-				55, 150, 0, BodyType.StaticBody,
+		x = 29.5f;
+		y = 6f;
+		width = 55;
+		height = 150;
+
+		Body secondCheckpointBody = createBoxBody(
+				this.serverLogic.getPhysicsWorld(), x, y, width, height, 0,
+				BodyType.StaticBody,
 				PhysicsFactory.createFixtureDef(0, 0, 0, true));
 		secondCheckpointBody.setUserData("second");
+		
 
 		new UpdateThread().start();
 	}
@@ -186,8 +206,11 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener,
 		final BodyDef boxBodyDef = new BodyDef();
 		boxBodyDef.type = pBodyType;
 
-		boxBodyDef.position.x = pX - 1920 / 2 - pWidth * 0.5f;
-		boxBodyDef.position.y = pY - 1080 / 2 - pHeight * 0.5f;
+		float x = pX - 1920 / 2 - pWidth * 0.5f;
+		float y = pY - 1080 / 2 - pHeight * 0.5f;
+
+		boxBodyDef.position.x = pX;// - 1920 / 2 - pWidth * 0.5f;
+		boxBodyDef.position.y = pY;// - 1080 / 2 - pHeight * 0.5f;
 
 		final Body boxBody = pPhysicsWorld.createBody(boxBodyDef);
 
@@ -205,8 +228,8 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener,
 
 		boxPoly.dispose();
 
-		boxBody.setTransform(boxBody.getWorldCenter(),
-				MathUtils.degToRad(pRotation));
+		// boxBody.setTransform(boxBody.getWorldCenter(),
+		// MathUtils.degToRad(pRotation));
 
 		return boxBody;
 	}

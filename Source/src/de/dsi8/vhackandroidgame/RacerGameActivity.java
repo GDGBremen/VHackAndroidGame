@@ -226,39 +226,6 @@ public class RacerGameActivity extends AbstractConnectionActivity implements
 		track.setSize(CAMERA_WIDTH, CAMERA_HEIGHT);
 		this.mScene.attachChild(track);
 
-		float x = 35f;
-		float y = 27.5f;
-		float width = 80;
-		float height = 120;
-
-		Body goalCheckpointBody = createBoxBody(
-				this.serverLogic.getPhysicsWorld(), x, y, width, height, 0,
-				BodyType.StaticBody,
-				PhysicsFactory.createFixtureDef(0, 0, 0, true));
-		goalCheckpointBody.setUserData("goal");
-
-		x = 36f;
-		y = 17.5f;
-		width = 160;
-		height = 55;
-
-		Body firstCheckpointBody = createBoxBody(
-				this.serverLogic.getPhysicsWorld(), x, y, width, height, 0,
-				BodyType.StaticBody,
-				PhysicsFactory.createFixtureDef(0, 0, 0, true));
-		firstCheckpointBody.setUserData("first");
-
-		x = 29.5f;
-		y = 6f;
-		width = 55;
-		height = 150;
-
-		Body secondCheckpointBody = createBoxBody(
-				this.serverLogic.getPhysicsWorld(), x, y, width, height, 0,
-				BodyType.StaticBody,
-				PhysicsFactory.createFixtureDef(0, 0, 0, true));
-		secondCheckpointBody.setUserData("second");
-		
 		
 //		Body ballBody = PhysicsFactory.createCircleBody(this.serverLogic.getPhysicsWorld(), ball, BodyType.DynamicBody, );
 		//this.serverLogic.getPhysicsWorld().registerPhysicsConnector(new PhysicsConnector(ball, ballBody, true, true));
