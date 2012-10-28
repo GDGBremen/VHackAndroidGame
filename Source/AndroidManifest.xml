@@ -6,11 +6,12 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <uses-feature
-    	android:name="android.hardware.touchscreen"
-    	android:required="false" />
-    
+        android:name="android.hardware.touchscreen"
+        android:required="false" />
+
     <uses-sdk
         android:minSdkVersion="8"
         android:targetSdkVersion="16" />
@@ -20,13 +21,17 @@
         android:label="@string/app_name"
         android:theme="@style/AppTheme" >
         <activity
-            android:name=".RacerGameActivity"
-            android:label="@string/title_activity_tv" >
+            android:name=".SearchingActivity"
+            android:label="@string/title_activity_search" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+        <activity
+            android:name=".RacerGameActivity"
+            android:label="@string/title_activity_tv" >
         </activity>
         <activity
             android:name=".RemoteActivity"

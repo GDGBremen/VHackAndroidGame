@@ -75,6 +75,7 @@ import de.dsi8.vhackandroidgame.logic.contract.IServerLogic;
 import de.dsi8.vhackandroidgame.logic.contract.IServerLogicListener;
 import de.dsi8.vhackandroidgame.logic.model.PresentationPartner;
 import de.dsi8.vhackandroidgame.logic.model.RemotePartner;
+import de.stalhut.networkfinderlibrary.UDPServer;
 
 /**
  * The logic on the {@link RacerGameActivity}.
@@ -126,11 +127,16 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener,
 	 * Number of presentation partner.
 	 */
 	private int numPresentationPartner = 0;
-	
+
 	private boolean qrCodeVisible = false;
-	
+
+	private UDPServer udpServer = new UDPServer();
+
 	/**
 	 * Creates the logic.
+	 * 
+	 * @param listener
+	 *          Interface to the {@link RacerGameActivity}.
 	 * 
 	 * @param listener
 	 *            Interface to the {@link RacerGameActivity}.
@@ -151,6 +157,7 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener,
 			e.printStackTrace();
 		}
 
+
 		Body goalBody = createBoxBody(this.mPhysicsWorld, 1095, 810, 80, 120,
 				0, BodyType.StaticBody,
 				PhysicsFactory.createFixtureDef(0, 0, 0, true));
@@ -168,6 +175,7 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener,
 
 		new UpdateThread().start();
 	}
+
 
 	public static Body createBoxBody(final PhysicsWorld pPhysicsWorld,
 			final float pX, final float pY, final float pWidth,
@@ -207,6 +215,7 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener,
 	@Override
 	public void start() {
 		this.communication.startListen();
+		this.udpServer.start();
 	}
 
 	/**
@@ -223,17 +232,18 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener,
 	@Override
 	public void newPartner(ICommunicationPartner partner) {
 		Log.i(LOG_TAG, "newPartner");
-		partner.registerMessageHandler(new AbstractMessageHandler<GameModeMessage>() {
-			@Override
-			public void handleMessage(CommunicationPartner partner,
-					GameModeMessage message) throws InvalidMessageException {
-				if (message.remote) {
-					newRemotePartner(partner);
-				} else {
-					newPresentationPartner(partner);
-				}
-			}
-		});
+		partner
+				.registerMessageHandler(new AbstractMessageHandler<GameModeMessage>() {
+					@Override
+					public void handleMessage(CommunicationPartner partner,
+							GameModeMessage message) throws InvalidMessageException {
+						if (message.remote) {
+							newRemotePartner(partner);
+						} else {
+							newPresentationPartner(partner);
+						}
+					}
+				});
 
 		// this.listener.addCar(partner.getId());
 		// TODO send addCar to the GamePresentationLogic
@@ -243,7 +253,7 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener,
 	 * A new remote partner is connecting.
 	 * 
 	 * @param partner
-	 *            the new remote partner
+	 *          the new remote partner
 	 */
 	private void newRemotePartner(CommunicationPartner partner) {
 		RemotePartner rPartner = new RemotePartner();
@@ -256,11 +266,15 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener,
 		final float ROTATION = 0;
 
 		// TODO make network-magic to the rectangle
-		Rectangle rectangle = new NetworkRectangle(rPartner.id, this, PX, PY, RacerGameActivity.CAR_SIZE, RacerGameActivity.CAR_SIZE);
-		
-		rPartner.body = PhysicsFactory.createBoxBody(this.mPhysicsWorld, rectangle, BodyType.DynamicBody, PhysicsFactory.createFixtureDef(1, 0.1f, 0.5f));
-		
-		rPartner.physicsConnector = new PhysicsConnector(rectangle, rPartner.body, true, true);
+		Rectangle rectangle = new NetworkRectangle(rPartner.id, this, PX, PY,
+				RacerGameActivity.CAR_SIZE, RacerGameActivity.CAR_SIZE);
+
+		rPartner.body = PhysicsFactory.createBoxBody(this.mPhysicsWorld, rectangle,
+				BodyType.DynamicBody, PhysicsFactory.createFixtureDef(1, 0.1f, 0.5f));
+
+		rPartner.physicsConnector = new PhysicsConnector(rectangle, rPartner.body,
+				true, true);
+
 		this.mPhysicsWorld.registerPhysicsConnector(rPartner.physicsConnector);
 
 		this.remotePartner.put(rPartner.id, rPartner);
@@ -280,7 +294,7 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener,
 	 * A new presentation partner is connecting.
 	 * 
 	 * @param partner
-	 *            the new presentation partner
+	 *          the new presentation partner
 	 */
 	private void newPresentationPartner(CommunicationPartner partner) {
 		PresentationPartner pPartner = new PresentationPartner();
@@ -290,7 +304,6 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener,
 		this.presentationPartner.put(pPartner.id, pPartner);
 
 		this.numPresentationPartner++;
-		
 		showBardcode();
 	}
 
@@ -304,8 +317,7 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener,
 		int idOfRemotePartner = getIdOfRemotePartner(partner);
 		RemotePartner rPartner = this.remotePartner.get(idOfRemotePartner);
 		if (rPartner != null) {
-			this.mPhysicsWorld
-					.unregisterPhysicsConnector(rPartner.physicsConnector);
+			this.mPhysicsWorld.unregisterPhysicsConnector(rPartner.physicsConnector);
 			CarMessage carMessage = new CarMessage();
 			carMessage.action = ACTION.REMOVE;
 			carMessage.id = rPartner.id;
@@ -318,9 +330,10 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener,
 			this.remotePartner.remove(rPartner.id);
 			this.listener.removePlayer(rPartner.id);
 		}
-		
+
 		int idOfPresentationPartner = getIdOfPresentationPartner(partner);
-		PresentationPartner pPartner = this.presentationPartner.get(idOfPresentationPartner);
+		PresentationPartner pPartner = this.presentationPartner
+				.get(idOfPresentationPartner);
 		if (pPartner != null) {
 			pPartner.communicationPartner.close();
 			pPartner.communicationPartner = null;
@@ -341,15 +354,14 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener,
 	 */
 	@Override
 	public void collisionDetected(int carId, CollisionType collidesWith) {
-		this.communication.sendMessage(carId,
-				new CollisionMessage(collidesWith));
+		this.communication.sendMessage(carId, new CollisionMessage(collidesWith));
 	}
 
 	/**
 	 * Return's the id of an remote partner.
 	 * 
 	 * @param partner
-	 *            the remote partner is to be returned to the id
+	 *          the remote partner is to be returned to the id
 	 * @return id of the remote partner
 	 */
 	private int getIdOfRemotePartner(ICommunicationPartner partner) {
@@ -363,14 +375,17 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener,
 		}
 		return -1;
 	}
-	
+
 	/**
 	 * Return's the id of an remote partner.
-	 * @param partner	the remote partner is to be returned to the id
-	 * @return			id of the remote partner
+	 * 
+	 * @param partner
+	 *          the remote partner is to be returned to the id
+	 * @return id of the remote partner
 	 */
 	private int getIdOfPresentationPartner(ICommunicationPartner partner) {
-		Iterator<Entry<Integer, PresentationPartner>> iterator = this.presentationPartner.entrySet().iterator();
+		Iterator<Entry<Integer, PresentationPartner>> iterator = this.presentationPartner
+				.entrySet().iterator();
 		while (iterator.hasNext()) {
 			Entry<Integer, PresentationPartner> next = iterator.next();
 			if (partner == next.getValue().communicationPartner) {
@@ -391,6 +406,7 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener,
 	@Override
 	public void beginContact(Contact contact) {
 		int firstCarId = getCarIdFromBody(contact.getFixtureA().getBody());
+
 		if (firstCarId > -1) {
 			// collisionDetected(firstCarId);
 			checkCheckpointCollision(contact, firstCarId);
@@ -401,9 +417,7 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener,
 			// collisionDetected(secondCarId);
 			checkCheckpointCollision(contact, secondCarId);
 		}
-
 	}
-
 	private void checkCheckpointCollision(Contact contact, int carId) {
 		final RemotePartner partner = new RemotePartner();
 		partner.id = carId;
@@ -494,13 +508,12 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener,
 
 	@Override
 	public void showBardcode() {
-		CommunicationPartner partner = this.presentationPartner.get(0).communicationPartner;
 		if (qrCodeVisible) {
-			partner.sendMessage(new QRCodeMessage(null, QRCodePosition.CENTER));
+			sendMessageToAllPresentationPartner(new QRCodeMessage(null, QRCodePosition.CENTER));
 		} else {
 			ConnectionParameter connectionDetails = gameConfig
 					.getConnectionDetails();
-			partner.sendMessage(new QRCodeMessage(connectionDetails
+			sendMessageToAllPresentationPartner(new QRCodeMessage(connectionDetails
 					.toConnectionURL(), QRCodePosition.CENTER));
 		}
 		qrCodeVisible = !qrCodeVisible;
