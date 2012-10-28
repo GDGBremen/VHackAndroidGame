@@ -60,7 +60,6 @@ import de.dsi8.dsi8acl.exception.ConnectionProblemException;
 import de.dsi8.dsi8acl.exception.InvalidMessageException;
 import de.dsi8.vhackandroidgame.RacerGameActivity;
 import de.dsi8.vhackandroidgame.communication.NetworkRectangle;
-import de.dsi8.vhackandroidgame.communication.model.BorderMessage;
 import de.dsi8.vhackandroidgame.communication.model.CarMessage;
 import de.dsi8.vhackandroidgame.communication.model.CarMessage.ACTION;
 import de.dsi8.vhackandroidgame.communication.model.CollisionMessage;
@@ -122,7 +121,7 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener, 
 	 */
 	private int numPresentationPartner = 0;
 	
-	private boolean qrCodeVisible = true;
+	private boolean qrCodeVisible = false;
 	
 	/**
 	 * Creates the logic.
@@ -199,9 +198,9 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener, 
 		// TODO make network-magic to the rectangle
 		Rectangle rectangle = new NetworkRectangle(rPartner.id, this, PX, PY, RacerGameActivity.CAR_SIZE, RacerGameActivity.CAR_SIZE);
 		
-		rPartner.body = PhysicsFactory.createBoxBody(this.mPhysicsWorld, rectangle, BodyType.DynamicBody, carFixtureDef);
+		rPartner.body = PhysicsFactory.createBoxBody(this.mPhysicsWorld, rectangle, BodyType.DynamicBody, PhysicsFactory.createFixtureDef(1, 0.1f, 0.5f));
 		
-		rPartner.physicsConnector = new PhysicsConnector(rectangle, rPartner.body, true, false);
+		rPartner.physicsConnector = new PhysicsConnector(rectangle, rPartner.body, true, true);
 		this.mPhysicsWorld.registerPhysicsConnector(rPartner.physicsConnector);
 		
 		this.remotePartner.put(rPartner.id, rPartner);
@@ -230,7 +229,7 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener, 
 		
 		this.numPresentationPartner++;
 		
-		test();
+		showBardcode();
 	}
 
 	/**
@@ -288,25 +287,6 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener, 
 			}
 		}
 		return -1;
-	}
-	
-
-	@Override
-	public void test() {
-//		CommunicationPartner partner = this.presentationPartner.get(0).communicationPartner;
-//		partner.sendMessage(new CarMessage(1, true));
-//		partner.sendMessage(new QRCodeMessage("hallo", QRCodePosition.CENTER));
-//		
-//		newRemotePartner(null);
-//		newRemotePartner(null);
-		
-		
-		CommunicationPartner partner = this.presentationPartner.get(0).communicationPartner;
-		
-		ConnectionParameter connectionDetails = gameConfig.getConnectionDetails();
-		
-		partner.sendMessage(new QRCodeMessage(connectionDetails.toConnectionURL(), QRCodePosition.CENTER));
-		partner.sendMessage(new BorderMessage(true, true, true, true));
 	}
 	
 

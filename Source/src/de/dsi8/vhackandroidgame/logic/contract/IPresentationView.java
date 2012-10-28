@@ -1,5 +1,8 @@
 package de.dsi8.vhackandroidgame.logic.contract;
 
+import org.andengine.util.color.Color;
+
+import de.dsi8.vhackandroidgame.communication.model.CarMessage.COLOR;
 import de.dsi8.vhackandroidgame.communication.model.QRCodeMessage.QRCodePosition;
 
 
