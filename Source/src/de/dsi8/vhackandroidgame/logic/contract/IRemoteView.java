@@ -20,6 +20,8 @@
  ******************************************************************************/
 package de.dsi8.vhackandroidgame.logic.contract;
 
+import org.andengine.util.color.Color;
+
 import de.dsi8.dsi8acl.exception.ConnectionProblemException;
 import de.dsi8.vhackandroidgame.RemoteActivity;
 import de.dsi8.vhackandroidgame.communication.model.CollisionType;
@@ -46,4 +48,8 @@ public interface IRemoteView {
 	 * @param collidesWith 
 	 */
 	void collisionDetected(CollisionType collidesWith);
+
+
+
+	void setPlayerInfo(String name, Color color);
 }

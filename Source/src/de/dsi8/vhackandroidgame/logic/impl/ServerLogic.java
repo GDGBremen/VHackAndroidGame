@@ -65,6 +65,7 @@ import de.dsi8.vhackandroidgame.communication.model.CarMessage.ACTION;
 import de.dsi8.vhackandroidgame.communication.model.CollisionMessage;
 import de.dsi8.vhackandroidgame.communication.model.CollisionType;
 import de.dsi8.vhackandroidgame.communication.model.GameModeMessage;
+import de.dsi8.vhackandroidgame.communication.model.PlayerInfoMessage;
 import de.dsi8.vhackandroidgame.communication.model.QRCodeMessage;
 import de.dsi8.vhackandroidgame.communication.model.QRCodeMessage.QRCodePosition;
 import de.dsi8.vhackandroidgame.handler.DriveMessageHandler;
@@ -212,6 +213,8 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener, 
 		message.action = ACTION.ADD;
 		message.id = rPartner.id;
 		sendMessageToAllPresentationPartner(message);
+		
+		rPartner.communicationPartner.sendMessage(new PlayerInfoMessage("Player " + rPartner.id, rPartner.id));
 		
 		this.listener.registerPlayer(rPartner.id);
 	}
