@@ -21,6 +21,7 @@
 package de.dsi8.vhackandroidgame.logic.impl;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -37,6 +38,8 @@ import org.andengine.util.math.MathUtils;
 import org.andlabs.andengine.extension.physicsloader.PhysicsEditorLoader;
 
 import android.content.Context;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 
 import com.badlogic.gdx.math.Vector2;
@@ -110,6 +113,8 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener,
 	private PhysicsWorld mPhysicsWorld = new PhysicsWorld(new Vector2(0, 0),
 			false);
 
+	private final Handler mHandler = new Handler(Looper.getMainLooper());
+	
 	/**
 	 * All connected remote partner.
 	 */
@@ -123,14 +128,14 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener,
 	/**
 	 * 
 	 */
-	private Map<Integer, PresentationPartner> presentationPartner = new HashMap<Integer, PresentationPartner>();
+	private Map<Integer, PresentationPartner> presentationPartner = Collections.synchronizedMap(new HashMap<Integer, PresentationPartner>());
 
 	/**
 	 * Number of presentation partner.
 	 */
 	private int numPresentationPartner = 0;
 
-	private boolean qrCodeVisible = true;
+	private boolean qrCodeVisible = false;
 
 	private UDPServer udpServer = new UDPServer();
 
@@ -548,8 +553,14 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener,
 		}
 	}
 
-	public void checkpointsPassed(RemotePartner remotePartner) {
-		this.listener.incrementCheckpointsPassed(remotePartner.id);
+	public void checkpointsPassed(final RemotePartner remotePartner) {
+		mHandler.post(new Runnable() {
+			
+			@Override
+			public void run() {
+				ServerLogic.this.listener.incrementCheckpointsPassed(remotePartner.id);
+			}
+		});
 	}
 
 	@Override
