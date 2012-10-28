@@ -29,6 +29,7 @@ import de.dsi8.vhackandroidgame.RemoteActivity;
 import de.dsi8.vhackandroidgame.communication.model.DriveMessage;
 import de.dsi8.vhackandroidgame.communication.model.GameModeMessage;
 import de.dsi8.vhackandroidgame.handler.CollisionMessageHandler;
+import de.dsi8.vhackandroidgame.handler.PlayerInfoMessageHandler;
 import de.dsi8.vhackandroidgame.logic.contract.IRemoteLogic;
 import de.dsi8.vhackandroidgame.logic.contract.IRemoteView;
 
@@ -61,9 +62,9 @@ public class RemoteLogic implements IRemoteLogic, ICommunicationPartnerListener 
 		this.remoteView = remoteView;
 		this.serverPartner = new CommunicationPartner(this, connection);
 		this.serverPartner.registerMessageHandler(new CollisionMessageHandler(this));
+		this.serverPartner.registerMessageHandler(new PlayerInfoMessageHandler(remoteView));
 		this.serverPartner.initialized();
 		this.serverPartner.sendMessage(new GameModeMessage(true));
-		
 	}
 	
 	/**
