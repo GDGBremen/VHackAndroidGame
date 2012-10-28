@@ -310,7 +310,13 @@ public class ServerLogic implements IServerLogic, IServerCommunicationListener,
 		this.presentationPartner.put(pPartner.id, pPartner);
 
 		this.numPresentationPartner++;
-		showBardcode();
+		
+		for (RemotePartner rPartner : this.remotePartner.values()) {
+			CarMessage carMessage = new CarMessage();
+			carMessage.action = ACTION.ADD;
+			carMessage.id = rPartner.id;
+			pPartner.communicationPartner.sendMessage(carMessage);
+		}
 	}
 
 	/**
