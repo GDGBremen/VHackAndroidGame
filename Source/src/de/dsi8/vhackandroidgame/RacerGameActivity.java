@@ -222,17 +222,12 @@ public class RacerGameActivity extends AbstractConnectionActivity implements
 				vertexBufferObjectManager);
 		this.borderRight = new Rectangle(CAMERA_WIDTH - 2, 0, 2, CAMERA_HEIGHT,
 				vertexBufferObjectManager);
-	
+		
 		Sprite track = new Sprite(0, 0, this.mTrackTextureRegion, vertexBufferObjectManager);
 		track.setSize(CAMERA_WIDTH, CAMERA_HEIGHT);
 		this.mScene.attachChild(track);
 
-		Sprite effectSun = new Sprite(1920/2, 0, this.mEffectSunTextureRegion, vertexBufferObjectManager);
-		effectSun.setScale(2.5f);
-		this.mScene.attachChild(effectSun);
 		
-		LoopEntityModifier loop = new LoopEntityModifier(new RotationModifier(60 , 0, 360));
-		effectSun.registerEntityModifier(loop);
 		
 //		Body ballBody = PhysicsFactory.createCircleBody(this.serverLogic.getPhysicsWorld(), ball, BodyType.DynamicBody, );
 		//this.serverLogic.getPhysicsWorld().registerPhysicsConnector(new PhysicsConnector(ball, ballBody, true, true));
