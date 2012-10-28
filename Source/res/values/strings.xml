@@ -5,16 +5,16 @@
     <string name="title_activity_remote">Remote</string>
     <string name="title_activity_server">Server</string>
     <string name="title_activity_tv">TV</string>
+    <string name="title_activity_search">Searching for a server &#8230;</string>
     <string name="same_network_dialog_title">Different Networks</string>
     <string name="same_network_dialog_msg">It\'s seems that you\'re not in the same WiFi-Network as the other client. The connection may fail. Try to connect anyway?</string>
     <string name="connection_falied_dialog_title">Connecting to the server failed</string>
     <string name="connection_falied_dialog_msg">Please check that you\'re in the same network.</string>
     <string name="retry">Retry</string>
-
     <string name="scoreboard_title">Scoreboard</string>
     <string name="scoreboard_player_id">Player %1$s</string>
     <string name="scoreboard_player_rounds">Rounds %1$s</string>
     <string name="scoreboard_player_checkpoints">Checkpoints %1$s</string>
-    
     <string name="show_qr_code">Show/Hide QR-Code</string>
+
 </resources>
