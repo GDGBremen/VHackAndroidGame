@@ -20,6 +20,7 @@
  ******************************************************************************/
 package de.dsi8.vhackandroidgame.handler;
 
+import android.util.Log;
 import de.dsi8.dsi8acl.communication.handler.AbstractMessageHandler;
 import de.dsi8.dsi8acl.communication.impl.CommunicationPartner;
 import de.dsi8.dsi8acl.exception.InvalidMessageException;
@@ -52,6 +53,7 @@ public class CollisionMessageHandler extends AbstractMessageHandler<CollisionMes
 	 */
 	@Override
 	public void handleMessage(CommunicationPartner partner, CollisionMessage message) throws InvalidMessageException {
+		Log.e("YEAH!", "CollisionMessage" + message.collidesWith.toString());
 		this.remoteLogic.getRemoteView().collisionDetected(message.collidesWith);
 	}
 }
