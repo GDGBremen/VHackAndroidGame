@@ -56,6 +56,8 @@ public class ServerGameActivity extends ListActivity implements
 		this.listView.setAdapter(adapter);
 		this.gameConfig = new VHackAndroidGameConfiguration(this);
 
+		Player.setAdapter(adapter);
+		
 		if (BuildConfig.DEBUG) {
 			// createFakePlayers();
 		}
